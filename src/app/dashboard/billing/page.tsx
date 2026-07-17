@@ -70,8 +70,7 @@ export default function BillingPage() {
             {selectedTab === 'overview' && (
               <>
                 {/* Current Plan Card */}
-                <div className="bg-gradient-to-br from-black to-slate-900 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-                  <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500 rounded-full mix-blend-screen filter blur-3xl opacity-20"></div>
+                <div className="bg-black rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-6">
                       <div>
@@ -85,10 +84,10 @@ export default function BillingPage() {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <button className="bg-white text-black px-6 py-3 rounded-2xl font-bold hover:bg-slate-100 transition-all">
+                      <button className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-lg">
                         Upgrade Plan
                       </button>
-                      <button className="bg-white/10 text-white px-6 py-3 rounded-2xl font-bold hover:bg-white/20 transition-all border border-white/20">
+                      <button className="border border-white text-slate-900 bg-white px-8 py-4 rounded-full font-bold text-lg hover:bg-black hover:text-white transition-all shadow-sm">
                         View Details
                       </button>
                     </div>
@@ -183,7 +182,7 @@ export default function BillingPage() {
                       <p className="font-bold text-black text-2xl">$688.80</p>
                     </div>
                   </div>
-                  <button className="w-full mt-6 bg-black text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all">
+                  <button className="w-full mt-6 bg-black text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-lg">
                     Pay Now
                   </button>
                 </div>

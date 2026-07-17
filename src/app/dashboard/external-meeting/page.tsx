@@ -75,13 +75,13 @@ export default function ExternalMeetingPage() {
                       value={meetingLink}
                       onChange={(e) => setMeetingLink(e.target.value)}
                       placeholder="Paste meeting link (zoom.us, teams.microsoft.com, meet.google.com...)"
-                      className="w-full bg-[#FAF9F5] border border-[#D9D7D0]/60 rounded-2xl py-4 pl-12 pr-4 text-black focus:outline-none focus:ring-1 focus:ring-black transition-all font-medium"
+                      className="w-full bg-white/50 border border-[#c4c7c7]/30 rounded-full py-4 pl-12 pr-4 text-[#1c1b1b] placeholder:text-[#8C8880]/60 text-[15px] focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={!meetingLink}
-                    className="bg-black text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-black/10 flex items-center justify-center gap-2 whitespace-nowrap"
+                    className="bg-black text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
                   >
                     Connect & Translate
                   </button>

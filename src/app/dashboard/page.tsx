@@ -90,9 +90,9 @@ export default function MainDashboardPage() {
                     <p className="text-white/60 text-sm">Start an instant native session with real-time intelligence.</p>
                   </div>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-6">
-                    <button className="bg-white text-black px-6 py-3.5 rounded-2xl font-bold hover:bg-slate-100 transition-all shadow-lg text-sm flex items-center justify-center gap-2 group/btn">
+                    <button className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-lg flex items-center justify-center gap-2 group/btn">
                       Start Now
-                      <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                      <span className="material-symbols-outlined text-[20px] group-hover/btn:translate-x-0.5 transition-transform">arrow_forward</span>
                     </button>
                   </div>
                 </div>
@@ -120,13 +120,13 @@ export default function MainDashboardPage() {
                         value={joinLink}
                         onChange={(e) => setJoinLink(e.target.value)}
                         placeholder="e.g. relay.ai/m/elias-room"
-                        className="w-full bg-[#FAF9F5] border border-[#D9D7D0]/60 rounded-2xl py-4 pl-12 pr-4 text-black focus:outline-none focus:ring-1 focus:ring-black transition-all font-medium"
+                        className="w-full bg-white/50 border border-[#c4c7c7]/30 rounded-full py-4 pl-12 pr-4 text-[#1c1b1b] placeholder:text-[#8C8880]/60 text-[15px] focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={!joinLink}
-                      className="bg-black text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-black/10 flex items-center justify-center gap-2"
+                      className="bg-black text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
                     >
                       Join Now
                     </button>
@@ -176,7 +176,7 @@ export default function MainDashboardPage() {
                   </div>
                 </div>
 
-                <button className="w-full mt-8 py-3 border border-[#D9D7D0]/60 hover:border-black/30 bg-[#FAF9F5] rounded-xl text-[10px] font-bold text-[#8C8880] hover:text-black transition-all tracking-widest uppercase font-['Inter']">
+                <button className="w-full mt-8 py-4 border border-slate-400 text-slate-900 bg-white rounded-full font-bold text-sm hover:bg-black hover:text-white transition-all shadow-sm">
                   View Full Calendar
                 </button>
               </div>

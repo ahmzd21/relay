@@ -69,9 +69,9 @@ export default function NativeMeetingPage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-6">
-                    h                    <button className="bg-white text-black px-6 py-3.5 rounded-2xl font-bold hover:bg-slate-100 transition-all shadow-lg text-sm flex items-center justify-center gap-2 group/btn">
+                    <button className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-lg flex items-center justify-center gap-2 group/btn">
                       Start Now
-                      <span className="material-symbols-outlined text-[18px] group-hover/btn:translate-x-0.5 transition-transform">arrow_forward</span>
+                      <span className="material-symbols-outlined text-[20px] group-hover/btn:translate-x-0.5 transition-transform">arrow_forward</span>
                     </button>
                   </div>
                 </div>
@@ -99,13 +99,13 @@ export default function NativeMeetingPage() {
                         value={joinLink}
                         onChange={(e) => setJoinLink(e.target.value)}
                         placeholder="e.g. relay.ai/m/elias-room"
-                        className="w-full bg-[#FAF9F5] border border-[#D9D7D0]/60 rounded-2xl py-4 pl-12 pr-4 text-black focus:outline-none focus:ring-1 focus:ring-black transition-all font-medium"
+                        className="w-full bg-white/50 border border-[#c4c7c7]/30 rounded-full py-4 pl-12 pr-4 text-[#1c1b1b] placeholder:text-[#8C8880]/60 text-[15px] focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={!joinLink}
-                      className="bg-black text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-black/10 flex items-center justify-center gap-2"
+                      className="bg-black text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
                     >
                       Join Now
                     </button>
