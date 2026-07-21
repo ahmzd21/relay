@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 interface SidebarProps {
   currentPath?: string;
@@ -9,6 +10,7 @@ interface SidebarProps {
 
 export default function Sidebar({ currentPath }: SidebarProps) {
   const pathname = usePathname() || currentPath;
+  const { isOrganization, hasPermission } = useWorkspace();
 
   // 1. Instantly check localStorage during render to avoid the "expanded-then-closed" flash
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -31,13 +33,23 @@ export default function Sidebar({ currentPath }: SidebarProps) {
     localStorage.setItem('sidebar-collapsed', String(nextState));
   };
 
+  // Context-aware navigation items
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: 'home' },
     { href: '/dashboard/native-meeting', label: 'Native Meeting', icon: 'video_camera_front' },
     { href: '/dashboard/external-meeting', label: 'External Meeting', icon: 'link' },
     { href: '/dashboard/statistics', label: 'Statistics', icon: 'bar_chart' },
-    { href: '/dashboard/billing', label: 'Billing', icon: 'payments' },
-  ];
+    // Organization-specific items (Team management is now in Settings)
+    ...(isOrganization() ? [
+      { href: '/dashboard/channels', label: 'Channels', icon: 'tag' },
+    ] : []),
+    // Billing - only show for personal workspace or org owner
+    ...(isOrganization() && hasPermission('owner') ? [
+      { href: '/dashboard/billing', label: 'Billing', icon: 'payments', permission: 'owner' as const },
+    ] : [
+      { href: '/dashboard/billing', label: 'Billing', icon: 'payments' },
+    ]),
+  ].filter(item => !item.permission || hasPermission(item.permission));
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {

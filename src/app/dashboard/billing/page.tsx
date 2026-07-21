@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
 
 export default function BillingPage() {
   const [selectedTab, setSelectedTab] = useState<'overview' | 'invoices' | 'payment'>('overview');
@@ -19,6 +20,8 @@ export default function BillingPage() {
             <button className="md:hidden p-2 -ml-2 text-black">
               <span className="material-symbols-outlined">menu</span>
             </button>
+            {/* Workspace Switcher */}
+            <WorkspaceSwitcher />
             <h1 className="text-2xl font-bold tracking-tight text-black">Billing</h1>
           </div>
           <div className="flex items-center gap-4">

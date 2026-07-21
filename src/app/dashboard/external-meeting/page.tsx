@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
 
 export default function ExternalMeetingPage() {
   const [meetingLink, setMeetingLink] = useState('');
@@ -20,6 +21,8 @@ export default function ExternalMeetingPage() {
             <button className="md:hidden p-2 -ml-2 text-black">
               <span className="material-symbols-outlined">menu</span>
             </button>
+            {/* Workspace Switcher */}
+            <WorkspaceSwitcher />
           </div>
           {/* Search - Centered */}
           <div className="hidden md:flex relative w-full max-w-md items-center">

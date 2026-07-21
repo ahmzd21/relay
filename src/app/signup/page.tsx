@@ -2,8 +2,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
+  const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mobileCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,6 +76,7 @@ export default function SignupPage() {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
+      router.push('/onboarding');
     }, 1500);
   };
 
