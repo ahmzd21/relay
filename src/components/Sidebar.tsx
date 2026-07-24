@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import WorkspaceSwitcher from './WorkspaceSwitcher';
 
 interface SidebarProps {
   currentPath?: string;
@@ -10,18 +11,25 @@ interface SidebarProps {
 
 export default function Sidebar({ currentPath }: SidebarProps) {
   const pathname = usePathname() || currentPath;
+  const router = useRouter();
   const { isOrganization, hasPermission } = useWorkspace();
 
-  // 1. Instantly check localStorage during render to avoid the "expanded-then-closed" flash
+  const handleSignOut = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (err) {
+      console.error('Sign out failed', err);
+    }
+  };
+
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
-      const savedState = localStorage.getItem('sidebar-collapsed');
-      return savedState === 'true';
+      return localStorage.getItem('sidebar-collapsed') === 'true';
     }
-    return false; // Server-side render default
+    return false;
   });
 
-  // 2. Hydration guard prevents SSR/client mismatches
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
@@ -33,62 +41,55 @@ export default function Sidebar({ currentPath }: SidebarProps) {
     localStorage.setItem('sidebar-collapsed', String(nextState));
   };
 
-  // Context-aware navigation items
+  // Build context adaptive dashboard options
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: 'home' },
     { href: '/dashboard/native-meeting', label: 'Native Meeting', icon: 'video_camera_front' },
     { href: '/dashboard/external-meeting', label: 'External Meeting', icon: 'link' },
     { href: '/dashboard/statistics', label: 'Statistics', icon: 'bar_chart' },
-    // Organization-specific items (Team management is now in Settings)
+    
+    // Organization channels only visible if in Org space profile
     ...(isOrganization() ? [
       { href: '/dashboard/channels', label: 'Channels', icon: 'tag' },
     ] : []),
-    // Billing - only show for personal workspace or org owner
-    ...(isOrganization() && hasPermission('owner') ? [
-      { href: '/dashboard/billing', label: 'Billing', icon: 'payments', permission: 'owner' as const },
-    ] : [
-      { href: '/dashboard/billing', label: 'Billing', icon: 'payments' },
+    
+    // Corporate invoices visible only to Org owners or private solo views
+    ...(isOrganization() ? (hasPermission('owner') ? [
+      { href: '/dashboard/billing', label: 'Corporate Billing', icon: 'payments' }
+    ] : []) : [
+      { href: '/dashboard/billing', label: 'Billing & Invoices', icon: 'payments' }
     ]),
-  ].filter(item => !item.permission || hasPermission(item.permission));
+  ];
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') {
-      return pathname === '/dashboard';
-    }
+    if (href === '/dashboard') return pathname === '/dashboard';
     return pathname === href || pathname?.startsWith(href + '/');
   };
 
-  // Keep layout shell completely stable with correct width during initial hydration
   if (!isMounted) {
-    // If the browser knows it should be collapsed before rendering, prepare the thin shell
     const initialCollapsed = typeof window !== 'undefined' && localStorage.getItem('sidebar-collapsed') === 'true';
-    return (
-      <aside
-        className={`border-r border-[#D9D7D0]/40 hidden md:block bg-[#Fdfbf7] h-screen sticky top-0 ${initialCollapsed ? 'w-20' : 'w-64'
-          }`}
-      />
-    );
+    return <aside className={`border-r border-white/10 hidden md:block bg-[#0f1115] h-screen sticky top-0 ${initialCollapsed ? 'w-20' : 'w-64'}`} />;
   }
 
   return (
     <aside
-      className={`border-r border-[#D9D7D0]/40 hidden md:flex flex-col justify-between bg-[#Fdfbf7] transition-all duration-300 ease-in-out h-screen sticky top-0 ${isCollapsed ? 'w-20' : 'w-64'
+      className={`border-r border-white/10 hidden md:flex flex-col justify-between bg-[#0f1115] transition-all duration-300 ease-in-out h-screen sticky top-0 ${isCollapsed ? 'w-20' : 'w-64'
         }`}
     >
       <div>
         {/* Logo Header with Interactive SVG Toggle */}
-        <div className={`h-20 flex items-center border-b border-[#D9D7D0]/40 transition-all duration-300 ${isCollapsed ? 'justify-center px-0' : 'justify-between px-6'
+        <div className={`h-20 flex items-center border-b border-white/10 transition-all duration-300 ${isCollapsed ? 'justify-center px-0' : 'justify-between px-6'
           }`}>
           <div className="flex items-center gap-3 overflow-hidden">
             <button
               onClick={toggleSidebar}
-              className="p-2 hover:bg-black/5 rounded-full transition-colors flex-shrink-0"
+              className="p-2 hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
               title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 100 100"
-                className="h-6 w-6 text-black transition-transform duration-500 ease-in-out"
+                className="h-6 w-6 text-white transition-transform duration-500 ease-in-out"
                 style={{
                   transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)'
                 }}
@@ -100,7 +101,7 @@ export default function Sidebar({ currentPath }: SidebarProps) {
 
             {/* Brand Text */}
             <span
-              className={`text-xl font-bold tracking-tighter text-black transition-all duration-300 origin-left ${isCollapsed ? 'opacity-0 max-w-0 scale-0' : 'opacity-100 max-w-[100px] scale-100'
+              className={`text-xl font-bold tracking-tighter text-white transition-all duration-300 origin-left ${isCollapsed ? 'opacity-0 max-w-0 scale-0' : 'opacity-100 max-w-[100px] scale-100'
                 }`}
             >
               Relay
@@ -117,59 +118,38 @@ export default function Sidebar({ currentPath }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 title={isCollapsed ? item.label : undefined}
-                className={`flex items-center rounded-xl font-medium text-sm transition-all relative ${isCollapsed ? 'justify-center h-11 w-11 mx-auto p-0' : 'gap-3 px-4 py-3'
-                  } ${active
-                    ? 'bg-black text-white shadow-md shadow-black/5'
-                    : 'text-[#8C8880] hover:text-black hover:bg-black/5'
-                  }`}
+                className={`flex items-center rounded-xl font-medium text-sm transition-all relative ${isCollapsed ? 'justify-center h-11 w-11 mx-auto p-0' : 'gap-3 px-4 py-3'} ${
+                  active
+                    ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-lg shadow-[#FF416C]/20'
+                    : 'text-white/50 hover:text-white hover:bg-white/10'
+                }`}
               >
                 <span className="material-symbols-outlined text-[20px] flex-shrink-0">{item.icon}</span>
-                <span
-                  className={`transition-all duration-300 origin-left whitespace-nowrap ${isCollapsed ? 'opacity-0 max-w-0 scale-0 pointer-events-none absolute' : 'opacity-100 max-w-[200px] scale-100'
-                    }`}
-                >
-                  {item.label}
-                </span>
+                {!isCollapsed && <span className="transition-all duration-300 whitespace-nowrap">{item.label}</span>}
               </Link>
             );
           })}
         </nav>
       </div>
 
-      {/* Bottom Actions */}
-      <div className="p-4 space-y-2 mb-4 border-t border-[#D9D7D0]/40 pt-6">
-        {/* Settings */}
+      {/* Settings & Sign Out footer controls */}
+      <div className="p-4 space-y-2 mb-4 border-t border-white/10 pt-6">
         <Link
           href="/dashboard/settings"
           title={isCollapsed ? 'Settings' : undefined}
-          className={`flex items-center rounded-xl font-medium text-sm transition-all relative ${isCollapsed ? 'justify-center h-11 w-11 mx-auto p-0' : 'gap-3 px-4 py-3'
-            } ${isActive('/dashboard/settings')
-              ? 'bg-black text-white shadow-md shadow-black/5'
-              : 'text-[#8C8880] hover:text-black hover:bg-black/5'
-            }`}
+          className={`flex items-center rounded-xl font-medium text-sm transition-all relative ${isCollapsed ? 'justify-center h-11 w-11 mx-auto p-0' : 'gap-3 px-4 py-3'} ${
+            isActive('/dashboard/settings')
+              ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-lg shadow-[#FF416C]/20'
+              : 'text-white/50 hover:text-white hover:bg-white/10'
+          }`}
         >
           <span className="material-symbols-outlined text-[20px] flex-shrink-0">settings</span>
-          <span
-            className={`transition-all duration-300 origin-left whitespace-nowrap ${isCollapsed ? 'opacity-0 max-w-0 scale-0 pointer-events-none absolute' : 'opacity-100 max-w-[200px] scale-100'
-              }`}
-          >
-            Settings
-          </span>
+          {!isCollapsed && <span>Settings</span>}
         </Link>
 
-        {/* Sign Out */}
-        <button
-          title={isCollapsed ? 'Sign Out' : undefined}
-          className={`flex items-center text-left text-rose-500 hover:bg-rose-50 rounded-xl font-medium text-sm transition-all ${isCollapsed ? 'justify-center h-11 w-11 mx-auto p-0' : 'w-full gap-3 px-4 py-3'
-            }`}
-        >
+        <button onClick={handleSignOut} className={`flex items-center text-left text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 rounded-xl font-medium text-sm transition-all ${isCollapsed ? 'justify-center h-11 w-11 mx-auto p-0' : 'w-full gap-3 px-4 py-3'}`}>
           <span className="material-symbols-outlined text-[20px] flex-shrink-0">logout</span>
-          <span
-            className={`transition-all duration-300 origin-left whitespace-nowrap ${isCollapsed ? 'opacity-0 max-w-0 scale-0 pointer-events-none absolute' : 'opacity-100 max-w-[200px] scale-100'
-              }`}
-          >
-            Sign Out
-          </span>
+          {!isCollapsed && <span>Sign Out</span>}
         </button>
       </div>
     </aside>

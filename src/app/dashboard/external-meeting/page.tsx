@@ -1,225 +1,412 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
-import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
+import DashboardHeader from '@/components/DashboardHeader';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+
+interface ExternalMeeting {
+  id: string;
+  title: string;
+  platform: 'Zoom' | 'Google Meet' | 'Microsoft Teams';
+  url: string;
+  time: string;
+  date: string;
+  duration: string;
+  status: 'translated' | 'processing' | 'ended';
+  participants: { name: string; initials: string; color: string }[];
+  languages: string[];
+}
+
+const MOCK_MEETINGS: ExternalMeeting[] = [
+  {
+    id: 'ext-1',
+    title: 'Q4 Strategy Review',
+    platform: 'Zoom',
+    url: 'https://zoom.us/j/123456789',
+    time: '14:30',
+    date: new Date(Date.now() - 2 * 3600000).toISOString().split('T')[0],
+    duration: '2h 15m',
+    status: 'translated',
+    participants: [
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
+      { name: 'Sarah Chen', initials: 'SC', color: 'bg-rose-100 text-rose-700' },
+      { name: 'Marcus Klein', initials: 'MK', color: 'bg-purple-100 text-purple-700' },
+    ],
+    languages: ['English', 'Spanish'],
+  },
+  {
+    id: 'ext-2',
+    title: 'Product Sync with Partners',
+    platform: 'Microsoft Teams',
+    url: 'https://teams.microsoft.com/l/meetup-join/abc',
+    time: '10:00',
+    date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+    duration: '45m',
+    status: 'translated',
+    participants: [
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
+      { name: 'Yousef Al-Rashid', initials: 'YA', color: 'bg-amber-100 text-amber-700' },
+    ],
+    languages: ['English', 'Arabic'],
+  },
+  {
+    id: 'ext-3',
+    title: 'Client Onboarding Call',
+    platform: 'Google Meet',
+    url: 'https://meet.google.com/abc-xyz-def',
+    time: '16:00',
+    date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
+    duration: '30m',
+    status: 'processing',
+    participants: [
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
+      { name: 'Sofia Martinez', initials: 'SM', color: 'bg-emerald-100 text-emerald-700' },
+    ],
+    languages: ['English', 'French'],
+  },
+  {
+    id: 'ext-4',
+    title: 'Engineering Standup',
+    platform: 'Zoom',
+    url: 'https://zoom.us/j/987654321',
+    time: '09:00',
+    date: new Date(Date.now() - 86400000 * 3).toISOString().split('T')[0],
+    duration: '15m',
+    status: 'translated',
+    participants: [
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
+      { name: 'Wei Zhang', initials: 'WZ', color: 'bg-blue-100 text-blue-700' },
+      { name: 'Priya Sharma', initials: 'PS', color: 'bg-pink-100 text-pink-700' },
+      { name: 'Marcus Klein', initials: 'MK', color: 'bg-purple-100 text-purple-700' },
+    ],
+    languages: ['English'],
+  },
+  {
+    id: 'ext-5',
+    title: 'Investor Update Call',
+    platform: 'Google Meet',
+    url: 'https://meet.google.com/xyz-abc-123',
+    time: '11:00',
+    date: new Date(Date.now() - 86400000 * 5).toISOString().split('T')[0],
+    duration: '1h',
+    status: 'translated',
+    participants: [
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
+    ],
+    languages: ['English', 'Japanese'],
+  },
+];
+
+const PLATFORM_ICONS: Record<string, { icon: string; color: string; bg: string; name: string }> = {
+  Zoom: { icon: 'videocam', color: 'text-blue-600', bg: 'bg-blue-50', name: 'Zoom' },
+  'Google Meet': { icon: 'groups', color: 'text-emerald-600', bg: 'bg-emerald-50', name: 'Google Meet' },
+  'Microsoft Teams': { icon: 'meeting_room', color: 'text-indigo-600', bg: 'bg-indigo-50', name: 'Microsoft Teams' },
+};
 
 export default function ExternalMeetingPage() {
+  const router = useRouter();
+  const { isOrganization } = useWorkspace();
+
   const [meetingLink, setMeetingLink] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'zoom' | 'meet' | 'teams'>('all');
+
+  // Load from localStorage
+  const [meetings, setMeetings] = useState<ExternalMeeting[]>([]);
+  useEffect(() => {
+    const saved = localStorage.getItem('relay-external-meetings');
+    if (saved) {
+      try { setMeetings(JSON.parse(saved)); } catch { setMeetings(MOCK_MEETINGS); }
+    } else {
+      setMeetings(MOCK_MEETINGS);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (meetings.length > 0) {
+      localStorage.setItem('relay-external-meetings', JSON.stringify(meetings));
+    }
+  }, [meetings]);
+
+  const filteredMeetings = useMemo(() => {
+    if (activeTab === 'all') return meetings;
+    const platformMap = { zoom: 'Zoom', meet: 'Google Meet', teams: 'Microsoft Teams' };
+    return meetings.filter(m => m.platform === platformMap[activeTab]);
+  }, [meetings, activeTab]);
+
+  const handleJoin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!meetingLink.trim()) return;
+    setIsConnecting(true);
+    setTimeout(() => {
+      setIsConnecting(false);
+      const newMeeting: ExternalMeeting = {
+        id: 'ext-' + Date.now(),
+        title: 'External Meeting',
+        platform: meetingLink.includes('zoom') ? 'Zoom' : meetingLink.includes('teams') ? 'Microsoft Teams' : 'Google Meet',
+        url: meetingLink,
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        date: new Date().toISOString().split('T')[0],
+        duration: '0m',
+        status: 'translated',
+        participants: [{ name: 'You', initials: 'Y', color: 'bg-indigo-100 text-indigo-700' }],
+        languages: ['English'],
+      };
+      setMeetings(prev => [newMeeting, ...prev]);
+      setMeetingLink('');
+    }, 2000);
+  };
+
+  const formatTime = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour = h % 12 || 12;
+    return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`;
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.getTime() === today.getTime()) return 'Today';
+    if (date.getTime() === yesterday.getTime()) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const tabs = [
+    { key: 'all' as const, label: 'All' },
+    { key: 'zoom' as const, label: 'Zoom' },
+    { key: 'meet' as const, label: 'Google Meet' },
+    { key: 'teams' as const, label: 'Teams' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#FAF9F5] text-[#1c1b1b] flex font-helvetica selection:bg-black selection:text-white">
       <Sidebar />
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <DashboardHeader searchPlaceholder="Search external meetings, integrations..." />
 
-        {/* Header */}
-        <header className="h-20 border-b border-[#D9D7D0]/40 flex items-center justify-between px-6 md:px-10 bg-white/80 backdrop-blur-xl z-20 sticky top-0 shadow-sm">
-          <div className="flex items-center gap-4">
-            {/* Mobile Menu Toggle */}
-            <button className="md:hidden p-2 -ml-2 text-black">
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            {/* Workspace Switcher */}
-            <WorkspaceSwitcher />
-          </div>
-          {/* Search - Centered */}
-          <div className="hidden md:flex relative w-full max-w-md items-center">
-            <span className="material-symbols-outlined absolute left-4 text-[#8C8880] text-[20px]">search</span>
-            <input
-              type="text"
-              placeholder="Search external meetings, integrations..."
-              className="w-full bg-[#FAF9F5] border border-[#D9D7D0]/60 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-black transition-all shadow-sm"
-            />
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="relative p-2 text-[#8C8880] hover:text-black transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-            </button>
-            <div className="w-px h-6 bg-[#D9D7D0]"></div>
-            <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                ET
-              </div>
-            </button>
-          </div>
-        </header>
-
-        {/* Dashboard Body */}
         <div className="flex-1 overflow-y-auto p-6 md:p-10 z-10 pb-24">
           <div className="max-w-6xl mx-auto space-y-10">
 
-            {/* Welcome Banner */}
+            {/* Page Title */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-2">External Meeting</h1>
-              <p className="text-[#8C8880] text-base">Connect Relay's AI translation to your favorite meeting platforms.</p>
+              <h1 className="text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">External Meeting</h1>
+              <p className="text-slate-600 text-lg">Connect Relay's AI translation to Zoom, Teams, or Google Meet.</p>
             </div>
 
-            {/* Quick Join Section */}
-            <div className="bg-white rounded-2xl p-8 border border-[#D9D7D0]/40 shadow-sm relative overflow-hidden hover:shadow-lg transition-all">
-              <div className="absolute -right-20 -top-20 w-64 h-64 bg-rose-50 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-[#FAF9F5] rounded-full flex items-center justify-center border border-[#D9D7D0]/60 mb-4">
-                  <span className="material-symbols-outlined text-black text-[24px]">login</span>
+              {/* Connect Platform — Dark Card */}
+              <div className="lg:col-span-1 bg-[#0f1115] text-white rounded-2xl p-8 shadow-md shadow-black/20 relative overflow-hidden group flex flex-col justify-between min-h-[220px] border border-slate-800">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
+                <div className="relative z-10 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF416C]/20 mb-5 group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-white text-[24px]">hub</span>
+                    </div>
+                    <h2 className="text-2xl font-bold font-helvetica tracking-tight text-white mb-2">
+                      Connect a Platform
+                    </h2>
+                    <p className="text-white/50 text-sm leading-relaxed max-w-xs">
+                      Link your Zoom, Google Meet, or Teams account for seamless translation.
+                    </p>
+                  </div>
+                  <button className="mt-6 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-8 py-3.5 rounded-full font-bold text-sm hover:scale-105 transition-all duration-200 shadow-lg shadow-[#FF416C]/20 flex items-center justify-center gap-2 group/btn w-fit">
+                    Connect Account
+                    <span className="material-symbols-outlined text-[18px] group-hover/btn:translate-x-0.5 transition-transform">arrow_forward</span>
+                  </button>
                 </div>
-                <h2 className="text-2xl font-bold text-black mb-2 flex items-center gap-2">
-                  Join External Meeting
-                </h2>
-                <p className="text-[#8C8880] text-sm mb-6">Paste any meeting link from Zoom, Teams, or Google Meet to add real-time translation.</p>
+              </div>
 
-                <form className="flex flex-col sm:flex-row gap-4" onSubmit={(e) => e.preventDefault()}>
-                  <div className="relative flex-1">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#8C8880]">link</span>
+              {/* Quick Join — Light Card */}
+              <div className="lg:col-span-2 bg-white rounded-2xl p-8 border border-[#c4c7c7]/30 shadow-sm relative overflow-hidden group hover:shadow-lg hover:-translate-y-1 hover:border-[#FF416C]/30 transition-all duration-300">
+                <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#FF416C]/10 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                  <div>
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#FF416C]/20">
+                      <span className="material-symbols-outlined text-white text-[24px]">link</span>
+                    </div>
+                    <h2 className="text-2xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">Join External Meeting</h2>
+                    <p className="text-slate-500 text-sm mb-6 leading-relaxed">Paste a Zoom, Google Meet, or Teams link to join with live translation overlay.</p>
+                  </div>
+
+                  <form className="flex gap-3 mt-auto" onSubmit={handleJoin}>
                     <input
-                      type="text"
+                      type="url"
                       value={meetingLink}
                       onChange={(e) => setMeetingLink(e.target.value)}
-                      placeholder="Paste meeting link (zoom.us, teams.microsoft.com, meet.google.com...)"
-                      className="w-full bg-white/50 border border-[#c4c7c7]/30 rounded-full py-4 pl-12 pr-4 text-[#1c1b1b] placeholder:text-[#8C8880]/60 text-[15px] focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                      placeholder="Paste meeting link..."
+                      className="flex-1 bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-full py-3 px-5 text-[15px] text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                      disabled={isConnecting}
                     />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={!meetingLink}
-                    className="bg-black text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2 whitespace-nowrap"
-                  >
-                    Connect & Translate
-                  </button>
-                </form>
+                    <button
+                      type="submit"
+                      disabled={!meetingLink.trim() || isConnecting}
+                      className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 shadow-lg shadow-[#FF416C]/20"
+                    >
+                      {isConnecting ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        <>
+                          Join
+                          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
 
-            {/* External Meeting Features */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold tracking-tight text-black">How External Integration Works</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Feature 1 */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-indigo-950/50 rounded-xl flex items-center justify-center flex-shrink-0 border border-indigo-900/50">
-                      <span className="material-symbols-outlined text-indigo-400 text-[22px]">smart_toy</span>
+            {/* Supported Platforms */}
+            <div>
+              <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 mb-5">
+                Supported Platforms
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { icon: 'videocam', name: 'Zoom', desc: 'HD video, breakout rooms, and live translation overlays', users: '2M+' },
+                  { icon: 'groups', name: 'Google Meet', desc: 'Instant join, live captions, and multilingual transcripts', users: '1.5M+' },
+                  { icon: 'meeting_room', name: 'Microsoft Teams', desc: 'Enterprise integration, channel meetings, and AI notes', users: '1M+' },
+                ].map((platform) => (
+                  <div
+                    key={platform.name}
+                    className="group bg-white border border-[#c4c7c7]/30 rounded-2xl p-5 hover:border-[#FF416C]/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 group-hover:scale-110 transition-transform">
+                        <span className="material-symbols-outlined text-white text-[20px]">
+                          {platform.icon}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#8C8880] bg-[#FAF9F5] border border-[#c4c7c7]/30 px-2 py-1 rounded-lg">
+                        {platform.users} users
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-slate-100 mb-2">Silent AI Assistant</h3>
-                      <p className="text-slate-400 text-sm leading-relaxed">Relay joins your meeting as a silent participant, capturing audio for translation without disrupting the call.</p>
-                    </div>
+                    <h3 className="font-bold font-helvetica text-slate-900 mb-1 group-hover:text-[#FF416C] transition-colors">
+                      {platform.name}
+                    </h3>
+                    <p className="text-slate-500 text-xs leading-relaxed">
+                      {platform.desc}
+                    </p>
                   </div>
-                </div>
-
-                {/* Feature 2 */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-emerald-950/50 rounded-xl flex items-center justify-center flex-shrink-0 border border-emerald-900/50">
-                      <span className="material-symbols-outlined text-emerald-400 text-[22px]">headphones</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-100 mb-2">Side-Channel Audio</h3>
-                      <p className="text-slate-400 text-sm leading-relaxed">Receive translated audio through a private side channel while the original meeting audio continues normally.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Feature 3 */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-amber-950/50 rounded-xl flex items-center justify-center flex-shrink-0 border border-amber-900/50">
-                      <span className="material-symbols-outlined text-amber-400 text-[22px]">subtitles</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-100 mb-2">Live Subtitles</h3>
-                      <p className="text-slate-400 text-sm leading-relaxed">View real-time translated subtitles in your preferred language through the Relay overlay panel.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Feature 4 */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-rose-950/50 rounded-xl flex items-center justify-center flex-shrink-0 border border-rose-900/50">
-                      <span className="material-symbols-outlined text-rose-400 text-[22px]">description</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-100 mb-2">Full Transcript</h3>
-                      <p className="text-slate-400 text-sm leading-relaxed">Get complete multilingual transcripts and AI-generated summaries after every external meeting.</p>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
             {/* Recent External Meetings */}
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold tracking-tight text-black">Recent External Meetings</h2>
-                <button className="text-sm font-bold text-black hover:text-indigo-600 transition-colors">View All</button>
-              </div>
-
-              <div className="bg-white border border-[#D9D7D0]/40 rounded-2xl shadow-sm overflow-hidden">
-                <div className="divide-y divide-[#D9D7D0]/40">
-                  {/* Meeting 1 */}
-                  <div className="p-5 hover:bg-[#FAF9F5] transition-colors cursor-pointer group">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                          <span className="material-symbols-outlined text-blue-600 text-[20px]">videocam</span>
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-black group-hover:text-blue-600 transition-colors">Q4 Strategy Review</h4>
-                          <p className="text-[#8C8880] text-xs mt-0.5">Zoom • 2h 30m ago</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">Translated</span>
-                        <span className="material-symbols-outlined text-[#8C8880]">chevron_right</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Meeting 2 */}
-                  <div className="p-5 hover:bg-[#FAF9F5] transition-colors cursor-pointer group">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-                          <span className="material-symbols-outlined text-indigo-600 text-[20px]">groups</span>
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-black group-hover:text-indigo-600 transition-colors">Product Sync with Partners</h4>
-                          <p className="text-[#8C8880] text-xs mt-0.5">Microsoft Teams • Yesterday</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">Translated</span>
-                        <span className="material-symbols-outlined text-[#8C8880]">chevron_right</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Meeting 3 */}
-                  <div className="p-5 hover:bg-[#FAF9F5] transition-colors cursor-pointer group">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
-                          <span className="material-symbols-outlined text-emerald-600 text-[20px]">meeting_room</span>
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-black group-hover:text-emerald-600 transition-colors">Client Onboarding Call</h4>
-                          <p className="text-[#8C8880] text-xs mt-0.5">Google Meet • 2 days ago</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="bg-amber-50 text-amber-600 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">Processing</span>
-                        <span className="material-symbols-outlined text-[#8C8880]">chevron_right</span>
-                      </div>
-                    </div>
-                  </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#8C8880] text-[20px]">history</span>
+                  Recent External Meetings
+                </h2>
+                <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl self-start sm:self-auto">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase font-helvetica transition-all ${
+                        activeTab === tab.key
+                          ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
 
+              {filteredMeetings.length === 0 ? (
+                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-12 text-center shadow-sm">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#FF416C]/20">
+                    <span className="material-symbols-outlined text-white text-[32px]">link_off</span>
+                  </div>
+                  <h3 className="text-lg font-bold font-helvetica text-slate-900 mb-2">No external meetings found</h3>
+                  <p className="text-slate-500 text-sm">
+                    {activeTab === 'all' ? 'Paste a meeting link above to get started.' : `No ${activeTab === 'meet' ? 'Google Meet' : activeTab === 'teams' ? 'Teams' : 'Zoom'} meetings yet.`}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {filteredMeetings.map((meeting) => {
+                    const platform = PLATFORM_ICONS[meeting.platform];
+                    return (
+                    <Link
+                      key={meeting.id}
+                      href={`/dashboard/external-meeting/${meeting.id}`}
+                      className="bg-[#0f1115] border border-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]"
+                    >
+                      <div>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
+                            meeting.status === 'translated'
+                              ? 'bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white border-[#FF416C]/30'
+                              : meeting.status === 'processing'
+                                ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                : 'bg-white/10 text-slate-400 border-white/10'
+                          }`}>
+                            <span className="material-symbols-outlined text-[20px]">{platform.icon}</span>
+                          </div>
+                          <div className="flex gap-1.5">
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider font-helvetica ${
+                              meeting.status === 'translated'
+                                ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20'
+                                : meeting.status === 'processing'
+                                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                  : 'bg-white/10 text-white/40 border border-white/10'
+                            }`}>
+                              {meeting.status}
+                            </span>
+                            <span className="bg-white/10 border border-white/10 text-white/60 px-2 py-0.5 rounded text-[9px] font-bold font-helvetica">
+                              {meeting.languages.slice(0, 2).join(' → ')}
+                            </span>
+                          </div>
+                        </div>
+                        <h3 className="font-bold text-white mb-1 group-hover:text-[#FF416C] transition-colors font-helvetica">
+                          {meeting.title}
+                        </h3>
+                        <p className="text-white/50 text-xs mb-4">
+                          {platform.name} · {formatDate(meeting.date)} at {formatTime(meeting.time)} · {meeting.duration}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex -space-x-2 overflow-hidden py-1">
+                          {meeting.participants.slice(0, 4).map((p, i) => (
+                            <div
+                              key={i}
+                              className={`w-6 h-6 rounded-full border-2 border-[#0f1115] ${p.color} flex items-center justify-center text-[8px] font-bold`}
+                              title={p.name}
+                            >
+                              {p.initials}
+                            </div>
+                          ))}
+                          {meeting.participants.length > 4 && (
+                            <div className="w-6 h-6 rounded-full border-2 border-[#0f1115] bg-white/10 text-white/60 flex items-center justify-center text-[8px] font-bold">
+                              +{meeting.participants.length - 4}
+                            </div>
+                          )}
+                        </div>
+                        <span className="material-symbols-outlined text-white/30 text-[18px] group-hover:text-[#FF416C] transition-colors">arrow_forward</span>
+                      </div>
+                    </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
