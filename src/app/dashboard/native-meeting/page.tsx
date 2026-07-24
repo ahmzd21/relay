@@ -1,290 +1,378 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
-import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
+import DashboardHeader from '@/components/DashboardHeader';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 export default function NativeMeetingPage() {
+  const router = useRouter();
+  const { currentWorkspace, isOrganization, hasPermission } = useWorkspace();
+
   const [joinLink, setJoinLink] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'transcripts' | 'whiteboards'>('all');
+
+  const handleStartMeeting = () => {
+    const meetingId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    router.push(`/meeting/${meetingId}`);
+  };
+
+  const handleJoinMeeting = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinLink.trim()) return;
+    const meetingId = joinLink.split('/').pop() || joinLink;
+    router.push(`/meeting/${meetingId}`);
+  };
+
+  const filters = [
+    { key: 'all' as const, label: 'All' },
+    { key: 'transcripts' as const, label: 'Transcripts' },
+    { key: 'whiteboards' as const, label: 'Whiteboards' },
+  ];
+
+  const recentMeetings = [
+    {
+      id: 'R902',
+      title: 'MENA Expansion Strategy',
+      time: '2h 45m ago',
+      duration: '45m',
+      languages: ['AR', 'EN'],
+      aiReady: true,
+      participants: [
+        { initials: 'ET', color: 'bg-indigo-950 text-indigo-400 border-indigo-900/50' },
+        { initials: 'SK', color: 'bg-indigo-900 text-indigo-300 border-indigo-800/50' },
+        { initials: '+3', color: 'bg-slate-800 text-slate-200 border-slate-700/50' },
+      ],
+      status: 'ended',
+    },
+    {
+      id: 'J881',
+      title: 'Tokyo Creative Workshop',
+      time: 'Yesterday',
+      duration: '1h 20m',
+      languages: ['JP', 'EN'],
+      aiReady: true,
+      participants: [
+        { initials: 'YS', color: 'bg-slate-800 text-slate-200 border-slate-700/50' },
+        { initials: 'MK', color: 'bg-slate-700 text-slate-300 border-slate-600/50' },
+      ],
+      status: 'ended',
+    },
+    {
+      id: 'P120',
+      title: 'Paris Sync: Design Ops',
+      time: '2 days ago',
+      duration: '30m',
+      languages: ['EN', 'FR'],
+      aiReady: false,
+      participants: [
+        { initials: 'PL', color: 'bg-emerald-950 text-emerald-400 border-emerald-900/50' },
+      ],
+      status: 'ended',
+    },
+    {
+      id: 'T001',
+      title: 'Global Town Hall',
+      time: 'Last week',
+      duration: '1h 45m',
+      languages: ['EN'],
+      aiReady: false,
+      participants: [
+        { initials: '120+', color: 'bg-slate-800 text-slate-200 border-slate-700/50' },
+      ],
+      status: 'ended',
+    },
+  ];
+
+  const filteredMeetings = activeFilter === 'all'
+    ? recentMeetings
+    : activeFilter === 'transcripts'
+      ? recentMeetings.filter(m => m.aiReady)
+      : recentMeetings.filter(m => m.languages.length > 1);
+
+  const meetingTemplates = [
+    { icon: 'bolt', label: 'Quick Huddle', duration: '15m', participants: '2–4', desc: 'Fast sync with instant translation' },
+    { icon: 'groups', label: 'Team Standup', duration: '30m', participants: '5–10', desc: 'Daily or weekly team check-in' },
+    { icon: 'handshake', label: 'Client Call', duration: '45m', participants: '3–8', desc: 'External meeting with live captions' },
+    { icon: 'science', label: 'Workshop', duration: '90m', participants: '10–30', desc: 'Collaborative session with whiteboard' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#FAF9F5] text-[#1c1b1b] flex font-helvetica selection:bg-black selection:text-white">
       <Sidebar />
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-
         {/* Header */}
-        <header className="h-20 border-b border-[#D9D7D0]/40 flex items-center justify-between px-6 md:px-10 bg-white/80 backdrop-blur-xl z-20 sticky top-0 shadow-sm">
-          <div className="flex items-center gap-4">
-            {/* Mobile Menu Toggle */}
-            <button className="md:hidden p-2 -ml-2 text-black">
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            {/* Workspace Switcher */}
-            <WorkspaceSwitcher />
-          </div>
-          {/* Search - Centered */}
-          <div className="hidden md:flex relative w-full max-w-md items-center">
-            <span className="material-symbols-outlined absolute left-4 text-[#8C8880] text-[20px]">search</span>
-            <input
-              type="text"
-              placeholder="Search meetings, insights, or people..."
-              className="w-full bg-[#FAF9F5] border border-[#D9D7D0]/60 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-black transition-all shadow-sm"
-            />
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="relative p-2 text-[#8C8880] hover:text-black transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-            </button>
-            <div className="w-px h-6 bg-[#D9D7D0]"></div>
-            <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                ET
-              </div>
-            </button>
-          </div>
-        </header>
+        <DashboardHeader
+          searchPlaceholder={isOrganization() ? "Search team meetings, transcripts..." : "Search meetings, transcripts, or people..."}
+        />
 
-        {/* Dashboard Body */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 md:p-10 z-10 pb-24">
           <div className="max-w-6xl mx-auto space-y-10">
 
-            {/* Welcome Banner */}
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-2">Native Meeting</h1>
-              <p className="text-[#8C8880] text-base">Create and manage Relay-native meetings with built-in AI translation and collaboration tools.</p>
+            {/* Page Title */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">
+                  {isOrganization() ? currentWorkspace.name : 'Native Meeting'}
+                </h1>
+                <p className="text-slate-600 text-lg">
+                  {isOrganization()
+                    ? `Team meeting hub — create, manage, and review sessions.`
+                    : 'Start a meeting with real-time AI translation and live captions.'}
+                </p>
+              </div>
+              {isOrganization() && (
+                <span className={`self-start px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                  currentWorkspace.role === 'owner'
+                    ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20'
+                    : 'bg-slate-100 text-slate-600 border border-slate-200'
+                }`}>
+                  {currentWorkspace.role}
+                </span>
+              )}
             </div>
 
-            {/* Quick Actions Grid */}
+            {/* Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-              {/* Create Instant Meeting Card */}
-              <div className="lg:col-span-1 bg-black rounded-2xl p-8 shadow-md shadow-black/20 text-left relative overflow-hidden group flex flex-col justify-between min-h-[220px]">
+              {/* Create Meeting — Dark Card */}
+              <div className="lg:col-span-1 bg-[#0f1115] text-white rounded-2xl p-8 shadow-md shadow-black/20 relative overflow-hidden group flex flex-col justify-between min-h-[220px] border border-slate-800">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
                 <div className="relative z-10 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/10 mb-4">
-                      <span className="material-symbols-outlined text-white">video_call</span>
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF416C]/20 mb-5 group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-white text-[24px]">video_call</span>
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-1">New Meeting</h2>
-                    <p className="text-white/60 text-sm">Start an instant native session with real-time intelligence.</p>
+                    <h2 className="text-2xl font-bold font-helvetica tracking-tight text-white mb-2">
+                      {isOrganization() ? 'Start Team Meeting' : 'New Meeting'}
+                    </h2>
+                    <p className="text-white/50 text-sm leading-relaxed max-w-xs">
+                      {isOrganization()
+                        ? 'Launch a meeting with your team with real-time translation.'
+                        : 'Start an instant session with real-time intelligence.'}
+                    </p>
                   </div>
-
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-6">
-                    <button className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-lg flex items-center justify-center gap-2 group/btn">
-                      Start Now
-                      <span className="material-symbols-outlined text-[20px] group-hover/btn:translate-x-0.5 transition-transform">arrow_forward</span>
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleStartMeeting}
+                    className="mt-6 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-8 py-3.5 rounded-full font-bold text-sm hover:scale-105 transition-all duration-200 shadow-lg shadow-[#FF416C]/20 flex items-center justify-center gap-2 group/btn w-fit"
+                  >
+                    {isOrganization() ? 'Start Team Meeting' : 'Start Now'}
+                    <span className="material-symbols-outlined text-[18px] group-hover/btn:translate-x-0.5 transition-transform">arrow_forward</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Join Meeting Input Card */}
-              <div className="lg:col-span-2 bg-white rounded-2xl p-8 border border-[#D9D7D0]/40 shadow-md relative overflow-hidden group">
-                <div className="absolute -right-20 -top-20 w-64 h-64 bg-rose-50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
+              {/* Quick Join — Light Card */}
+              <div className="lg:col-span-2 bg-white rounded-2xl p-8 border border-[#c4c7c7]/30 shadow-sm relative overflow-hidden group hover:shadow-lg hover:-translate-y-1 hover:border-[#FF416C]/30 transition-all duration-300">
+                <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#FF416C]/10 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
                 <div className="relative z-10 h-full flex flex-col justify-between">
                   <div>
-                    <div className="w-12 h-12 bg-[#FAF9F5] rounded-full flex items-center justify-center border border-[#D9D7D0]/60 mb-4">
-                      <span className="material-symbols-outlined text-black text-[24px]">login</span>
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#FF416C]/20">
+                      <span className="material-symbols-outlined text-white text-[24px]">link</span>
                     </div>
-                    <h2 className="text-xl font-bold text-black mb-1 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">
                       Join a Meeting
                     </h2>
-                    <p className="text-[#8C8880] text-sm mb-6">Enter a Relay link or ID to instantly connect with real-time translation.</p>
+                    <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+                      Enter a Relay link or ID to instantly connect with real-time translation.
+                    </p>
                   </div>
-                  <form className="flex flex-col sm:flex-row gap-3 mt-auto" onSubmit={(e) => e.preventDefault()}>
-                    <div className="relative flex-1">
-                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#8C8880]">link</span>
-                      <input
-                        type="text"
-                        value={joinLink}
-                        onChange={(e) => setJoinLink(e.target.value)}
-                        placeholder="e.g. relay.ai/m/elias-room"
-                        className="w-full bg-white/50 border border-[#c4c7c7]/30 rounded-full py-4 pl-12 pr-4 text-[#1c1b1b] placeholder:text-[#8C8880]/60 text-[15px] focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                      />
-                    </div>
+                  <form className="flex gap-3 mt-auto" onSubmit={handleJoinMeeting}>
+                    <input
+                      type="text"
+                      value={joinLink}
+                      onChange={(e) => setJoinLink(e.target.value)}
+                      placeholder="Paste meeting link..."
+                      className="flex-1 bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-full py-3 px-5 text-[15px] text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                    />
                     <button
                       type="submit"
-                      disabled={!joinLink}
-                      className="bg-black text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
+                      disabled={!joinLink.trim()}
+                      className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 shadow-lg shadow-[#FF416C]/20"
                     >
-                      Join Now
+                      Join
+                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </button>
                   </form>
                 </div>
               </div>
-
             </div>
 
-            {/* Bento-Style Meetings (Col-span-8) */}
-            <div className="lg:col-span-8 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h3 className="text-2xl font-bold tracking-tight text-black flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[22px] text-[#8C8880]">history</span>
-                  Recent Meetings
-                </h3>
-                <div className="flex gap-1.5 bg-[#D9D7D0]/20 p-1 rounded-xl self-start sm:self-auto">
-                  <button className="px-3 py-1.5 bg-white shadow-sm text-black rounded-lg text-[10px] font-bold tracking-wider uppercase font-['Inter'] transition-colors">All</button>
-                  <button className="px-3 py-1.5 text-[#8C8880] hover:text-black rounded-lg text-[10px] font-bold tracking-wider uppercase font-['Inter'] transition-colors">Transcripts</button>
-                  <button className="px-3 py-1.5 text-[#8C8880] hover:text-black rounded-lg text-[10px] font-bold tracking-wider uppercase font-['Inter'] transition-colors">Whiteboards</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Bento Grid layout matching the detail treatment from native-meeting */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-              {/* Card 1 */}
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]">
-                <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-950/50 text-indigo-400 flex items-center justify-center border border-indigo-900/50">
-                      <span className="material-symbols-outlined text-[20px]">translate</span>
-                    </div>
-                    <div className="flex gap-1.5">
-                      <span className="bg-indigo-950/50 text-indigo-400 border border-indigo-900/50 px-2 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase font-['Inter']">AI READY</span>
-                      <span className="bg-slate-800 border border-slate-700/60 text-slate-300 px-2 py-0.5 rounded text-[9px] font-bold font-['Inter']">AR | EN</span>
-                    </div>
-                  </div>
-                  <h5 className="font-bold text-slate-100 mb-1 group-hover:text-rose-400 transition-colors">MENA Expansion Strategy</h5>
-                  <p className="text-slate-400 text-xs mb-4">2h 45m ago • Session ID: #R902</p>
-                </div>
-                <div className="flex -space-x-2 overflow-hidden py-1">
-                  <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-indigo-950 text-indigo-400 flex items-center justify-center text-[8px] font-bold">ET</div>
-                  <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-indigo-900 text-indigo-300 flex items-center justify-center text-[8px] font-bold">SK</div>
-                  <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[8px] font-bold text-slate-200">+3</div>
-                </div>
-              </div>
-
-              {/* Card 2 */}
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]">
-                <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-amber-950/50 text-amber-400 flex items-center justify-center border border-amber-900/50">
-                      <span className="material-symbols-outlined text-[20px]">draw</span>
-                    </div>
-                    <div className="flex gap-1.5">
-                      <span className="bg-indigo-950/50 text-indigo-400 border border-indigo-900/50 px-2 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase font-['Inter']">AI READY</span>
-                      <span className="bg-slate-800 border border-slate-700/60 text-slate-300 px-2 py-0.5 rounded text-[9px] font-bold font-['Inter']">JP | EN</span>
-                    </div>
-                  </div>
-                  <h5 className="font-bold text-slate-100 mb-1 group-hover:text-rose-400 transition-colors">Tokyo Creative Workshop</h5>
-                  <p className="text-slate-400 text-xs mb-4">Yesterday • Session ID: #J881</p>
-                </div>
-                <div className="flex -space-x-2 overflow-hidden py-1">
-                  <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[8px] font-bold text-slate-200">YS</div>
-                  <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-slate-700 flex items-center justify-center text-[8px] font-bold text-slate-300">MK</div>
-                </div>
-              </div>
-
-              {/* Card 3 */}
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]">
-                <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-950/50 text-emerald-400 flex items-center justify-center border border-emerald-900/50">
-                      <span className="material-symbols-outlined text-[20px]">forum</span>
-                    </div>
-                    <div className="flex gap-1.5">
-                      <span className="bg-slate-800 border border-slate-700/60 text-slate-300 px-2 py-0.5 rounded text-[9px] font-bold font-['Inter']">EN | FR</span>
-                    </div>
-                  </div>
-                  <h5 className="font-bold text-slate-100 mb-1 group-hover:text-rose-400 transition-colors">Paris Sync: Design Ops</h5>
-                  <p className="text-slate-400 text-xs mb-4">2 days ago • Session ID: #P120</p>
-                </div>
-                <div className="flex -space-x-2 overflow-hidden py-1">
-                  <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-emerald-950 text-emerald-400 flex items-center justify-center text-[8px] font-bold">PL</div>
-                </div>
-              </div>
-
-              {/* Card 4 */}
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-lg transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]">
-                <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-rose-950/50 text-rose-400 flex items-center justify-center border border-rose-900/50">
-                      <span className="material-symbols-outlined text-[20px]">mic</span>
-                    </div>
-                    <div className="flex gap-1.5">
-                      <span className="bg-rose-950/50 text-rose-400 border border-rose-900/50 px-2 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase font-['Inter']">ANALYZING</span>
-                      <span className="bg-slate-800 border border-slate-700/60 text-slate-300 px-2 py-0.5 rounded text-[9px] font-bold font-['Inter']">EN</span>
-                    </div>
-                  </div>
-                  <h5 className="font-bold text-slate-100 mb-1 group-hover:text-rose-400 transition-colors">Global Town Hall</h5>
-                  <p className="text-slate-400 text-xs mb-4">Last week • Session ID: #T001</p>
-                </div>
-                <div className="flex -space-x-2 overflow-hidden py-1">
-                  <div className="w-6 h-6 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[8px] font-bold text-slate-200">120+</div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Native Meeting Features */}
+            {/* Recent Meetings */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold tracking-tight text-black">Native Meeting Features</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Feature 1 */}
-                <div className="bg-white border border-[#D9D7D0]/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group">
-                  <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-indigo-600 text-[24px]">draw</span>
-                  </div>
-                  <h3 className="font-bold text-black mb-2">Interactive Whiteboards</h3>
-                  <p className="text-[#8C8880] text-sm leading-relaxed">Collaborative whiteboards with real-time translation for diagrams and sketches.</p>
-                </div>
-
-                {/* Feature 2 */}
-                <div className="bg-white border border-[#D9D7D0]/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-emerald-600 text-[24px]">smart_toy</span>
-                  </div>
-                  <h3 className="font-bold text-black mb-2">AI Intelligence</h3>
-                  <p className="text-[#8C8880] text-sm leading-relaxed">Real-time summaries, action item extraction, and semantic search across transcripts.</p>
-                </div>
-
-                {/* Feature 3 */}
-                <div className="bg-white border border-[#D9D7D0]/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group">
-                  <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-amber-600 text-[24px]">record_voice_over</span>
-                  </div>
-                  <h3 className="font-bold text-black mb-2">Voice-to-Voice Translation</h3>
-                  <p className="text-[#8C8880] text-sm leading-relaxed">Neural synthesis preserves emotion and vocal characteristics across 40+ languages.</p>
-                </div>
-
-                {/* Feature 4 */}
-                <div className="bg-white border border-[#D9D7D0]/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group">
-                  <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-rose-600 text-[24px]">subtitles</span>
-                  </div>
-                  <h3 className="font-bold text-black mb-2">Dynamic Subtitles</h3>
-                  <p className="text-[#8C8880] text-sm leading-relaxed">Personalized subtitle streams per user with independent language preferences.</p>
-                </div>
-
-                {/* Feature 5 */}
-                <div className="bg-white border border-[#D9D7D0]/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group">
-                  <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-blue-600 text-[24px]">security</span>
-                  </div>
-                  <h3 className="font-bold text-black mb-2">Secure Recording</h3>
-                  <p className="text-[#8C8880] text-sm leading-relaxed">Encrypted cloud storage for transcripts, recordings, and meeting artifacts.</p>
-                </div>
-
-                {/* Feature 6 */}
-                <div className="bg-white border border-[#D9D7D0]/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group">
-                  <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-purple-600 text-[24px]">groups</span>
-                  </div>
-                  <h3 className="font-bold text-black mb-2">Breakout Rooms</h3>
-                  <p className="text-[#8C8880] text-sm leading-relaxed">Create smaller discussion groups with continued translation support.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#8C8880] text-[20px]">history</span>
+                  Recent Meetings
+                </h2>
+                <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl self-start sm:self-auto">
+                  {filters.map((f) => (
+                    <button
+                      key={f.key}
+                      onClick={() => setActiveFilter(f.key)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase font-helvetica transition-all ${
+                        activeFilter === f.key
+                          ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
+              {filteredMeetings.length === 0 ? (
+                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-12 text-center shadow-sm">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#FF416C]/20">
+                    <span className="material-symbols-outlined text-white text-[32px]">videocam_off</span>
+                  </div>
+                  <h3 className="text-lg font-bold font-helvetica text-slate-900 mb-2">No meetings found</h3>
+                  <p className="text-slate-500 text-sm">
+                    {activeFilter === 'all'
+                      ? 'Start your first meeting to see it here.'
+                      : `No ${activeFilter} meetings yet.`}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {filteredMeetings.map((meeting) => (
+                    <Link
+                      key={meeting.id}
+                      href={`/dashboard/native-meeting/${meeting.id}`}
+                      className="bg-[#0f1115] border border-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]"
+                    >
+                      <div>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
+                            meeting.aiReady
+                              ? 'bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white border-[#FF416C]/30'
+                              : 'bg-white/10 text-slate-400 border-white/10'
+                          }`}>
+                            <span className="material-symbols-outlined text-[20px]">
+                              {meeting.aiReady ? 'translate' : 'forum'}
+                            </span>
+                          </div>
+                          <div className="flex gap-1.5">
+                            {meeting.aiReady && (
+                              <span className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-2 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase font-helvetica shadow-sm shadow-[#FF416C]/20">
+                                AI Ready
+                              </span>
+                            )}
+                            <span className="bg-white/10 border border-white/10 text-white/60 px-2 py-0.5 rounded text-[9px] font-bold font-helvetica">
+                              {meeting.languages.join(' | ')}
+                            </span>
+                          </div>
+                        </div>
+                        <h3 className="font-bold text-white mb-1 group-hover:text-[#FF416C] transition-colors font-helvetica">
+                          {meeting.title}
+                        </h3>
+                        <p className="text-white/50 text-xs mb-4">
+                          {meeting.time} · {meeting.duration} · #{meeting.id}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex -space-x-2 overflow-hidden py-1">
+                          {meeting.participants.map((p, i) => (
+                            <div
+                              key={i}
+                              className={`w-6 h-6 rounded-full border-2 border-[#0f1115] ${p.color} flex items-center justify-center text-[8px] font-bold`}
+                            >
+                              {p.initials}
+                            </div>
+                          ))}
+                        </div>
+                        <span className="material-symbols-outlined text-white/30 text-[18px] group-hover:text-[#FF416C] transition-colors">arrow_forward</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
+            {/* Org-Only: Usage Stats */}
+            {isOrganization() && hasPermission('owner') && (
+              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 mb-5">Usage & Limits</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Minutes Used</span>
+                      <span className="text-sm font-bold text-slate-900">847 / 2,000</span>
+                    </div>
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] rounded-full" style={{ width: '42%' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Meetings This Month</span>
+                      <span className="text-sm font-bold text-slate-900">24</span>
+                    </div>
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] rounded-full" style={{ width: '60%' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Team Members Active</span>
+                      <span className="text-sm font-bold text-slate-900">9 / 12</span>
+                    </div>
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] rounded-full" style={{ width: '75%' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Meeting Templates */}
+            <div>
+              <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 mb-5">
+                Meeting Templates
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {meetingTemplates.map((template) => (
+                  <button
+                    key={template.label}
+                    onClick={handleStartMeeting}
+                    className="group bg-white border border-[#c4c7c7]/30 rounded-2xl p-5 text-left hover:border-[#FF416C]/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 group-hover:scale-110 transition-transform">
+                        <span className="material-symbols-outlined text-white text-[20px]">
+                          {template.icon}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#8C8880] bg-[#FAF9F5] border border-[#c4c7c7]/30 px-2 py-1 rounded-lg">
+                        {template.duration}
+                      </span>
+                    </div>
+                    <h3 className="font-bold font-helvetica text-slate-900 mb-1 group-hover:text-[#FF416C] transition-colors">
+                      {template.label}
+                    </h3>
+                    <p className="text-slate-500 text-xs leading-relaxed">
+                      {template.desc}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-3">
+                      <span className="material-symbols-outlined text-[#8C8880] text-[14px]">
+                        group
+                      </span>
+                      <span className="text-[10px] font-bold text-[#8C8880] uppercase tracking-wider">
+                        {template.participants} people
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </main >
-    </div >
+      </main>
+    </div>
   );
 }

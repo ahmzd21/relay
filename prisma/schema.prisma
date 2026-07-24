@@ -1,0 +1,55 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum WorkspaceType {
+  PERSONAL
+  ORGANIZATION
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id           String            @id @default(cuid())
+  email        String            @unique
+  fullName     String
+  passwordHash String
+  settings     Json              @default("{}")
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  memberships  WorkspaceMember[]
+}
+
+model Workspace {
+  id               String            @id @default(cuid())
+  name             String
+  type             WorkspaceType     @default(PERSONAL)
+  subscriptionTier String            @default("FREE") // FREE, PRO, ENTERPRISE
+  settings         Json              @default("{}") // Stores theme, branding, layout config
+  minutesUsed      Int               @default(0)
+  minutesLimit     Int               @default(2000)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  members          WorkspaceMember[]
+}
+
+model WorkspaceMember {
+  id          String     @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        MemberRole @default(MEMBER)
+  joinedAt    DateTime   @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId]) // A user can only occupy one seat per workspace
+}

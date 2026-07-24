@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
-import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
+import DashboardHeader from '@/components/DashboardHeader';
 
 export default function ChannelsPage() {
   const [activeChannel, setActiveChannel] = useState('engineering');
@@ -42,36 +42,9 @@ export default function ChannelsPage() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
         
-        {/* Header */}
-        <header className="h-20 border-b border-[#D9D7D0]/40 flex items-center justify-between px-6 md:px-10 bg-white/80 backdrop-blur-xl z-20 sticky top-0 shadow-sm">
-          <div className="flex items-center gap-4">
-            <button className="md:hidden p-2 -ml-2 text-black">
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <WorkspaceSwitcher />
-            <h1 className="text-2xl font-bold tracking-tight text-black hidden sm:block">Channels</h1>
-          </div>
-          <div className="hidden md:flex relative w-full max-w-md items-center mx-4">
-            <span className="material-symbols-outlined absolute left-4 text-[#8C8880] text-[20px]">search</span>
-            <input
-              type="text"
-              placeholder="Search channels, messages, or files..."
-              className="w-full bg-[#FAF9F5] border border-[#D9D7D0]/60 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-black transition-all shadow-sm"
-            />
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="relative p-2 text-[#8C8880] hover:text-black transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-            </button>
-            <div className="w-px h-6 bg-[#D9D7D0]"></div>
-            <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                ET
-              </div>
-            </button>
-          </div>
-        </header>
+        <DashboardHeader
+          searchPlaceholder="Search channels, messages, or files..."
+        />
 
         {/* Channels Split Layout */}
         <div className="flex-1 flex overflow-hidden">

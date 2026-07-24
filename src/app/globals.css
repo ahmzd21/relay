@@ -4,6 +4,7 @@
 
 html {
   scroll-behavior: smooth;
+  overscroll-behavior: none;
 }
 
 body {
@@ -12,6 +13,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #fafafa;
   color: #1a1a1a;
+  overflow-x: hidden;
 }
 
 .font-helvetica {
