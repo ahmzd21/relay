@@ -1,0 +1,21 @@
+{
+  "name": "@relay/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "db:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "db:push": "prisma db push --schema=./prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.0",
+    "@prisma/client": "^7.9.0"
+  },
+  "devDependencies": {
+    "@prisma/config": "^7.9.0",
+    "prisma": "^7.9.0",
+    "typescript": "^5"
+  }
+}

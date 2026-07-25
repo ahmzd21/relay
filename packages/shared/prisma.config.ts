@@ -4,7 +4,7 @@ import * as path from "path";
 
 function loadEnv() {
   try {
-    const envPath = path.resolve(process.cwd(), ".env");
+    const envPath = path.resolve(process.cwd(), "../../.env");
     const content = fs.readFileSync(envPath, "utf-8");
     const lines = content.split("\n");
     for (const line of lines) {
@@ -31,7 +31,7 @@ function loadEnv() {
 loadEnv();
 
 export default defineConfig({
-  schema: "packages/shared/prisma/schema.prisma",
+  schema: "prisma/schema.prisma",
   datasource: {
     url: process.env.DATABASE_URL,
   },

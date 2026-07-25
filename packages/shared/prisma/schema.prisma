@@ -1,0 +1,73 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum WorkspaceType {
+  PERSONAL
+  ORGANIZATION
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  fullName           String
+  passwordHash       String?
+  avatar             String?
+  provider           String              @default("email")
+  providerAccountId  String?
+  emailVerified      DateTime?
+  settings           Json                @default("{}")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  memberships        WorkspaceMember[]
+  verificationTokens VerificationToken[]
+
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  type      String   @default("EMAIL_VERIFICATION") // EMAIL_VERIFICATION | PASSWORD_RESET
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workspace {
+  id               String            @id @default(cuid())
+  name             String
+  type             WorkspaceType     @default(PERSONAL)
+  subscriptionTier String            @default("FREE")
+  settings         Json              @default("{}")
+  minutesUsed      Int               @default(0)
+  minutesLimit     Int               @default(2000)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  members          WorkspaceMember[]
+}
+
+model WorkspaceMember {
+  id          String     @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        MemberRole @default(MEMBER)
+  joinedAt    DateTime   @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+}
