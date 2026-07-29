@@ -131,10 +131,10 @@ export default function StatisticsPage() {
   return (
     <>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
         <DashboardHeader searchPlaceholder={isOrg ? "Search team stats, members..." : "Search your stats, meetings..."} />
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 z-10 pb-24">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 z-10 pb-24">
           <div className="max-w-7xl mx-auto space-y-10">
 
             {/* Page Title */}
@@ -147,8 +147,8 @@ export default function StatisticsPage() {
                   {isOrg ? 'Team-wide usage analytics and insights.' : 'Your personal meeting activity and translation usage.'}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl overflow-x-auto no-scrollbar">
                   {TIME_PERIODS.map((p) => (
                     <button
                       key={p}

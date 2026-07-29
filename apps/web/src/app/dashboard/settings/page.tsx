@@ -1,15 +1,20 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import DashboardHeader from '@/components/DashboardHeader';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, getUserJobRole } from '@/contexts/AuthContext';
+import { useNotifications } from '@/contexts/NotificationContext';
+import Modal from '@/components/ui/Modal';
+import { Button, Input, Toggle } from '@/components/ui';
 
 type SettingsTab = 'profile' | 'language' | 'workspace' | 'members' | 'policies';
 
 export default function SettingsPage() {
   const { isOrganization, currentWorkspace, hasPermission, joinWorkspaceWithCode, addWorkspace } = useWorkspace();
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
+  const { preferences, updatePreferences, deviceCount, pushEnabled, requestPushPermission } = useNotifications();
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const isOrg = isOrganization();
   const isOwner = hasPermission('owner');
 
@@ -20,7 +25,39 @@ export default function SettingsPage() {
   const [hearingLanguage, setHearingLanguage] = useState('english');
   const [subtitleLanguage, setSubtitleLanguage] = useState('english');
   const [selectedVoice, setSelectedVoice] = useState('natural');
-  const [twoFactor, setTwoFactor] = useState(false);
+
+  // 2FA state
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [show2FADisable, setShow2FADisable] = useState(false);
+  const [twoFactorStep, setTwoFactorStep] = useState<'intro' | 'qr' | 'verify' | 'backup'>('intro');
+  const [twoFactorSecret, setTwoFactorSecret] = useState('');
+  const [twoFactorQrCode, setTwoFactorQrCode] = useState('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [setupCode, setSetupCode] = useState('');
+  const [setupError, setSetupError] = useState<string | null>(null);
+  const [isSetupLoading, setIsSetupLoading] = useState(false);
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disableCode, setDisableCode] = useState('');
+  const [disableError, setDisableError] = useState<string | null>(null);
+  const [isDisableLoading, setIsDisableLoading] = useState(false);
+
+  // Edit profile state
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [editFullName, setEditFullName] = useState('');
+  const [editJobRole, setEditJobRole] = useState('');
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  // Change password state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Org join/create state
   const [joinCode, setJoinCode] = useState('');
@@ -77,7 +114,7 @@ export default function SettingsPage() {
   return (
     <>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
         <DashboardHeader
           rightContent={
             statusMessage ? (
@@ -88,7 +125,7 @@ export default function SettingsPage() {
           }
         />
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 z-10 pb-24">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 z-10 pb-24">
           <div className="max-w-6xl mx-auto space-y-8">
 
             {/* Page Title */}
@@ -102,7 +139,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl w-fit">
+            <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl w-fit overflow-x-auto no-scrollbar">
               {tabs.map((t) => (
                 <button
                   key={t.key}
@@ -125,18 +162,34 @@ export default function SettingsPage() {
                 <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-[#FF416C]/20">
-                        {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
-                      </div>
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt={user.fullName} className="w-16 h-16 rounded-2xl object-cover shadow-lg" />
+                      ) : (
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-[#FF416C]/20">
+                          {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+                        </div>
+                      )}
                       <div>
                         <h3 className="text-xl font-bold font-helvetica text-slate-900">{user?.fullName || 'User'}</h3>
                         <p className="text-slate-500 text-sm">{user?.email || ''}</p>
+                        {getUserJobRole(user) && (
+                          <p className="text-xs font-bold text-slate-600 mt-0.5">{getUserJobRole(user)}</p>
+                        )}
                         <span className="inline-block mt-1 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20">
                           {isOrg ? `${currentWorkspace.role} · ${currentWorkspace.name}` : 'Solo Account'}
                         </span>
                       </div>
                     </div>
-                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors">
+                    <button
+                      className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors"
+                      onClick={() => {
+                        setEditFullName(user?.fullName || '');
+                        setEditJobRole(getUserJobRole(user) || '');
+                        setProfileError(null);
+                        setAvatarPreview(null);
+                        setShowEditProfileModal(true);
+                      }}
+                    >
                       Edit Profile
                     </button>
                   </div>
@@ -153,27 +206,62 @@ export default function SettingsPage() {
                         </div>
                         <div>
                           <p className="text-sm font-bold text-slate-900">Password</p>
-                          <p className="text-xs text-slate-500">Last changed 30 days ago</p>
+                          <p className="text-xs text-slate-500">
+                            {user?.hasPassword
+                              ? 'Set a new password'
+                              : 'No password set'}
+                          </p>
                         </div>
                       </div>
-                      <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors">Change</button>
+                      {!user?.hasPassword ? (
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          {user?.provider === 'google' ? 'Google' : 'None'}
+                        </span>
+                      ) : (
+                        <button
+                          className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors"
+                          onClick={() => {
+                            setCurrentPassword('');
+                            setNewPassword('');
+                            setConfirmPassword('');
+                            setPasswordError(null);
+                            setShowPasswordModal(true);
+                          }}
+                        >
+                          Change
+                        </button>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+                    <div
+                      className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl cursor-pointer hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300"
+                      onClick={() => {
+                        if (user?.twoFactorEnabled) {
+                          setShow2FADisable(true);
+                        } else {
+                          setShow2FASetup(true);
+                          setTwoFactorStep('intro');
+                          setSetupCode('');
+                          setSetupError(null);
+                        }
+                      }}
+                    >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
                           <span className="material-symbols-outlined text-white text-[20px]">shield</span>
                         </div>
                         <div>
                           <p className="text-sm font-bold text-slate-900">Two-Factor Authentication</p>
-                          <p className="text-xs text-slate-500">{twoFactor ? 'Enabled' : 'Disabled'}</p>
+                          <p className="text-xs text-slate-500">{user?.twoFactorEnabled ? 'Enabled' : 'Disabled'}</p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => setTwoFactor(!twoFactor)}
-                        className={`w-12 h-7 rounded-full relative transition-colors cursor-pointer ${twoFactor ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] shadow-sm shadow-[#FF416C]/20' : 'bg-slate-300'}`}
-                      >
-                        <span className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${twoFactor ? 'right-1' : 'left-1'}`} />
-                      </button>
+                      <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                        user?.twoFactorEnabled
+                          ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20'
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {user?.twoFactorEnabled ? 'Active' : 'Setup'}
+                        <span className="material-symbols-outlined text-[13px]">chevron_right</span>
+                      </span>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
                       <div className="flex items-center gap-4">
@@ -185,7 +273,12 @@ export default function SettingsPage() {
                           <p className="text-xs text-slate-500">Email and push notifications</p>
                         </div>
                       </div>
-                      <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors">Configure</button>
+                      <button
+                        className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors"
+                        onClick={() => setShowNotificationModal(true)}
+                      >
+                        Configure
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -509,6 +602,573 @@ export default function SettingsPage() {
           </div>
         </div>
       </main>
+
+      {/* ===== EDIT PROFILE MODAL ===== */}
+      <Modal open={showEditProfileModal} onClose={() => setShowEditProfileModal(false)} title="Edit Profile">
+        <div className="p-6 space-y-6">
+          {/* Avatar Upload */}
+          <div className="flex flex-col items-center gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="relative w-20 h-20 rounded-2xl overflow-hidden group cursor-pointer disabled:opacity-50"
+            >
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+              ) : user?.avatar ? (
+                <img src={user.avatar} alt={user.fullName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                  {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {isUploadingAvatar ? (
+                  <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                ) : (
+                  <span className="material-symbols-outlined text-white text-[24px]">photo_camera</span>
+                )}
+              </div>
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setIsUploadingAvatar(true);
+                setProfileError(null);
+                try {
+                  const formData = new FormData();
+                  formData.append('avatar', file);
+                  const res = await fetch('/api/auth/avatar', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData,
+                  });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error);
+                  await refetchUser();
+                  setAvatarPreview(null);
+                } catch (err: unknown) {
+                  setProfileError(err instanceof Error ? err.message : 'Failed to upload avatar');
+                } finally {
+                  setIsUploadingAvatar(false);
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }
+              }}
+            />
+
+            {user?.avatar && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsUploadingAvatar(true);
+                  setProfileError(null);
+                  try {
+                    const res = await fetch('/api/auth/avatar', {
+                      method: 'DELETE',
+                      credentials: 'include',
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error);
+                    await refetchUser();
+                    setAvatarPreview(null);
+                  } catch (err: unknown) {
+                    setProfileError(err instanceof Error ? err.message : 'Failed to remove avatar');
+                  } finally {
+                    setIsUploadingAvatar(false);
+                  }
+                }}
+                className="text-[10px] font-bold text-rose-500 uppercase tracking-widest hover:text-rose-600 transition-colors"
+              >
+                Remove Photo
+              </button>
+            )}
+          </div>
+
+          <Input
+            label="Full Name"
+            value={editFullName}
+            onChange={(e) => { setEditFullName(e.target.value); setProfileError(null); }}
+            placeholder="Your full name"
+            required
+            radius="xl"
+          />
+
+          <Input
+            label="Job Title / Role"
+            value={editJobRole}
+            onChange={(e) => { setEditJobRole(e.target.value); setProfileError(null); }}
+            placeholder="e.g. Lead Manager, Product Designer..."
+            radius="xl"
+          />
+
+          {profileError && (
+            <p className="text-xs text-rose-500 text-center font-medium">{profileError}</p>
+          )}
+
+          <div className="flex gap-3">
+            <Button
+              variant="white"
+              fullWidth
+              onClick={() => setShowEditProfileModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="gradient"
+              fullWidth
+              isLoading={isUpdatingProfile}
+              disabled={!editFullName.trim()}
+              onClick={async () => {
+                if (!editFullName.trim()) return;
+                setIsUpdatingProfile(true);
+                setProfileError(null);
+                try {
+                  const res = await fetch('/api/auth/profile', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                      fullName: editFullName.trim(),
+                      jobRole: editJobRole.trim() || null,
+                    }),
+                  });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error);
+                  await refetchUser();
+                  setShowEditProfileModal(false);
+                  setStatusMessage('Profile updated successfully!');
+                  setTimeout(() => setStatusMessage(null), 3000);
+                } catch (err: unknown) {
+                  setProfileError(err instanceof Error ? err.message : 'Failed to update profile');
+                } finally {
+                  setIsUpdatingProfile(false);
+                }
+              }}
+            >
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ===== NOTIFICATIONS MODAL ===== */}
+      <Modal open={showNotificationModal} onClose={() => setShowNotificationModal(false)} title="Notifications">
+        <div className="p-6 space-y-6">
+          {/* Push Notifications */}
+          <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+            <div>
+              <p className="text-sm font-bold text-slate-900">Push Notifications</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {pushEnabled
+                  ? `Enabled on ${deviceCount} device${deviceCount === 1 ? '' : 's'}`
+                  : 'Not set up'}
+              </p>
+            </div>
+            <Toggle
+              enabled={preferences.push}
+              onToggle={() => {
+                const next = !preferences.push;
+                updatePreferences({ push: next });
+                if (next && !pushEnabled) {
+                  requestPushPermission();
+                }
+              }}
+            />
+          </div>
+
+          {/* Email Notifications */}
+          <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+            <div>
+              <p className="text-sm font-bold text-slate-900">Email Notifications</p>
+              <p className="text-xs text-slate-500 mt-0.5">Receive email alerts for meeting invites and updates</p>
+            </div>
+            <Toggle
+              enabled={preferences.email}
+              onToggle={() => updatePreferences({ email: !preferences.email })}
+            />
+          </div>
+
+          <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+            Push notifications require browser permission. You&apos;ll receive meeting invites, reminders, and updates.
+          </p>
+        </div>
+      </Modal>
+
+      {/* ===== CHANGE PASSWORD MODAL ===== */}
+      <Modal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} title="Change Password">
+        <div className="p-6 space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Current Password</label>
+            <input
+              type="password"
+              placeholder="Enter current password"
+              value={currentPassword}
+              onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); }}
+              className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">New Password</label>
+            <input
+              type="password"
+              placeholder="Min 8 chars, uppercase, lowercase, number, symbol"
+              value={newPassword}
+              onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
+              className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Confirm New Password</label>
+            <input
+              type="password"
+              placeholder="Re-enter new password"
+              value={confirmPassword}
+              onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
+              className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+            />
+          </div>
+
+          {passwordError && (
+            <p className="text-xs text-rose-500 text-center font-medium">{passwordError}</p>
+          )}
+
+          <div className="flex gap-3">
+            <Button
+              variant="white"
+              fullWidth
+              onClick={() => setShowPasswordModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="gradient"
+              fullWidth
+              isLoading={isChangingPassword}
+              disabled={!currentPassword || !newPassword || !confirmPassword}
+              onClick={async () => {
+                if (!currentPassword || !newPassword || !confirmPassword) return;
+                setIsChangingPassword(true);
+                setPasswordError(null);
+                try {
+                  const res = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                      currentPassword,
+                      newPassword,
+                      confirmPassword,
+                    }),
+                  });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error);
+                  setShowPasswordModal(false);
+                  setCurrentPassword('');
+                  setNewPassword('');
+                  setConfirmPassword('');
+                  setStatusMessage('Password changed successfully!');
+                  setTimeout(() => setStatusMessage(null), 3000);
+                } catch (err: unknown) {
+                  setPasswordError(err instanceof Error ? err.message : 'Failed to change password');
+                } finally {
+                  setIsChangingPassword(false);
+                }
+              }}
+            >
+              Save Password
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ===== 2FA SETUP MODAL ===== */}
+      <Modal open={show2FASetup} onClose={() => setShow2FASetup(false)} title="Set Up Two-Factor Authentication">
+        <div className="p-6">
+          {/* Step 1: Intro */}
+          {twoFactorStep === 'intro' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-lg shadow-[#FF416C]/20">
+                  <span className="material-symbols-outlined text-white text-[32px]">shield</span>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 text-center leading-relaxed">
+                Two-factor authentication adds an extra layer of security to your account.
+                After enabling it, you&apos;ll be prompted for a 6-digit code from your
+                authenticator app when signing in.
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-xs text-amber-800 font-medium">
+                  You&apos;ll need an authenticator app like Google Authenticator or Authy to scan the QR code.
+                </p>
+              </div>
+              <Button
+                variant="gradient"
+                fullWidth
+                onClick={async () => {
+                  setIsSetupLoading(true);
+                  setSetupError(null);
+                  try {
+                    const res = await fetch('/api/auth/2fa/setup', { credentials: 'include' });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error);
+                    setTwoFactorSecret(data.secret);
+                    setTwoFactorQrCode(data.qrCode);
+                    setTwoFactorStep('qr');
+                  } catch (err: unknown) {
+                    setSetupError(err instanceof Error ? err.message : 'Failed to start setup');
+                  } finally {
+                    setIsSetupLoading(false);
+                  }
+                }}
+                isLoading={isSetupLoading}
+                icon="arrow_forward"
+              >
+                Get Started
+              </Button>
+              {setupError && (
+                <p className="text-xs text-rose-500 text-center font-medium">{setupError}</p>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: QR Code */}
+          {twoFactorStep === 'qr' && (
+            <div className="space-y-6">
+              <p className="text-sm text-slate-600 text-center leading-relaxed">
+                Scan this QR code with your authenticator app.
+              </p>
+              <div className="flex justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={twoFactorQrCode}
+                  alt="QR Code"
+                  className="w-48 h-48 border-2 border-[#c4c7c7]/30 rounded-xl p-2 bg-white"
+                />
+              </div>
+              <div className="bg-[#FAF9F5] rounded-xl p-4 border border-[#c4c7c7]/20">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Manual Setup Key</p>
+                <p className="text-sm font-mono font-bold text-slate-900 select-all break-all">{twoFactorSecret}</p>
+              </div>
+              <Button
+                variant="gradient"
+                fullWidth
+                onClick={() => {
+                  setTwoFactorStep('verify');
+                  setSetupCode('');
+                  setSetupError(null);
+                }}
+                icon="arrow_forward"
+              >
+                I&apos;ve Scanned It
+              </Button>
+            </div>
+          )}
+
+          {/* Step 3: Verify */}
+          {twoFactorStep === 'verify' && (
+            <div className="space-y-6">
+              <p className="text-sm text-slate-600 text-center leading-relaxed">
+                Enter the 6-digit verification code from your authenticator app to confirm setup.
+              </p>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                placeholder="000000"
+                value={setupCode}
+                onChange={(e) => {
+                  setSetupCode(e.target.value.replace(/[^0-9]/g, ''));
+                  setSetupError(null);
+                }}
+                className="w-full text-center text-3xl tracking-[0.5em] font-mono bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-4 px-4 text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+                autoFocus
+              />
+              {setupError && (
+                <p className="text-xs text-rose-500 text-center font-medium">{setupError}</p>
+              )}
+              <Button
+                variant="gradient"
+                fullWidth
+                disabled={setupCode.length !== 6}
+                isLoading={isSetupLoading}
+                onClick={async () => {
+                  if (setupCode.length !== 6) return;
+                  setIsSetupLoading(true);
+                  setSetupError(null);
+                  try {
+                    const res = await fetch('/api/auth/2fa/verify', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({ code: setupCode }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error);
+                    setBackupCodes(data.backupCodes);
+                    setTwoFactorStep('backup');
+                  } catch (err: unknown) {
+                    setSetupError(err instanceof Error ? err.message : 'Invalid code');
+                  } finally {
+                    setIsSetupLoading(false);
+                  }
+                }}
+              >
+                Verify &amp; Enable
+              </Button>
+              <button
+                onClick={() => {
+                  setTwoFactorStep('qr');
+                  setSetupError(null);
+                }}
+                className="w-full text-center text-[11px] font-bold text-slate-500 hover:text-slate-900 transition-colors"
+              >
+                Back to QR Code
+              </button>
+            </div>
+          )}
+
+          {/* Step 4: Backup Codes */}
+          {twoFactorStep === 'backup' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-200">
+                  <span className="material-symbols-outlined text-emerald-600 text-[28px]">check_circle</span>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 text-center leading-relaxed">
+                Two-factor authentication is now enabled. Save these backup codes in a safe place —
+                you&apos;ll need them if you lose access to your authenticator app.
+              </p>
+              <div className="bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl p-4 space-y-2">
+                {backupCodes.map((code, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <span className="text-sm font-mono font-bold text-slate-900 tracking-wider">{code}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-rose-50 border border-rose-200 rounded-xl p-3">
+                <p className="text-xs text-rose-700 font-medium">
+                  These codes won&apos;t be shown again. Copy them now.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="white"
+                  fullWidth
+                  onClick={() => {
+                    const text = backupCodes.join('\n');
+                    navigator.clipboard.writeText(text);
+                  }}
+                  icon="content_copy"
+                >
+                  Copy Codes
+                </Button>
+                <Button
+                  variant="gradient"
+                  fullWidth
+                  onClick={async () => {
+                    setShow2FASetup(false);
+                    setTwoFactorStep('intro');
+                    await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).then(data => {
+                      // refetch will happen in AuthContext automatically
+                    });
+                    window.location.reload();
+                  }}
+                  icon="done"
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* ===== 2FA DISABLE MODAL ===== */}
+      <Modal open={show2FADisable} onClose={() => setShow2FADisable(false)} title="Disable Two-Factor Authentication">
+        <div className="p-6 space-y-6">
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4">
+            <p className="text-xs text-rose-700 font-medium">
+              This will remove two-factor authentication from your account. Your account will be less secure.
+            </p>
+          </div>
+
+          {disableError && (
+            <p className="text-xs text-rose-500 text-center font-medium">{disableError}</p>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Password</label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={disablePassword}
+              onChange={(e) => { setDisablePassword(e.target.value); setDisableError(null); }}
+              className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Authenticator Code</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              placeholder="000000"
+              value={disableCode}
+              onChange={(e) => { setDisableCode(e.target.value.replace(/[^0-9]/g, '')); setDisableError(null); }}
+              className="w-full text-center text-2xl tracking-[0.5em] font-mono bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+            />
+          </div>
+
+          <Button
+            variant="danger"
+            fullWidth
+            disabled={!disablePassword || disableCode.length !== 6}
+            isLoading={isDisableLoading}
+            onClick={async () => {
+              if (!disablePassword || disableCode.length !== 6) return;
+              setIsDisableLoading(true);
+              setDisableError(null);
+              try {
+                const res = await fetch('/api/auth/2fa/disable', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ password: disablePassword, code: disableCode }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                setShow2FADisable(false);
+                setDisablePassword('');
+                setDisableCode('');
+                window.location.reload();
+              } catch (err: unknown) {
+                setDisableError(err instanceof Error ? err.message : 'Failed to disable');
+              } finally {
+                setIsDisableLoading(false);
+              }
+            }}
+          >
+            Disable 2FA
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }

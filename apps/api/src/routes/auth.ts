@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '../lib/prisma.js';
-import { signSessionToken } from '../lib/jwt.js';
+import { signSessionToken, signTempToken, verifyTempToken } from '../lib/jwt.js';
 import { authMiddleware } from '../middleware/auth.js';
 import {
   registerUserWithDefaultWorkspace,
@@ -14,7 +14,17 @@ import {
   verifyPasswordResetToken,
 } from '../lib/auth-service.js';
 import { normalizeEmail, isDisposableEmail, hasValidMxRecord } from '../lib/email-validation.js';
+import multer from 'multer';
+import cloudinary, { extractPublicId } from '../lib/cloudinary.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../lib/email.js';
+import {
+  generateTwoFactorSecret,
+  generateQRCodeDataUrl,
+  verifyTwoFactorCode,
+  generateBackupCodes,
+  hashBackupCode,
+  verifyBackupCode,
+} from '../lib/totp.js';
 
 const router = Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -31,7 +41,9 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
         avatar: true,
         provider: true,
         settings: true,
+        twoFactorEnabled: true,
         createdAt: true,
+        passwordHash: true,
       },
     });
 
@@ -39,9 +51,219 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    return res.json({ user });
+    const { passwordHash, ...safeUser } = user;
+
+    return res.json({ user: { ...safeUser, hasPassword: !!passwordHash } });
   } catch (error) {
     console.error('Get user error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- PATCH /api/auth/profile ---
+const profileSchema = z.object({
+  fullName: z.string().min(1, 'Full name is required').max(100).optional(),
+  jobRole: z.string().max(100).optional(),
+});
+
+router.patch('/profile', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const body = profileSchema.parse(req.body);
+
+    if (!body.fullName && body.jobRole === undefined) {
+      return res.status(400).json({ error: 'Nothing to update' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const data: Record<string, unknown> = {};
+
+    if (body.fullName) {
+      data.fullName = body.fullName;
+    }
+
+    if (body.jobRole !== undefined) {
+      const currentSettings = (user.settings || {}) as Record<string, unknown>;
+      data.settings = { ...currentSettings, jobRole: body.jobRole };
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        avatar: true,
+        provider: true,
+        settings: true,
+        twoFactorEnabled: true,
+        createdAt: true,
+        passwordHash: true,
+      },
+    });
+
+    const { passwordHash, ...safeUser } = updatedUser;
+
+    return res.json({ success: true, user: { ...safeUser, hasPassword: !!passwordHash } });
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
+    console.error('Update profile error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- Multer config (memory storage for Cloudinary) ---
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'));
+    }
+  },
+});
+
+// --- POST /api/auth/avatar ---
+router.post('/avatar', authMiddleware, (req: Request, res: Response) => {
+  upload.single('avatar')(req, res, async (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
+      }
+      return res.status(400).json({ error: err.message || 'Upload failed' });
+    }
+
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file provided' });
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      // Delete old avatar from Cloudinary if it exists
+      if (user.avatar) {
+        const publicId = extractPublicId(user.avatar);
+        if (publicId) {
+          await cloudinary.uploader.destroy(publicId).catch(() => {});
+        }
+      }
+
+      // Upload new avatar
+      const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'avatars',
+            public_id: `${req.user!.userId}-${Date.now()}`,
+            transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }],
+            format: 'webp',
+          },
+          (error, result) => {
+            if (error || !result) return reject(error || new Error('Upload failed'));
+            resolve(result);
+          }
+        );
+        stream.end(req.file!.buffer);
+      });
+
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatar: result.secure_url },
+        select: { id: true, email: true, fullName: true, avatar: true, provider: true, settings: true, twoFactorEnabled: true, createdAt: true, passwordHash: true },
+      });
+
+      const { passwordHash, ...safeUser } = updatedUser;
+
+      return res.json({ success: true, user: { ...safeUser, hasPassword: !!passwordHash } });
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      return res.status(500).json({ error: 'Failed to upload avatar' });
+    }
+  });
+});
+
+// --- DELETE /api/auth/avatar ---
+router.delete('/avatar', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (!user.avatar) {
+      return res.status(400).json({ error: 'No avatar to remove' });
+    }
+
+    const publicId = extractPublicId(user.avatar);
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId).catch(() => {});
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { avatar: null },
+      select: { id: true, email: true, fullName: true, avatar: true, provider: true, settings: true, twoFactorEnabled: true, createdAt: true, passwordHash: true },
+    });
+
+    const { passwordHash, ...safeUser } = updatedUser;
+
+    return res.json({ success: true, user: { ...safeUser, hasPassword: !!passwordHash } });
+  } catch (error) {
+    console.error('Avatar delete error:', error);
+    return res.status(500).json({ error: 'Failed to remove avatar' });
+  }
+});
+
+// --- POST /api/auth/change-password ---
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+  confirmPassword: z.string().min(1, 'Please confirm your new password'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
+
+router.post('/change-password', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const body = changePasswordSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (!user.passwordHash) {
+      return res.status(400).json({ error: 'No password set for this account. Use Google Sign-In.' });
+    }
+
+    const passwordValid = await bcrypt.compare(body.currentPassword, user.passwordHash);
+    if (!passwordValid) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    const newPasswordHash = await bcrypt.hash(body.newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    return res.json({ success: true, message: 'Password changed successfully.' });
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
+    console.error('Change password error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -148,6 +370,15 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(403).json({
         error: 'Please verify your email before logging in',
         requiresVerification: true,
+      });
+    }
+
+    // Check 2FA
+    if (user.twoFactorEnabled) {
+      const tempToken = await signTempToken(user.id);
+      return res.json({
+        requires2FA: true,
+        tempToken,
       });
     }
 
@@ -385,6 +616,240 @@ router.post('/reset-password', async (req: Request, res: Response) => {
       return res.status(400).json({ error: error.errors[0].message });
     }
     console.error('Reset password error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ==================== TWO-FACTOR AUTHENTICATION ====================
+
+// --- GET /api/auth/2fa/setup ---
+router.get('/2fa/setup', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (user.twoFactorEnabled) {
+      return res.status(400).json({ error: 'Two-factor authentication is already enabled. Disable it first.' });
+    }
+
+    const { secret, otpauthUri } = generateTwoFactorSecret(user.email);
+    const qrCodeDataUrl = await generateQRCodeDataUrl(otpauthUri);
+
+    // Store secret (not yet enabled)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { twoFactorSecret: secret },
+    });
+
+    return res.json({ secret, qrCode: qrCodeDataUrl });
+  } catch (error) {
+    console.error('2FA setup error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- POST /api/auth/2fa/verify ---
+router.post('/2fa/verify', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ error: 'Verification code is required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (user.twoFactorEnabled) {
+      return res.status(400).json({ error: 'Two-factor authentication is already enabled' });
+    }
+
+    if (!user.twoFactorSecret) {
+      return res.status(400).json({ error: 'No 2FA setup in progress. Please run setup first.' });
+    }
+
+    const valid = verifyTwoFactorCode(user.twoFactorSecret, code);
+    if (!valid) {
+      return res.status(400).json({ error: 'Invalid verification code. Please try again.' });
+    }
+
+    // Generate backup codes
+    const plainCodes = generateBackupCodes();
+    const hashedCodes = plainCodes.map(hashBackupCode);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        twoFactorEnabled: true,
+        twoFactorBackupCodes: JSON.stringify(hashedCodes),
+      },
+    });
+
+    return res.json({ success: true, backupCodes: plainCodes });
+  } catch (error) {
+    console.error('2FA verify error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- POST /api/auth/2fa/disable ---
+router.post('/2fa/disable', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { password, code } = req.body;
+    if (!password || !code) {
+      return res.status(400).json({ error: 'Password and verification code are required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+      return res.status(400).json({ error: 'Two-factor authentication is not enabled' });
+    }
+
+    // Verify password
+    if (!user.passwordHash) {
+      return res.status(400).json({ error: 'No password set for this account' });
+    }
+    const passwordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!passwordValid) {
+      return res.status(400).json({ error: 'Invalid password' });
+    }
+
+    // Verify TOTP code
+    const codeValid = verifyTwoFactorCode(user.twoFactorSecret, code);
+    if (!codeValid) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+        twoFactorBackupCodes: null,
+      },
+    });
+
+    return res.json({ success: true, message: 'Two-factor authentication has been disabled.' });
+  } catch (error) {
+    console.error('2FA disable error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- POST /api/auth/2fa/regenerate-backup-codes ---
+router.post('/2fa/regenerate-backup-codes', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { password, code } = req.body;
+    if (!password || !code) {
+      return res.status(400).json({ error: 'Password and verification code are required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+      return res.status(400).json({ error: 'Two-factor authentication is not enabled' });
+    }
+
+    if (!user.passwordHash) {
+      return res.status(400).json({ error: 'No password set for this account' });
+    }
+    const passwordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!passwordValid) {
+      return res.status(400).json({ error: 'Invalid password' });
+    }
+
+    const codeValid = verifyTwoFactorCode(user.twoFactorSecret, code);
+    if (!codeValid) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    const plainCodes = generateBackupCodes();
+    const hashedCodes = plainCodes.map(hashBackupCode);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { twoFactorBackupCodes: JSON.stringify(hashedCodes) },
+    });
+
+    return res.json({ success: true, backupCodes: plainCodes });
+  } catch (error) {
+    console.error('2FA regenerate backup codes error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- POST /api/auth/2fa/verify-login ---
+router.post('/2fa/verify-login', async (req: Request, res: Response) => {
+  try {
+    const { tempToken, code } = req.body;
+    if (!tempToken || !code) {
+      return res.status(400).json({ error: 'Token and verification code are required' });
+    }
+
+    const payload = await verifyTempToken(tempToken);
+    if (!payload) {
+      return res.status(401).json({ error: 'Invalid or expired token. Please log in again.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+      return res.status(400).json({ error: 'Invalid request' });
+    }
+
+    // Check if it's a backup code (format: XXXX-XXXX)
+    let codeValid = false;
+    let remainingBackupCodes: string[] | null = null;
+
+    if (code.includes('-') && code.length === 9) {
+      // Backup code
+      if (user.twoFactorBackupCodes) {
+        const storedHashes: string[] = JSON.parse(user.twoFactorBackupCodes);
+        const result = verifyBackupCode(storedHashes, code);
+        codeValid = result.valid;
+        remainingBackupCodes = result.remaining;
+      }
+    } else {
+      // TOTP code
+      codeValid = verifyTwoFactorCode(user.twoFactorSecret, code);
+    }
+
+    if (!codeValid) {
+      return res.status(401).json({ error: 'Invalid verification code' });
+    }
+
+    // If backup code was used, update stored hashes
+    if (remainingBackupCodes !== null) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { twoFactorBackupCodes: JSON.stringify(remainingBackupCodes) },
+      });
+    }
+
+    const token = await signSessionToken({ userId: user.id, email: user.email });
+
+    res.cookie('relay_session', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7 * 1000,
+    });
+
+    const isNewUser = !user.settings || Object.keys(user.settings as object).length === 0;
+
+    return res.json({
+      success: true,
+      isNewUser,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+      },
+    });
+  } catch (error) {
+    console.error('2FA verify-login error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

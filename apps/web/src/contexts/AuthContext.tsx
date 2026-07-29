@@ -8,7 +8,9 @@ export interface User {
   avatar: string | null;
   provider: string;
   settings: Record<string, unknown> | null;
+  twoFactorEnabled: boolean;
   createdAt: string;
+  hasPassword: boolean;
 }
 
 export function getUserJobRole(user: User | null): string | null {

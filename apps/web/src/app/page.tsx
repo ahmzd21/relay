@@ -131,7 +131,7 @@ export default function Home() {
       <main>
         {/* Hero Section */}
         <section
-          className="pt-[280px] pb-24 px-6 text-center overflow-hidden"
+          className="relative pt-32 md:pt-[280px] pb-12 md:pb-24 px-6 text-center overflow-hidden"
           style={{
             background:
               "radial-gradient(circle at 50% -20%, #FFFDF8 0%, #FAF9F5 100%)",
@@ -145,20 +145,20 @@ export default function Home() {
               <span className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] bg-clip-text text-transparent">
                 Language Barrier
               </span>
-              <br />
+              <br className="hidden sm:inline" />
               in Every Meeting
             </h1>
-            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-16 leading-relaxed">
+            <p className="text-base md:text-xl text-slate-600 max-w-2xl mx-auto mb-10 md:mb-16 leading-relaxed">
               Experience crystal-clear, real-time voice-to-voice translation.
               Connect natively or bridge to your existing workflows with
               millisecond latency.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 max-w-md sm:max-w-prose mx-auto sm:max-w-none justify-center gap-4">
-              <button className="w-full bg-black text-white px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 max-w-sm sm:max-w-prose mx-auto sm:max-w-none justify-center gap-3 sm:gap-4">
+              <button className="w-full bg-black text-white px-5 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg">
                 <span className="material-symbols-outlined">video_call</span>
                 Start Native Meeting
               </button>
-              <button className="w-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 hover:scale-105 transition-all shadow-lg shadow-[#FF416C]/20">
+              <button className="w-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:scale-105 transition-all shadow-lg shadow-[#FF416C]/20">
                 <span className="material-symbols-outlined">link</span>
                 Connect Third-Party Link
               </button>
@@ -167,7 +167,7 @@ export default function Home() {
         </section>
 
         {/* Speak Your Language + Meeting UI Visual */}
-        <section id="" className="py-28 px-6 scroll-mt-20">
+        <section id="" className="py-12 md:py-28 px-6 scroll-mt-20">
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
               <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest mb-4 block">
@@ -363,7 +363,7 @@ export default function Home() {
         </section>
 
         {/* Core Features Cards */}
-        <section className="py-28 px-6 max-w-7xl mx-auto">
+        <section className="py-12 md:py-28 px-6 max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest block mb-4">
               Core Technology
@@ -493,7 +493,7 @@ export default function Home() {
 
             <div className="space-y-8">
               {/* Step 1 — text left, visual right */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-3xl border border-white/10 bg-white/[0.05] p-10 hover:border-[#FF416C]/30 transition-all">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-3xl border border-white/10 bg-white/[0.05] p-5 sm:p-10 hover:border-[#FF416C]/30 transition-all">
                 <div>
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-10 h-10 rounded-full bg-[#FF416C] flex items-center justify-center text-white font-black text-base shadow-lg shadow-[#FF416C]/30">
@@ -534,7 +534,7 @@ export default function Home() {
               </div>
 
               {/* Step 2 — visual left, text right */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-3xl border border-white/10 bg-white/[0.05] p-10 hover:border-[#FF416C]/30 transition-all">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-3xl border border-white/10 bg-white/[0.05] p-5 sm:p-10 hover:border-[#FF416C]/30 transition-all">
                 <div className="md:order-2">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-10 h-10 rounded-full bg-[#FF416C] flex items-center justify-center text-white font-black text-base shadow-lg shadow-[#FF416C]/30">
@@ -579,7 +579,7 @@ export default function Home() {
               </div>
 
               {/* Step 3 — text left, visual right */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-3xl border border-white/10 bg-white/[0.05] p-10 hover:border-[#FF416C]/30 transition-all">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-3xl border border-white/10 bg-white/[0.05] p-5 sm:p-10 hover:border-[#FF416C]/30 transition-all">
                 <div>
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-10 h-10 rounded-full bg-[#FF416C] flex items-center justify-center text-white font-black text-base shadow-lg shadow-[#FF416C]/30">
@@ -619,7 +619,7 @@ export default function Home() {
         </section>
 
         {/* Testimonials */}
-        <section className="py-28 bg-[#FAF9F5] overflow-hidden relative">
+        <section className="py-12 md:py-28 bg-[#FAF9F5] overflow-hidden relative">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
               <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest block mb-4">
@@ -1005,7 +1005,7 @@ export default function Home() {
         {/* Pricing Section */}
         <section
           id="pricing"
-          className="py-28 px-6 scroll-mt-20 overflow-hidden"
+          className="py-12 md:py-28 px-6 scroll-mt-20 overflow-hidden"
         >
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-24">
@@ -1022,7 +1022,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
               {/* Guest */}
-              <div className="bg-white rounded-2xl p-10 border border-slate-200 flex flex-col h-full shadow-sm hover:shadow-xl transition-shadow">
+              <div className="bg-white rounded-2xl p-5 sm:p-10 border border-slate-200 flex flex-col h-full shadow-sm hover:shadow-xl transition-shadow">
                 <div className="flex-grow">
                   <h4 className="text-2xl font-bold font-helvetica mb-4 text-slate-900">
                     Guest
@@ -1067,7 +1067,7 @@ export default function Home() {
               </div>
 
               {/* Registered */}
-              <div className="bg-white rounded-2xl p-10 border-2 border-black flex flex-col h-full relative shadow-2xl scale-105 z-10">
+              <div className="bg-white rounded-2xl p-5 sm:p-10 border-2 border-black flex flex-col h-full relative shadow-2xl md:scale-105 z-10">
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-[#FF416C]/20">
                   Most Popular
                 </div>
@@ -1115,7 +1115,7 @@ export default function Home() {
               </div>
 
               {/* Organization */}
-              <div className="bg-white rounded-2xl p-10 border-2 border-slate-200 flex flex-col h-full shadow-sm hover:shadow-xl transition-shadow">
+              <div className="bg-white rounded-2xl p-5 sm:p-10 border-2 border-slate-200 flex flex-col h-full shadow-sm hover:shadow-xl transition-shadow">
                 <div className="flex-grow">
                   <h4 className="text-2xl font-bold font-helvetica mb-4 text-slate-900">
                     Organization
