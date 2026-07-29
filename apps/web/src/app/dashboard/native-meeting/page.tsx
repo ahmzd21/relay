@@ -100,14 +100,14 @@ export default function NativeMeetingPage() {
   return (
     <>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
         {/* Header */}
         <DashboardHeader
           searchPlaceholder={isOrganization() ? "Search team meetings, transcripts..." : "Search meetings, transcripts, or people..."}
         />
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 z-10 pb-24">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 z-10 pb-24">
           <div className="max-w-6xl mx-auto space-y-10">
 
             {/* Page Title */}
@@ -179,7 +179,7 @@ export default function NativeMeetingPage() {
                       Enter a Relay link or ID to instantly connect with real-time translation.
                     </p>
                   </div>
-                  <form className="flex gap-3 mt-auto" onSubmit={handleJoinMeeting}>
+                  <form className="flex flex-col sm:flex-row gap-3 mt-auto" onSubmit={handleJoinMeeting}>
                     <input
                       type="text"
                       value={joinLink}

@@ -115,9 +115,35 @@ const DEFAULT_MEETINGS: ScheduledMeeting[] = [
 ];
 
 const RECENT_MEETINGS = [
-  { id: "rm-1", title: "Client Sync: Website Redesign", timeAgo: "2h ago", platform: "Zoom" as const, participants: [MOCK_PARTICIPANTS[0], MOCK_PARTICIPANTS[1], MOCK_PARTICIPANTS[2]] },
-  { id: "rm-2", title: "Weekly Team Standup", timeAgo: "Yesterday", platform: "Native" as const, participants: [MOCK_PARTICIPANTS[0], MOCK_PARTICIPANTS[1]] },
-  { id: "rm-3", title: "Design Review", timeAgo: "2 days ago", platform: "Google Meet" as const, participants: [MOCK_PARTICIPANTS[0], MOCK_PARTICIPANTS[4], MOCK_PARTICIPANTS[5]] },
+  {
+    id: "rm-1",
+    title: "Client Sync: Website Redesign",
+    timeAgo: "2h ago",
+    platform: "Zoom" as const,
+    participants: [
+      MOCK_PARTICIPANTS[0],
+      MOCK_PARTICIPANTS[1],
+      MOCK_PARTICIPANTS[2],
+    ],
+  },
+  {
+    id: "rm-2",
+    title: "Weekly Team Standup",
+    timeAgo: "Yesterday",
+    platform: "Native" as const,
+    participants: [MOCK_PARTICIPANTS[0], MOCK_PARTICIPANTS[1]],
+  },
+  {
+    id: "rm-3",
+    title: "Design Review",
+    timeAgo: "2 days ago",
+    platform: "Google Meet" as const,
+    participants: [
+      MOCK_PARTICIPANTS[0],
+      MOCK_PARTICIPANTS[4],
+      MOCK_PARTICIPANTS[5],
+    ],
+  },
 ];
 
 const WEEKLY_STREAK = [
@@ -136,12 +162,8 @@ const ACTION_ITEMS = [
 
 export default function MainDashboardPage() {
   const router = useRouter();
-  const {
-    isOrganization,
-    currentWorkspace,
-    workspaces,
-    hasPermission,
-  } = useWorkspace();
+  const { isOrganization, currentWorkspace, workspaces, hasPermission } =
+    useWorkspace();
   const { user } = useAuth();
 
   const [externalLink, setExternalLink] = useState("");
@@ -302,8 +324,7 @@ export default function MainDashboardPage() {
 
   return (
     <>
-
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
         <DashboardHeader
           searchPlaceholder={
             isOrganization()
@@ -312,25 +333,31 @@ export default function MainDashboardPage() {
           }
         />
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 z-10 pb-24">
-          <div className="max-w-6xl mx-auto space-y-10">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 z-10 pb-24">
+          <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10">
             {/* Greeting */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  <h1 className="text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900">
+                  <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900">
                     {isOrganization()
                       ? currentWorkspace.name
-                      : `${getGreeting()}, ${user?.fullName?.split(' ')[0] || 'there'}`}
+                      : `${getGreeting()}, ${user?.fullName?.split(" ")[0] || "there"}`}
                   </h1>
                   {(() => {
-                    const role = isOrganization() ? currentWorkspace.role : null;
+                    const role = isOrganization()
+                      ? currentWorkspace.role
+                      : null;
                     const jobRole = getUserJobRole(user);
                     if (role) {
                       return (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white text-[10px] font-bold uppercase tracking-widest shadow-md shadow-[#FF416C]/20">
                           <span className="material-symbols-outlined text-[13px]">
-                            {role === "owner" ? "shield" : role === "admin" ? "admin_panel_settings" : "person"}
+                            {role === "owner"
+                              ? "shield"
+                              : role === "admin"
+                                ? "admin_panel_settings"
+                                : "person"}
                           </span>
                           {role}
                         </span>
@@ -346,7 +373,7 @@ export default function MainDashboardPage() {
                     return null;
                   })()}
                 </div>
-                <p className="text-slate-600 text-lg">
+                <p className="text-slate-600 text-base sm:text-lg">
                   {isOrganization()
                     ? `${orgFeed.length} recent activities across your team`
                     : "Your cross-border meetings and AI translation studio."}
@@ -355,18 +382,20 @@ export default function MainDashboardPage() {
             </div>
 
             {/* Hero Meeting Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <Link
                 href="/dashboard/native-meeting"
-                className="group bg-[#0f1115] text-white p-8 rounded-2xl flex flex-col justify-between min-h-[220px] hover:shadow-xl hover:shadow-[#FF416C]/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden border border-slate-800 hover:border-[#FF416C]/30"
+                className="group bg-[#0f1115] text-white p-5 sm:p-8 rounded-2xl flex flex-col justify-between min-h-[200px] sm:min-h-[220px] hover:shadow-xl hover:shadow-[#FF416C]/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden border border-slate-800 hover:border-[#FF416C]/30"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
                 <div className="relative z-10 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF416C]/20 mb-5 group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-white text-[24px]">video_call</span>
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF416C]/20 mb-4 sm:mb-5 group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-white text-[24px]">
+                        video_call
+                      </span>
                     </div>
-                    <h2 className="text-2xl font-bold font-helvetica tracking-tight text-white mb-2">
+                    <h2 className="text-xl sm:text-2xl font-bold font-helvetica tracking-tight text-white mb-2">
                       Native Meeting
                     </h2>
                     <p className="text-white/50 text-sm leading-relaxed max-w-xs">
@@ -374,7 +403,7 @@ export default function MainDashboardPage() {
                       captions built in.
                     </p>
                   </div>
-                  <div className="mt-6 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-8 py-3.5 rounded-full font-bold text-sm shadow-lg shadow-[#FF416C]/20 flex items-center justify-center gap-2 group/btn w-fit">
+                  <div className="mt-6 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-sm shadow-lg shadow-[#FF416C]/20 flex items-center justify-center gap-2 group/btn w-fit">
                     Start Meeting
                     <span className="material-symbols-outlined text-[18px] group-hover/btn:translate-x-0.5 transition-transform">
                       arrow_forward
@@ -383,15 +412,15 @@ export default function MainDashboardPage() {
                 </div>
               </Link>
 
-              <div className="group bg-white border border-[#c4c7c7]/30 p-8 rounded-2xl flex flex-col justify-between min-h-[220px] hover:shadow-lg hover:-translate-y-1 hover:border-[#FF416C]/30 transition-all duration-300 relative overflow-hidden">
+              <div className="group bg-white border border-[#c4c7c7]/30 p-5 sm:p-8 rounded-2xl flex flex-col justify-between min-h-[200px] sm:min-h-[220px] hover:shadow-lg hover:-translate-y-1 hover:border-[#FF416C]/30 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/[0.02] to-transparent pointer-events-none" />
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#FF416C]/20">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#FF416C]/20">
                     <span className="material-symbols-outlined text-white text-[24px]">
                       link
                     </span>
                   </div>
-                  <h2 className="text-2xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">
+                  <h2 className="text-xl sm:text-2xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">
                     External Meeting
                   </h2>
                   <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
@@ -400,7 +429,7 @@ export default function MainDashboardPage() {
                   </p>
                 </div>
                 <form
-                  className="relative flex gap-3 mt-6"
+                  className="relative flex flex-col sm:flex-row gap-3 mt-6"
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (externalLink.trim()) {
@@ -420,7 +449,7 @@ export default function MainDashboardPage() {
                   <button
                     type="submit"
                     disabled={!externalLink.trim()}
-                    className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 shadow-lg shadow-[#FF416C]/20"
+                    className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 shadow-lg shadow-[#FF416C]/20"
                   >
                     Join
                     <span className="material-symbols-outlined text-[16px]">
@@ -433,8 +462,8 @@ export default function MainDashboardPage() {
 
             {/* Context-Dependent Sections */}
             {isOrganization() ? (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
                   {[
                     {
                       label: "Members",
@@ -460,17 +489,17 @@ export default function MainDashboardPage() {
                   ].map((stat) => (
                     <div
                       key={stat.label}
-                      className="group bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 flex items-center gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-[#FF416C]/30 transition-all duration-300 cursor-default"
+                      className="group bg-white border border-[#c4c7c7]/30 rounded-2xl p-4 sm:p-6 flex items-center gap-3 sm:gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-[#FF416C]/30 transition-all duration-300 cursor-default first:col-span-2 sm:first:col-span-1"
                     >
                       <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.color}`}
+                        className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${stat.color}`}
                       >
-                        <span className="material-symbols-outlined text-[22px]">
+                        <span className="material-symbols-outlined text-[20px] sm:text-[22px]">
                           {stat.icon}
                         </span>
                       </div>
                       <div>
-                        <p className="text-3xl font-bold font-helvetica text-slate-900 leading-none">
+                        <p className="text-2xl sm:text-3xl font-bold font-helvetica text-slate-900 leading-none">
                           {stat.value}
                         </p>
                         <p className="text-[10px] font-bold text-[#8C8880] uppercase tracking-widest mt-1">
@@ -483,40 +512,46 @@ export default function MainDashboardPage() {
 
                 {/* Live Now Card */}
                 {meetings.some((m) => m.status === "live") && (
-                  <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-5 flex items-center justify-between relative overflow-hidden">
+                  <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-[#FF416C]/5 to-transparent pointer-events-none" />
-                    <div className="flex items-center gap-4 relative">
+                    <div className="flex items-center gap-4 relative min-w-0">
                       <div className="relative flex h-3 w-3 flex-shrink-0">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF416C] opacity-75" />
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF416C]" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-white font-bold text-sm font-helvetica">
                           Meeting in Progress
                         </p>
-                        <p className="text-white/50 text-xs mt-0.5">
+                        <p className="text-white/50 text-xs mt-0.5 truncate">
                           {meetings.find((m) => m.status === "live")?.title} —{" "}
-                          {meetings.find((m) => m.status === "live")?.participants.length} participants
+                          {
+                            meetings.find((m) => m.status === "live")
+                              ?.participants.length
+                          }{" "}
+                          participants
                         </p>
                       </div>
                     </div>
-                    <button className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 py-2.5 rounded-full text-xs font-bold hover:scale-105 transition-all duration-200 shadow-lg shadow-[#FF416C]/20 relative flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[16px]">videocam</span>
+                    <button className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 py-2.5 rounded-full text-xs font-bold hover:scale-105 transition-all duration-200 shadow-lg shadow-[#FF416C]/20 relative flex items-center justify-center gap-2 self-start sm:self-auto">
+                      <span className="material-symbols-outlined text-[16px]">
+                        videocam
+                      </span>
                       Join Now
                     </button>
                   </div>
                 )}
 
                 {/* Recent Meetings */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-4 sm:p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
                       <span className="material-symbols-outlined text-[#8C8880] text-[20px]">
                         history
                       </span>
                       Recent Meetings
                     </h2>
-                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors">
+                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors flex-shrink-0">
                       View All
                     </button>
                   </div>
@@ -524,21 +559,23 @@ export default function MainDashboardPage() {
                     {RECENT_MEETINGS.map((meeting) => (
                       <div
                         key={meeting.id}
-                        className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 transition-all cursor-pointer group"
+                        className="flex items-center justify-between p-3 sm:p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 transition-all cursor-pointer group gap-2"
                       >
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-white border border-[#c4c7c7]/30 flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-[#8C8880] text-[20px]">
-                              {meeting.platform === "Native" ? "videocam" : "link"}
+                        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#c4c7c7]/30 flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-[#8C8880] text-[18px] sm:text-[20px]">
+                              {meeting.platform === "Native"
+                                ? "videocam"
+                                : "link"}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-bold text-slate-900 text-sm group-hover:text-[#FF416C] transition-colors truncate">
                                 {meeting.title}
                               </p>
                               <span
-                                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 hidden sm:inline-block ${
                                   meeting.platform === "Native"
                                     ? "bg-[#FF416C]/10 text-[#FF416C] border border-[#FF416C]/20"
                                     : "bg-slate-100 text-slate-600 border border-slate-200"
@@ -549,15 +586,17 @@ export default function MainDashboardPage() {
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <div className="flex -space-x-1.5">
-                                {meeting.participants.slice(0, 3).map((p, i) => (
-                                  <div
-                                    key={i}
-                                    className={`w-5 h-5 rounded-full border-2 border-white ${p.color} flex items-center justify-center text-[7px] font-bold`}
-                                    title={p.name}
-                                  >
-                                    {p.initials}
-                                  </div>
-                                ))}
+                                {meeting.participants
+                                  .slice(0, 3)
+                                  .map((p, i) => (
+                                    <div
+                                      key={i}
+                                      className={`w-5 h-5 rounded-full border-2 border-white ${p.color} flex items-center justify-center text-[7px] font-bold`}
+                                      title={p.name}
+                                    >
+                                      {p.initials}
+                                    </div>
+                                  ))}
                                 {meeting.participants.length > 3 && (
                                   <div className="w-5 h-5 rounded-full border-2 border-white bg-slate-200 text-slate-600 flex items-center justify-center text-[7px] font-bold">
                                     +{meeting.participants.length - 3}
@@ -570,7 +609,7 @@ export default function MainDashboardPage() {
                             </div>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-[#c4c7c7] text-[18px] group-hover:text-[#FF416C] transition-colors flex-shrink-0 ml-4">
+                        <span className="material-symbols-outlined text-[#c4c7c7] text-[18px] group-hover:text-[#FF416C] transition-colors flex-shrink-0">
                           chevron_right
                         </span>
                       </div>
@@ -579,9 +618,9 @@ export default function MainDashboardPage() {
                 </div>
 
                 {/* Action Items + Quick AI Query & Weekly Streak */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   {/* Action Items */}
-                  <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+                  <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
                     <div className="relative">
                       <div className="flex items-center justify-between mb-5">
@@ -599,7 +638,10 @@ export default function MainDashboardPage() {
                       </div>
                       <div className="space-y-3">
                         {ACTION_ITEMS.map((item, i) => (
-                          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-[#FF416C]/20 transition-all cursor-pointer group">
+                          <div
+                            key={i}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-[#FF416C]/20 transition-all cursor-pointer group"
+                          >
                             <div className="w-6 h-6 rounded-lg bg-[#FF416C]/10 border border-[#FF416C]/20 flex items-center justify-center flex-shrink-0">
                               <span className="text-[10px] font-bold text-[#FF416C]">
                                 {i + 1}
@@ -625,9 +667,9 @@ export default function MainDashboardPage() {
                   {/* Right Column: Quick AI Query + Weekly Streak */}
                   <div className="space-y-6">
                     {/* Quick AI Query */}
-                    <div className="bg-white border border-[#FF416C]/20 rounded-2xl p-5 shadow-sm">
+                    <div className="bg-white border border-[#FF416C]/20 rounded-2xl p-4 sm:p-5 shadow-sm">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 flex-shrink-0">
                           <span className="material-symbols-outlined text-white text-[18px]">
                             smart_toy
                           </span>
@@ -655,7 +697,7 @@ export default function MainDashboardPage() {
                     </div>
 
                     {/* Weekly Streak */}
-                    <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-5 shadow-sm">
+                    <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-4 sm:p-5 shadow-sm">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold font-helvetica text-slate-900">
                           This Week
@@ -666,8 +708,14 @@ export default function MainDashboardPage() {
                       </div>
                       <div className="flex items-end gap-2 h-20">
                         {WEEKLY_STREAK.map((bar) => (
-                          <div key={bar.day} className="flex-1 flex flex-col items-center gap-1.5">
-                            <div className="w-full relative" style={{ height: `${bar.height}%` }}>
+                          <div
+                            key={bar.day}
+                            className="flex-1 flex flex-col items-center gap-1.5"
+                          >
+                            <div
+                              className="w-full relative"
+                              style={{ height: `${bar.height}%` }}
+                            >
                               <div className="absolute inset-0 bg-gradient-to-t from-[#FF416C] to-[#FF4B2B] rounded-lg" />
                             </div>
                             <span className="text-[9px] font-bold text-[#8C8880] uppercase">
@@ -680,12 +728,12 @@ export default function MainDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-300">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900">
+                    <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900">
                       Recent Activity
                     </h2>
-                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors">
+                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors flex-shrink-0">
                       View All
                     </button>
                   </div>
@@ -693,17 +741,17 @@ export default function MainDashboardPage() {
                     {orgFeed.map((feed) => (
                       <div
                         key={feed.id}
-                        className="flex items-center gap-4 p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 transition-all cursor-pointer group"
+                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 transition-all cursor-pointer group"
                       >
                         <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${feed.live ? "bg-[#FF416C] text-white" : "bg-white text-[#FF416C] border border-[#FF416C]/20"}`}
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${feed.live ? "bg-[#FF416C] text-white" : "bg-white text-[#FF416C] border border-[#FF416C]/20"}`}
                         >
-                          <span className="material-symbols-outlined text-[20px]">
+                          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
                             {feed.type === "channel" ? "tag" : "lightbulb"}
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-slate-900 text-sm">
                               {feed.name}
                             </span>
@@ -716,7 +764,7 @@ export default function MainDashboardPage() {
                           </p>
                         </div>
                         {feed.live ? (
-                          <span className="bg-[#FF416C] text-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0">
+                          <span className="bg-[#FF416C] text-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0">
                             <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                             Live
                           </span>
@@ -731,8 +779,8 @@ export default function MainDashboardPage() {
                 </div>
 
                 {hasPermission("owner") && (
-                  <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
-                    <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 mb-5">
+                  <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-4 sm:p-6 shadow-sm">
+                    <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900 mb-5">
                       Quick Management
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -768,7 +816,7 @@ export default function MainDashboardPage() {
                           className="group flex items-center gap-4 p-4 border border-[#c4c7c7]/30 rounded-xl hover:border-[#FF416C]/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                         >
                           <div
-                            className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${item.iconBg}`}
+                            className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all flex-shrink-0 ${item.iconBg}`}
                           >
                             <span className="material-symbols-outlined text-[20px]">
                               {item.icon}
@@ -789,43 +837,49 @@ export default function MainDashboardPage() {
                 )}
               </div>
             ) : (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Live Now Card */}
                 {meetings.some((m) => m.status === "live") && (
-                  <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-5 flex items-center justify-between relative overflow-hidden">
+                  <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-[#FF416C]/5 to-transparent pointer-events-none" />
-                    <div className="flex items-center gap-4 relative">
+                    <div className="flex items-center gap-4 relative min-w-0">
                       <div className="relative flex h-3 w-3 flex-shrink-0">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF416C] opacity-75" />
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF416C]" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-white font-bold text-sm font-helvetica">
                           Meeting in Progress
                         </p>
-                        <p className="text-white/50 text-xs mt-0.5">
+                        <p className="text-white/50 text-xs mt-0.5 truncate">
                           {meetings.find((m) => m.status === "live")?.title} —{" "}
-                          {meetings.find((m) => m.status === "live")?.participants.length} participants
+                          {
+                            meetings.find((m) => m.status === "live")
+                              ?.participants.length
+                          }{" "}
+                          participants
                         </p>
                       </div>
                     </div>
-                    <button className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 py-2.5 rounded-full text-xs font-bold hover:scale-105 transition-all duration-200 shadow-lg shadow-[#FF416C]/20 relative flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[16px]">videocam</span>
+                    <button className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 py-2.5 rounded-full text-xs font-bold hover:scale-105 transition-all duration-200 shadow-lg shadow-[#FF416C]/20 relative flex items-center justify-center gap-2 self-start sm:self-auto">
+                      <span className="material-symbols-outlined text-[16px]">
+                        videocam
+                      </span>
                       Join Now
                     </button>
                   </div>
                 )}
 
                 {/* Recent Meetings */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-4 sm:p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
                       <span className="material-symbols-outlined text-[#8C8880] text-[20px]">
                         history
                       </span>
                       Recent Meetings
                     </h2>
-                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors">
+                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors flex-shrink-0">
                       View All
                     </button>
                   </div>
@@ -833,21 +887,23 @@ export default function MainDashboardPage() {
                     {RECENT_MEETINGS.map((meeting) => (
                       <div
                         key={meeting.id}
-                        className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 transition-all cursor-pointer group"
+                        className="flex items-center justify-between p-3 sm:p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 transition-all cursor-pointer group gap-2"
                       >
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-white border border-[#c4c7c7]/30 flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-[#8C8880] text-[20px]">
-                              {meeting.platform === "Native" ? "videocam" : "link"}
+                        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#c4c7c7]/30 flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-[#8C8880] text-[18px] sm:text-[20px]">
+                              {meeting.platform === "Native"
+                                ? "videocam"
+                                : "link"}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-bold text-slate-900 text-sm group-hover:text-[#FF416C] transition-colors truncate">
                                 {meeting.title}
                               </p>
                               <span
-                                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 hidden sm:inline-block ${
                                   meeting.platform === "Native"
                                     ? "bg-[#FF416C]/10 text-[#FF416C] border border-[#FF416C]/20"
                                     : "bg-slate-100 text-slate-600 border border-slate-200"
@@ -858,15 +914,17 @@ export default function MainDashboardPage() {
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <div className="flex -space-x-1.5">
-                                {meeting.participants.slice(0, 3).map((p, i) => (
-                                  <div
-                                    key={i}
-                                    className={`w-5 h-5 rounded-full border-2 border-white ${p.color} flex items-center justify-center text-[7px] font-bold`}
-                                    title={p.name}
-                                  >
-                                    {p.initials}
-                                  </div>
-                                ))}
+                                {meeting.participants
+                                  .slice(0, 3)
+                                  .map((p, i) => (
+                                    <div
+                                      key={i}
+                                      className={`w-5 h-5 rounded-full border-2 border-white ${p.color} flex items-center justify-center text-[7px] font-bold`}
+                                      title={p.name}
+                                    >
+                                      {p.initials}
+                                    </div>
+                                  ))}
                                 {meeting.participants.length > 3 && (
                                   <div className="w-5 h-5 rounded-full border-2 border-white bg-slate-200 text-slate-600 flex items-center justify-center text-[7px] font-bold">
                                     +{meeting.participants.length - 3}
@@ -879,7 +937,7 @@ export default function MainDashboardPage() {
                             </div>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-[#c4c7c7] text-[18px] group-hover:text-[#FF416C] transition-colors flex-shrink-0 ml-4">
+                        <span className="material-symbols-outlined text-[#c4c7c7] text-[18px] group-hover:text-[#FF416C] transition-colors flex-shrink-0">
                           chevron_right
                         </span>
                       </div>
@@ -888,9 +946,9 @@ export default function MainDashboardPage() {
                 </div>
 
                 {/* Action Items + Quick AI Query & Weekly Streak */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   {/* Action Items */}
-                  <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+                  <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
                     <div className="relative">
                       <div className="flex items-center justify-between mb-5">
@@ -908,7 +966,10 @@ export default function MainDashboardPage() {
                       </div>
                       <div className="space-y-3">
                         {ACTION_ITEMS.map((item, i) => (
-                          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-[#FF416C]/20 transition-all cursor-pointer group">
+                          <div
+                            key={i}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:border-[#FF416C]/20 transition-all cursor-pointer group"
+                          >
                             <div className="w-6 h-6 rounded-lg bg-[#FF416C]/10 border border-[#FF416C]/20 flex items-center justify-center flex-shrink-0">
                               <span className="text-[10px] font-bold text-[#FF416C]">
                                 {i + 1}
@@ -934,9 +995,9 @@ export default function MainDashboardPage() {
                   {/* Right Column: Quick AI Query + Weekly Streak */}
                   <div className="space-y-6">
                     {/* Quick AI Query */}
-                    <div className="bg-white border border-[#FF416C]/20 rounded-2xl p-5 shadow-sm">
+                    <div className="bg-white border border-[#FF416C]/20 rounded-2xl p-4 sm:p-5 shadow-sm">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 flex-shrink-0">
                           <span className="material-symbols-outlined text-white text-[18px]">
                             smart_toy
                           </span>
@@ -964,7 +1025,7 @@ export default function MainDashboardPage() {
                     </div>
 
                     {/* Weekly Streak */}
-                    <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-5 shadow-sm">
+                    <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-4 sm:p-5 shadow-sm">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold font-helvetica text-slate-900">
                           This Week
@@ -975,8 +1036,14 @@ export default function MainDashboardPage() {
                       </div>
                       <div className="flex items-end gap-2 h-20">
                         {WEEKLY_STREAK.map((bar) => (
-                          <div key={bar.day} className="flex-1 flex flex-col items-center gap-1.5">
-                            <div className="w-full relative" style={{ height: `${bar.height}%` }}>
+                          <div
+                            key={bar.day}
+                            className="flex-1 flex flex-col items-center gap-1.5"
+                          >
+                            <div
+                              className="w-full relative"
+                              style={{ height: `${bar.height}%` }}
+                            >
                               <div className="absolute inset-0 bg-gradient-to-t from-[#FF416C] to-[#FF4B2B] rounded-lg" />
                             </div>
                             <span className="text-[9px] font-bold text-[#8C8880] uppercase">
@@ -990,21 +1057,21 @@ export default function MainDashboardPage() {
                 </div>
 
                 {/* Upcoming Schedule */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-4">
-                      <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
+                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-4 sm:p-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[#8C8880] text-[20px]">
                           calendar_month
                         </span>
                         Upcoming Schedule
                       </h2>
-                      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto no-scrollbar">
                         {(["today", "week", "all"] as const).map((tab) => (
                           <button
                             key={tab}
                             onClick={() => setScheduleTab(tab)}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase font-helvetica transition-all ${
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase font-helvetica transition-all whitespace-nowrap flex-shrink-0 ${
                               scheduleTab === tab
                                 ? "bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-md shadow-[#FF416C]/20"
                                 : "text-slate-500 hover:text-[#FF416C]"
@@ -1019,7 +1086,7 @@ export default function MainDashboardPage() {
                     </div>
                     <button
                       onClick={() => setShowScheduleModal(true)}
-                      className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 hover:scale-105 transition-all duration-200 flex items-center gap-2 shadow-lg shadow-black/5"
+                      className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-black/5 self-start w-full sm:w-auto"
                     >
                       <span className="material-symbols-outlined text-[16px]">
                         add
@@ -1029,7 +1096,7 @@ export default function MainDashboardPage() {
                   </div>
 
                   {filteredMeetings.length === 0 ? (
-                    <div className="py-12 text-center">
+                    <div className="py-10 sm:py-12 text-center">
                       <div className="w-16 h-16 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#FF416C]/20">
                         <span className="material-symbols-outlined text-white text-[32px]">
                           event_busy
@@ -1055,10 +1122,10 @@ export default function MainDashboardPage() {
                       {filteredMeetings.map((meeting) => (
                         <div
                           key={meeting.id}
-                          className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 transition-all duration-300 group"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 transition-all duration-300 group"
                         >
                           <div className="flex items-center gap-4 flex-1 min-w-0">
-                            <div className="text-center w-20 flex-shrink-0">
+                            <div className="text-center w-16 sm:w-20 flex-shrink-0">
                               <p className="font-bold text-slate-900 text-sm">
                                 {formatDate(meeting.date)}
                               </p>
@@ -1068,7 +1135,7 @@ export default function MainDashboardPage() {
                             </div>
                             <div className="w-px h-10 bg-[#c4c7c7]/30 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <p className="font-bold text-slate-900 text-sm group-hover:text-[#FF416C] transition-colors truncate">
                                   {meeting.title}
                                 </p>
@@ -1108,7 +1175,7 @@ export default function MainDashboardPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                          <div className="flex items-center gap-2 flex-shrink-0 ml-0 sm:ml-4 pl-[4.5rem] sm:pl-0">
                             <button
                               onClick={() => joinMeeting(meeting)}
                               className="bg-black text-white px-4 py-2 rounded-xl text-[11px] font-bold hover:bg-slate-800 hover:scale-105 transition-all duration-200 flex items-center gap-1.5"
@@ -1122,7 +1189,7 @@ export default function MainDashboardPage() {
                             </button>
                             <button
                               onClick={() => deleteMeeting(meeting.id)}
-                              className="w-8 h-8 rounded-xl border border-[#c4c7c7]/30 flex items-center justify-center text-[#8C8880] hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-all"
+                              className="w-8 h-8 rounded-xl border border-[#c4c7c7]/30 flex items-center justify-center text-[#8C8880] hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-all flex-shrink-0"
                               title="Remove meeting"
                             >
                               <span className="material-symbols-outlined text-[16px]">
@@ -1144,21 +1211,21 @@ export default function MainDashboardPage() {
       {/* Schedule Meeting Modal */}
       {showScheduleModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
           onClick={() => setShowScheduleModal(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl border border-[#c4c7c7]/30 w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white rounded-2xl shadow-2xl border border-[#c4c7c7]/30 w-full max-w-md mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-[#c4c7c7]/30">
+            <div className="p-5 sm:p-6 border-b border-[#c4c7c7]/30">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold font-helvetica text-slate-900">
                   Schedule a Meeting
                 </h2>
                 <button
                   onClick={() => setShowScheduleModal(false)}
-                  className="w-8 h-8 rounded-xl border border-[#c4c7c7]/30 flex items-center justify-center text-[#8C8880] hover:text-[#FF416C] hover:border-[#FF416C]/30 transition-colors"
+                  className="w-8 h-8 rounded-xl border border-[#c4c7c7]/30 flex items-center justify-center text-[#8C8880] hover:text-[#FF416C] hover:border-[#FF416C]/30 transition-colors flex-shrink-0"
                 >
                   <span className="material-symbols-outlined text-[18px]">
                     close
@@ -1166,7 +1233,7 @@ export default function MainDashboardPage() {
                 </button>
               </div>
             </div>
-            <form onSubmit={addMeeting} className="p-6 space-y-4">
+            <form onSubmit={addMeeting} className="p-5 sm:p-6 space-y-4">
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
                   Meeting Title
@@ -1185,7 +1252,7 @@ export default function MainDashboardPage() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
                     Date
@@ -1221,7 +1288,7 @@ export default function MainDashboardPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
                     Duration

@@ -38,7 +38,7 @@ export default function ChannelsPage() {
     <>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
         
         <DashboardHeader
           searchPlaceholder="Search channels, messages, or files..."
@@ -104,7 +104,7 @@ export default function ChannelsPage() {
             </div>
 
             {/* Feed / Activity */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 pb-32">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 space-y-8 pb-32">
               
               <div className="text-center py-6">
                 <p className="text-xs font-bold text-[#8C8880] uppercase tracking-wider">Today, July 21st</p>

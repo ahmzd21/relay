@@ -22,10 +22,10 @@ export default function BillingPage() {
   return (
     <>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
+      <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
         <DashboardHeader searchPlaceholder={isOrg ? "Search billing, invoices..." : "Search billing, plans..."} />
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 z-10 pb-24">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 z-10 pb-24">
           <div className="max-w-6xl mx-auto space-y-8">
 
             {/* Page Title */}
@@ -41,7 +41,7 @@ export default function BillingPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl w-fit">
+            <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl w-fit overflow-x-auto no-scrollbar">
               {tabs.map((t) => (
                 <button
                   key={t.key}

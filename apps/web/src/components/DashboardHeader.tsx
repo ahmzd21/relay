@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 interface DashboardHeaderProps {
   searchPlaceholder?: string;
@@ -11,11 +13,20 @@ export default function DashboardHeader({
   searchPlaceholder,
   rightContent,
 }: DashboardHeaderProps) {
+  const { isOpen, toggle } = useMobileMenu();
+  const { unreadCount, showBellDropdown, setShowBellDropdown, notifications, dismissNotification } = useNotifications();
+
   return (
-    <header className="h-20 flex items-center justify-between px-6 md:px-10 bg-transparent z-20 sticky top-0">
-      <div className="flex items-center gap-4">
-        <button className="md:hidden p-2 -ml-2 text-white/50">
-          <span className="material-symbols-outlined">menu</span>
+    <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-10 bg-transparent z-20 sticky top-0">
+      <div className="flex items-center gap-2 md:gap-4">
+        <button
+          onClick={toggle}
+          className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-black/5 transition-colors"
+          aria-label="Toggle menu"
+        >
+          <span className="block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300" />
+          <span className="block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300" />
+          <span className="block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300" />
         </button>
       </div>
 
@@ -34,14 +45,59 @@ export default function DashboardHeader({
         <div />
       )}
 
-      <div className="flex items-center gap-3">
-        {rightContent}
-        <button className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 transition-colors">
-          <span className="material-symbols-outlined text-white text-[18px]">
-            notifications
-          </span>
-        </button>
+      <div className="flex items-center gap-2 md:gap-3">
+        <div className="hidden sm:block">{rightContent}</div>
         <WorkspaceSwitcher />
+
+        {/* Notification Bell */}
+        <div className="relative">
+          <button
+            onClick={() => setShowBellDropdown(!showBellDropdown)}
+            className="relative h-9 w-9 md:h-10 md:w-10 rounded-xl bg-white border border-[#c4c7c7]/30 flex items-center justify-center shadow-sm hover:border-[#FF416C]/30 hover:shadow-md transition-all"
+            aria-label="Notifications"
+          >
+            <span className="material-symbols-outlined text-[#1c1b1b] text-[20px]">notifications</span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 min-w-[16px] flex items-center justify-center px-1 rounded-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white text-[9px] font-bold shadow-sm shadow-[#FF416C]/20">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* Dropdown */}
+          {showBellDropdown && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowBellDropdown(false)} />
+              <div className="absolute right-0 mt-2 z-50 w-80 bg-white border border-[#c4c7c7]/30 rounded-2xl shadow-xl overflow-hidden">
+                <div className="p-4 border-b border-[#c4c7c7]/20">
+                  <p className="text-sm font-bold font-helvetica text-slate-900">Notifications</p>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <span className="material-symbols-outlined text-[#c4c7c7] text-[32px] mb-2">notifications_off</span>
+                      <p className="text-xs text-slate-500">No notifications yet</p>
+                    </div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        className={`p-4 border-b border-[#c4c7c7]/10 hover:bg-[#FAF9F5] cursor-pointer transition-colors ${!n.read ? 'bg-[#FF416C]/5' : ''}`}
+                        onClick={() => dismissNotification(n.id)}
+                      >
+                        <p className="text-sm font-bold text-slate-900">{n.title}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{n.body}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{n.time}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+
       </div>
     </header>
   );

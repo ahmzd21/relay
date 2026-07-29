@@ -1,9 +1,12 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { useWorkspace, Workspace } from '@/contexts/WorkspaceContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function WorkspaceSwitcher() {
   const { currentWorkspace, workspaces, switchWorkspace, isUserOrgOwner, joinWorkspaceWithCode } = useWorkspace();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showJoinInput, setShowJoinInput] = useState(false);
   const [joinCode, setJoinCode] = useState('');
@@ -61,21 +64,25 @@ export default function WorkspaceSwitcher() {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2.5 pl-3 pr-3 py-2.5 bg-[#0f1115] text-white rounded-xl hover:bg-slate-800 transition-all shadow-sm"
+          className="flex items-center gap-2.5 pl-3 pr-3 py-2.5 bg-white border border-[#c4c7c7]/30 text-[#1c1b1b] rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all shadow-sm"
         >
-          <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-[14px]">person</span>
-          </div>
-          <span className="text-[13px] font-bold line-clamp-1 max-w-[120px]">
+          {user?.avatar ? (
+            <img src={user.avatar} alt="" className="w-6 h-6 rounded-lg object-cover" />
+          ) : (
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white text-[11px] font-bold">
+              {user?.fullName?.charAt(0).toUpperCase() || '?'}
+            </div>
+          )}
+          <span className="text-[13px] font-bold line-clamp-1 max-w-[90px] sm:max-w-[120px]">
             {currentWorkspace.name}
           </span>
-          <span className={`material-symbols-outlined text-white/50 text-[16px] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+          <span className={`material-symbols-outlined text-[#8C8880] text-[16px] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
             expand_more
           </span>
         </button>
 
         {isOpen && (
-          <div className="absolute top-full right-0 mt-2 w-72 bg-[#0f1115] rounded-xl shadow-2xl border border-slate-700/50 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="absolute top-full right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-[#0f1115] rounded-xl shadow-2xl border border-slate-700/50 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="p-3 border-b border-slate-700/50">
               <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Your Workspace</p>
             </div>
@@ -141,6 +148,23 @@ export default function WorkspaceSwitcher() {
                 </div>
               )}
             </div>
+
+            {/* Settings Link */}
+            <div className="border-t border-slate-700/50 p-1.5">
+              <Link
+                href="/dashboard/settings"
+                onClick={() => setIsOpen(false)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white/50 text-[16px]">settings</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Settings</p>
+                  <p className="text-[10px] text-white/40">Profile, notifications, security</p>
+                </div>
+              </Link>
+            </div>
           </div>
         )}
       </div>
@@ -153,20 +177,26 @@ export default function WorkspaceSwitcher() {
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2.5 pl-3 pr-3 py-2.5 bg-[#0f1115] text-white rounded-xl hover:bg-slate-800 transition-all shadow-sm"
+        className="flex items-center gap-2.5 pl-3 pr-3 py-2.5 bg-white border border-[#c4c7c7]/30 text-[#1c1b1b] rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all shadow-sm"
       >
-        {getWorkspaceAvatar(currentWorkspace)}
-        <span className="text-[13px] font-bold line-clamp-1 max-w-[120px]">
+        {user?.avatar ? (
+            <img src={user.avatar} alt="" className="w-6 h-6 rounded-lg object-cover" />
+          ) : (
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white text-[11px] font-bold">
+              {user?.fullName?.charAt(0).toUpperCase() || '?'}
+            </div>
+          )}
+        <span className="text-[13px] font-bold line-clamp-1 max-w-[90px] sm:max-w-[120px]">
           {currentWorkspace.name}
         </span>
-        <span className={`material-symbols-outlined text-white/50 text-[16px] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+        <span className={`material-symbols-outlined text-[#8C8880] text-[16px] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
           expand_more
         </span>
       </button>
 
       {/* Profile Toggle & Context Dropdown Container */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-72 bg-[#0f1115] rounded-xl shadow-2xl border border-slate-700/50 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-[#0f1115] rounded-xl shadow-2xl border border-slate-700/50 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-3 border-b border-slate-700/50">
             <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
               {isUserOrgOwner() ? 'Switch Context Profile' : 'Your Workspaces'}
@@ -209,6 +239,23 @@ export default function WorkspaceSwitcher() {
                 </button>
               );
             })}
+          </div>
+
+          {/* Settings Link */}
+          <div className="border-t border-slate-700/50 p-1.5">
+            <Link
+              href="/dashboard/settings"
+              onClick={() => setIsOpen(false)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-white/50 text-[16px]">settings</span>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Settings</p>
+                <p className="text-[10px] text-white/40">Profile, notifications, security</p>
+              </div>
+            </Link>
           </div>
         </div>
       )}

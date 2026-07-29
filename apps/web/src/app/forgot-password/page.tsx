@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Input, Button } from '@/components/ui';
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -36,42 +37,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen text-[#1c1b1b] selection:bg-black selection:text-white overflow-x-hidden font-helvetica">
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .auth-input {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @media (min-width: 1024px) {
-          .auth-input:focus {
-              background: #ffffff !important;
-              border-color: #000000 !important;
-              outline: none;
-              box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
-          }
-        }
-
-        @media (max-width: 1023px) {
-          .auth-input {
-            color: #000000 !important;
-          }
-          .auth-input:focus {
-              background: rgba(255, 255, 255, 0.9) !important;
-              border-color: #FF416C !important;
-              outline: none;
-              box-shadow: 0 0 0 3px rgba(255, 65, 108, 0.2);
-          }
-        }
-
-        .cta-button {
-            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        .cta-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 24px -10px rgba(255, 65, 108, 0.3);
-        }
-      `}} />
-
       <div className="flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden min-h-screen">
 
         {/* Left Side (Desktop Editorial) */}
@@ -96,16 +61,16 @@ export default function ForgotPasswordPage() {
           </div>
           <footer className="relative z-10 flex flex-col items-center justify-center gap-y-4 w-full mt-auto">
             <div className="flex items-center justify-center gap-x-[64px]">
-              <a className="text-[11px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-[0.1em] font-['Inter']" href="#">Privacy</a>
-              <a className="text-[11px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-[0.1em] font-['Inter']" href="#">Terms</a>
-              <a className="text-[11px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-[0.1em] font-['Inter']" href="#">Security</a>
+              <a className="text-[11px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-[0.1em]" href="#">Privacy</a>
+              <a className="text-[11px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-[0.1em]" href="#">Terms</a>
+              <a className="text-[11px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-[0.1em]" href="#">Security</a>
             </div>
-            <span className="text-[11px] font-bold text-white/40 uppercase tracking-[0.1em] font-['Inter']">© 2026 Relay AI</span>
+            <span className="text-[11px] font-bold text-white/40 uppercase tracking-[0.1em]">&copy; 2026 Relay AI</span>
           </footer>
         </section>
 
         {/* Right Side / Mobile Form */}
-        <main className="relative z-10 w-full lg:w-[50%] flex flex-col justify-between items-center p-[24px] md:p-[40px] bg-[#FAF9F5] min-h-screen lg:h-full lg:overflow-y-auto">
+        <main className="relative z-10 w-full lg:w-[50%] flex flex-col justify-between items-center p-6 md:p-10 bg-[#FAF9F5] min-h-screen lg:h-full lg:overflow-y-auto">
 
           {/* Ambient gradient blobs */}
           <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#FF416C]/10 blur-[120px] rounded-full pointer-events-none" />
@@ -120,9 +85,9 @@ export default function ForgotPasswordPage() {
             <Link href="/" className="text-[24px] font-bold tracking-tight font-helvetica text-slate-900">Relay</Link>
           </div>
 
-          <div className="relative z-10 w-full max-w-[420px] my-auto py-12 space-y-[40px] lg:space-y-[32px]">
+          <div className="relative z-10 w-full max-w-[420px] my-auto py-12 space-y-6 lg:space-y-8">
             <div className="text-left">
-              <h1 className="text-[36px] lg:text-[48px] font-bold font-helvetica mb-[8px] text-slate-900 tracking-tight">Forgot Password</h1>
+              <h1 className="text-3xl lg:text-[48px] font-bold font-helvetica mb-2 text-slate-900 tracking-tight">Forgot Password</h1>
               <p className="text-slate-600 text-[15px]">
                 Enter your email and we&apos;ll send you a link to reset your password.
               </p>
@@ -145,43 +110,33 @@ export default function ForgotPasswordPage() {
                 </Link>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-[16px]">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {errorMsg && (
                   <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-500 text-sm font-medium">
                     {errorMsg}
                   </div>
                 )}
-                <div className="space-y-[4px]">
-                  <label className="block text-[10px] uppercase tracking-[0.1em] font-bold font-['Inter'] text-slate-400 ml-4 mb-2">Email Address</label>
-                  <input
-                    className="auth-input w-full px-6 py-4 rounded-full border border-[#c4c7c7]/30 
-                             text-slate-900 bg-white/50 
-                             placeholder:text-slate-400 text-[15px]"
-                    placeholder="name@domain.com"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
 
-                <div className="pt-[16px]">
-                  <button className="cta-button w-full py-4 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white rounded-full text-[15px] font-bold shadow-xl shadow-[#FF416C]/20 flex items-center justify-center gap-2 group" type="submit" disabled={isLoading}>
-                    {isLoading ? (
-                      <span className="flex items-center justify-center gap-3">
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Sending...
-                      </span>
-                    ) : (
-                      <>
-                        Send Reset Link
-                        <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                      </>
-                    )}
-                  </button>
+                <Input
+                  label="Email Address"
+                  type="email"
+                  placeholder="name@domain.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    variant="gradient"
+                    size="lg"
+                    fullWidth
+                    isLoading={isLoading}
+                    icon="arrow_forward"
+                  >
+                    {isLoading ? 'Sending...' : 'Send Reset Link'}
+                  </Button>
                 </div>
               </form>
             )}

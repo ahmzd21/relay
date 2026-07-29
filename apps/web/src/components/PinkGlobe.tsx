@@ -87,7 +87,7 @@ export default function PinkGlobe() {
   if (!isClient) return <div className="w-full aspect-square min-h-[500px]" />;
 
   return (
-    <div className="relative w-full aspect-square max-w-[650px] mx-auto flex items-center justify-center ml-4 lg:ml-10">
+    <div className="relative w-full aspect-square max-w-[650px] mx-auto flex items-center justify-center">
       <div className="w-full h-full pointer-events-none">
         <Globe
           ref={globeEl}
