@@ -322,6 +322,11 @@ export default function MainDashboardPage() {
     }
   };
 
+  const handleStartNativeMeeting = () => {
+    const meetingId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    router.push(`/meeting/${meetingId}`);
+  };
+
   return (
     <>
       <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
@@ -383,9 +388,9 @@ export default function MainDashboardPage() {
 
             {/* Hero Meeting Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <Link
-                href="/dashboard/native-meeting"
-                className="group bg-[#FFFDF8] text-[#1c1b1b] p-5 sm:p-8 rounded-2xl flex flex-col justify-between min-h-[200px] sm:min-h-[220px] hover:shadow-warm-md hover:shadow-[#FF416C]/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden border border-[#E4E0D6] hover:border-[#FF416C]/30"
+              <div
+                onClick={handleStartNativeMeeting}
+                className="group bg-[#FFFDF8] text-[#1c1b1b] p-5 sm:p-8 rounded-2xl flex flex-col justify-between min-h-[200px] sm:min-h-[220px] hover:shadow-warm-md hover:shadow-[#FF416C]/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden border border-[#E4E0D6] hover:border-[#FF416C]/30 cursor-pointer"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
                 <div className="relative z-10 flex-1 flex flex-col justify-between">
@@ -403,14 +408,21 @@ export default function MainDashboardPage() {
                       captions built in.
                     </p>
                   </div>
-                  <div className="mt-6 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-sm shadow-lg shadow-[#FF416C]/20 flex items-center justify-center gap-2 group/btn w-fit">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartNativeMeeting();
+                    }}
+                    className="mt-6 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-sm shadow-lg shadow-[#FF416C]/20 flex items-center justify-center gap-2 group/btn w-fit hover:scale-105 transition-all"
+                  >
                     Start Meeting
                     <span className="material-symbols-outlined text-[18px] group-hover/btn:translate-x-0.5 transition-transform">
                       arrow_forward
                     </span>
-                  </div>
+                  </button>
                 </div>
-              </Link>
+              </div>
 
               <div className="group bg-[#FFFDF8] border border-[#E4E0D6]/30 p-5 sm:p-8 rounded-2xl flex flex-col justify-between min-h-[200px] sm:min-h-[220px] hover:shadow-lg hover:-translate-y-1 hover:border-[#FF416C]/30 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/[0.02] to-transparent pointer-events-none" />
