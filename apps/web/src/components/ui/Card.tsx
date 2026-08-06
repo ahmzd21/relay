@@ -14,10 +14,10 @@ interface CardProps {
 }
 
 const variantStyles: Record<CardVariant, string> = {
-  white: "bg-white border border-[#c4c7c7]/30 shadow-sm",
-  dark: "bg-[#0f1115] border border-slate-800 text-white",
+  white: "bg-[#FFFDF8] border border-[#E4E0D6] shadow-warm",
+  dark: "bg-[#FFFDF8] border border-[#E4E0D6] text-[#1c1b1b]",
   gradient:
-    "bg-[#0f1115] text-white border border-slate-800",
+    "bg-[#FFFDF8] text-[#1c1b1b] border border-[#E4E0D6]",
   ghost: "bg-transparent",
 };
 

@@ -138,7 +138,7 @@ export default function ChannelsPage() {
                         Join Live Translation
                       </button>
                     ) : (
-                      <button className="bg-white border border-[#D9D7D0] text-black px-5 py-2.5 rounded-full font-bold text-sm hover:bg-black hover:text-white transition-colors shadow-sm">
+                      <button className="bg-[#FFFDF8] border border-[#E4E0D6] text-black px-5 py-2.5 rounded-full font-bold text-sm hover:bg-black hover:text-white transition-colors shadow-sm">
                         View Summary & Transcript
                       </button>
                     )}

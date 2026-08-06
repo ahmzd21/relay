@@ -139,7 +139,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl w-fit overflow-x-auto no-scrollbar">
+            <div className="flex gap-1 bg-[#FFFDF8] border border-[#E4E0D6]/30 p-1 rounded-xl w-fit overflow-x-auto no-scrollbar">
               {tabs.map((t) => (
                 <button
                   key={t.key}
@@ -159,7 +159,7 @@ export default function SettingsPage() {
             {tab === 'profile' && (
               <div className="space-y-6">
                 {/* Profile Card */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       {user?.avatar ? (
@@ -196,10 +196,10 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Account Settings */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                   <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900 mb-6">Account Settings</h2>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+                    <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
                           <span className="material-symbols-outlined text-white text-[20px]">lock</span>
@@ -233,7 +233,7 @@ export default function SettingsPage() {
                       )}
                     </div>
                     <div
-                      className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl cursor-pointer hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300"
+                      className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl cursor-pointer hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300"
                       onClick={() => {
                         if (user?.twoFactorEnabled) {
                           setShow2FADisable(true);
@@ -263,7 +263,7 @@ export default function SettingsPage() {
                         <span className="material-symbols-outlined text-[13px]">chevron_right</span>
                       </span>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+                    <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
                           <span className="material-symbols-outlined text-white text-[20px]">notifications</span>
@@ -289,7 +289,7 @@ export default function SettingsPage() {
             {tab === 'language' && (
               <div className="space-y-6">
                 {/* Language Preferences */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
                       <span className="material-symbols-outlined text-white text-[20px]">translate</span>
@@ -343,7 +343,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Voice Configuration */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
                       <span className="material-symbols-outlined text-white text-[20px]">record_voice_over</span>
@@ -364,7 +364,7 @@ export default function SettingsPage() {
                         className={`p-4 rounded-2xl border-2 text-left transition-all ${
                           selectedVoice === voice.id
                             ? 'border-[#FF416C]/30 bg-[#FF416C]/5'
-                            : 'border-[#c4c7c7]/30 hover:border-[#c4c7c7]/60'
+                            : 'border-[#E4E0D6]/30 hover:border-[#E4E0D6]/60'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -388,7 +388,7 @@ export default function SettingsPage() {
             {/* ==================== WORKSPACE TAB (Personal only) ==================== */}
             {tab === 'workspace' && !isOrg && (
               <div className="space-y-6">
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
                       <span className="material-symbols-outlined text-white text-[20px]">domain</span>
@@ -412,7 +412,7 @@ export default function SettingsPage() {
                     </button>
                     <button
                       onClick={() => { setShowJoinInput(!showJoinInput); setShowCreateInput(false); }}
-                      className="bg-white border border-[#c4c7c7]/30 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold hover:border-[#FF416C]/30 hover:text-[#FF416C] transition-all flex items-center gap-2"
+                      className="bg-white border border-[#E4E0D6]/30 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold hover:border-[#FF416C]/30 hover:text-[#FF416C] transition-all flex items-center gap-2"
                     >
                       <span className="material-symbols-outlined text-[16px]">group_add</span>
                       {showJoinInput ? 'Cancel' : 'Join with Invite Code'}
@@ -420,13 +420,13 @@ export default function SettingsPage() {
                   </div>
 
                   {showJoinInput && (
-                    <form onSubmit={handleJoinOrg} className="mt-4 p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl flex gap-3">
+                    <form onSubmit={handleJoinOrg} className="mt-4 p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl flex gap-3">
                       <input
                         type="text"
                         placeholder="Paste invite code (e.g. RELAY-8841)"
                         value={joinCode}
                         onChange={(e) => setJoinCode(e.target.value)}
-                        className="flex-1 bg-white border border-[#c4c7c7]/30 rounded-xl px-4 py-2.5 text-xs uppercase font-mono tracking-wider focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20"
+                        className="flex-1 bg-white border border-[#E4E0D6]/30 rounded-xl px-4 py-2.5 text-xs uppercase font-mono tracking-wider focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20"
                       />
                       <button type="submit" className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md shadow-[#FF416C]/20">
                         Join
@@ -435,7 +435,7 @@ export default function SettingsPage() {
                   )}
 
                   {showCreateInput && (
-                    <form onSubmit={handleCreateOrg} className="mt-4 p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl space-y-3">
+                    <form onSubmit={handleCreateOrg} className="mt-4 p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl space-y-3">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Organization Name</label>
                       <div className="flex gap-3">
                         <input
@@ -443,7 +443,7 @@ export default function SettingsPage() {
                           placeholder="e.g. Acme Corp"
                           value={orgName}
                           onChange={(e) => setOrgName(e.target.value)}
-                          className="flex-1 bg-white border border-[#c4c7c7]/30 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20"
+                          className="flex-1 bg-white border border-[#E4E0D6]/30 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20"
                         />
                         <button type="submit" className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md shadow-[#FF416C]/20">
                           Create
@@ -454,9 +454,9 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Current Workspace Info */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                   <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900 mb-4">Current Workspace</h2>
-                  <div className="p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+                  <div className="p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white flex items-center justify-center text-xs font-bold shadow-md shadow-[#FF416C]/20">
                         P
@@ -476,7 +476,7 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 {/* Invite Code (Owner only) */}
                 {isOwner && (
-                  <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                  <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
                         <span className="material-symbols-outlined text-white text-[20px]">vpn_key</span>
@@ -486,7 +486,7 @@ export default function SettingsPage() {
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest">Share this code to add members</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-4 bg-[#FAF9F5] border border-dashed border-[#c4c7c7]/50 rounded-xl">
+                    <div className="flex items-center gap-3 p-4 bg-[#FAF9F5] border border-dashed border-[#E4E0D6]/50 rounded-xl">
                       <span className="font-mono text-lg font-black tracking-widest text-slate-900 select-all">
                         {currentWorkspace.inviteCode || 'RELAY-8841'}
                       </span>
@@ -499,7 +499,7 @@ export default function SettingsPage() {
                 )}
 
                 {/* Member List */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">
                       Members ({orgMembers.length})
@@ -513,7 +513,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-3">
                     {orgMembers.map((member, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300 group">
+                      <div key={i} className="flex items-center justify-between p-4 border border-[#E4E0D6]/20 rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300 group">
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-xl ${member.color} flex items-center justify-center text-[11px] font-bold group-hover:scale-110 transition-transform`}>
                             {member.initials}
@@ -532,7 +532,7 @@ export default function SettingsPage() {
                             {member.role}
                           </span>
                           {isOwner && member.role !== 'Owner' && (
-                            <button className="w-8 h-8 rounded-xl border border-[#c4c7c7]/30 flex items-center justify-center text-slate-500 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-all">
+                            <button className="w-8 h-8 rounded-xl border border-[#E4E0D6]/30 flex items-center justify-center text-slate-500 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-all">
                               <span className="material-symbols-outlined text-[16px]">person_remove</span>
                             </button>
                           )}
@@ -547,7 +547,7 @@ export default function SettingsPage() {
             {/* ==================== POLICIES TAB (Org Owner only) ==================== */}
             {tab === 'policies' && isOrg && isOwner && (
               <div className="space-y-6">
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
                       <span className="material-symbols-outlined text-white text-[20px]">policy</span>
@@ -576,7 +576,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Danger Zone */}
-                <div className="bg-white border border-rose-200 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-rose-200 rounded-2xl p-6 shadow-warm">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20">
                       <span className="material-symbols-outlined text-white text-[20px]">warning</span>
@@ -765,7 +765,7 @@ export default function SettingsPage() {
       <Modal open={showNotificationModal} onClose={() => setShowNotificationModal(false)} title="Notifications">
         <div className="p-6 space-y-6">
           {/* Push Notifications */}
-          <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl">
             <div>
               <p className="text-sm font-bold text-slate-900">Push Notifications</p>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -787,7 +787,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Email Notifications */}
-          <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl">
             <div>
               <p className="text-sm font-bold text-slate-900">Email Notifications</p>
               <p className="text-xs text-slate-500 mt-0.5">Receive email alerts for meeting invites and updates</p>
@@ -814,7 +814,7 @@ export default function SettingsPage() {
               placeholder="Enter current password"
               value={currentPassword}
               onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); }}
-              className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+              className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
             />
           </div>
 
@@ -825,7 +825,7 @@ export default function SettingsPage() {
               placeholder="Min 8 chars, uppercase, lowercase, number, symbol"
               value={newPassword}
               onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
-              className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+              className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
             />
           </div>
 
@@ -836,7 +836,7 @@ export default function SettingsPage() {
               placeholder="Re-enter new password"
               value={confirmPassword}
               onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
-              className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+              className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
             />
           </div>
 
@@ -955,10 +955,10 @@ export default function SettingsPage() {
                 <img
                   src={twoFactorQrCode}
                   alt="QR Code"
-                  className="w-48 h-48 border-2 border-[#c4c7c7]/30 rounded-xl p-2 bg-white"
+                  className="w-48 h-48 border-2 border-[#E4E0D6]/30 rounded-xl p-2 bg-white"
                 />
               </div>
-              <div className="bg-[#FAF9F5] rounded-xl p-4 border border-[#c4c7c7]/20">
+              <div className="bg-[#FAF9F5] rounded-xl p-4 border border-[#E4E0D6]/20">
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Manual Setup Key</p>
                 <p className="text-sm font-mono font-bold text-slate-900 select-all break-all">{twoFactorSecret}</p>
               </div>
@@ -994,7 +994,7 @@ export default function SettingsPage() {
                   setSetupCode(e.target.value.replace(/[^0-9]/g, ''));
                   setSetupError(null);
                 }}
-                className="w-full text-center text-3xl tracking-[0.5em] font-mono bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-4 px-4 text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+                className="w-full text-center text-3xl tracking-[0.5em] font-mono bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-4 px-4 text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
                 autoFocus
               />
               {setupError && (
@@ -1053,7 +1053,7 @@ export default function SettingsPage() {
                 Two-factor authentication is now enabled. Save these backup codes in a safe place —
                 you&apos;ll need them if you lose access to your authenticator app.
               </p>
-              <div className="bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl p-4 space-y-2">
+              <div className="bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl p-4 space-y-2">
                 {backupCodes.map((code, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <span className="text-sm font-mono font-bold text-slate-900 tracking-wider">{code}</span>
@@ -1118,7 +1118,7 @@ export default function SettingsPage() {
               placeholder="Enter your password"
               value={disablePassword}
               onChange={(e) => { setDisablePassword(e.target.value); setDisableError(null); }}
-              className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+              className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
             />
           </div>
 
@@ -1132,7 +1132,7 @@ export default function SettingsPage() {
               placeholder="000000"
               value={disableCode}
               onChange={(e) => { setDisableCode(e.target.value.replace(/[^0-9]/g, '')); setDisableError(null); }}
-              className="w-full text-center text-2xl tracking-[0.5em] font-mono bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+              className="w-full text-center text-2xl tracking-[0.5em] font-mono bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-[#FF416C] focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
             />
           </div>
 
@@ -1187,7 +1187,7 @@ function SelectField({ label, value, onChange, options }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-xl py-3 px-4 text-sm text-slate-900 focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+        className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-slate-900 focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1205,7 +1205,7 @@ function PolicyRow({ label, desc, value, onChange, options }: {
   options: string[];
 }) {
   return (
-    <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+    <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl">
       <div>
         <p className="text-sm font-bold text-slate-900">{label}</p>
         <p className="text-xs text-slate-500">{desc}</p>
@@ -1213,7 +1213,7 @@ function PolicyRow({ label, desc, value, onChange, options }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-white border border-[#c4c7c7]/30 rounded-xl px-4 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-black transition-all"
+        className="bg-white border border-[#E4E0D6]/30 rounded-xl px-4 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-black transition-all"
       >
         {options.map((opt) => (
           <option key={opt} value={opt}>{opt === 'all' ? 'All Members' : opt === 'admins' ? 'Admins Only' : opt === 'on' ? 'Enabled' : opt === 'off' ? 'Disabled' : opt}</option>

@@ -25,9 +25,9 @@ const variantStyles: Record<ButtonVariant, string> = {
   gradient:
     "bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-lg shadow-[#FF416C]/20 hover:shadow-xl hover:shadow-[#FF416C]/30",
   black: "bg-black text-white hover:bg-slate-800",
-  white: "bg-white text-black border border-[#c4c7c7]/60 hover:bg-slate-50 shadow-sm",
+  white: "bg-white text-black border border-[#E4E0D6]/80 hover:bg-[#FF416C]/5 shadow-sm",
   outline:
-    "bg-white border border-[#c4c7c7]/30 text-slate-700 hover:border-[#FF416C]/30 hover:text-[#FF416C]",
+    "bg-white border border-[#E4E0D6] text-slate-700 hover:border-[#FF416C]/30 hover:text-[#FF416C]",
   ghost: "bg-transparent text-slate-500 hover:text-slate-900",
   danger: "bg-rose-600 text-white hover:bg-rose-700",
   link: "bg-transparent text-[#FF416C] hover:text-[#FF4B2B] underline",

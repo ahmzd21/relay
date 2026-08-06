@@ -148,7 +148,7 @@ export default function StatisticsPage() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl overflow-x-auto no-scrollbar">
+                <div className="flex gap-1 bg-[#FFFDF8] border border-[#E4E0D6]/30 p-1 rounded-xl overflow-x-auto no-scrollbar">
                   {TIME_PERIODS.map((p) => (
                     <button
                       key={p}
@@ -163,7 +163,7 @@ export default function StatisticsPage() {
                     </button>
                   ))}
                 </div>
-                <button className="flex items-center gap-2 bg-white border border-[#c4c7c7]/30 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold hover:border-[#FF416C]/30 hover:text-[#FF416C] transition-all">
+                <button className="flex items-center gap-2 bg-white border border-[#E4E0D6]/30 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold hover:border-[#FF416C]/30 hover:text-[#FF416C] transition-all">
                   <span className="material-symbols-outlined text-[16px]">download</span>
                   Export
                 </button>
@@ -192,7 +192,7 @@ export default function StatisticsPage() {
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Meeting Activity */}
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">
                     {isOrg ? 'Team Meeting Activity' : 'Your Meeting Activity'}
@@ -218,7 +218,7 @@ export default function StatisticsPage() {
               </div>
 
               {/* Translation Volume */}
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">
                     {isOrg ? 'Team Translation Volume' : 'Your Translation Volume'}
@@ -247,7 +247,7 @@ export default function StatisticsPage() {
             {/* Language Breakdown + Platform Usage */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Language Breakdown */}
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">Language Breakdown</h2>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{languages.length} languages</span>
@@ -274,7 +274,7 @@ export default function StatisticsPage() {
               </div>
 
               {/* Platform Usage */}
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">Platform Usage</h2>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">By meeting type</span>
@@ -303,7 +303,7 @@ export default function StatisticsPage() {
 
             {/* Top Members (Org only) */}
             {isOrg && (
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">Top Contributors</h2>
                   {hasPermission('owner') && (
@@ -314,7 +314,7 @@ export default function StatisticsPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {orgMembers.map((member, i) => (
-                    <div key={i} className="flex items-center gap-4 p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300 group">
+                    <div key={i} className="flex items-center gap-4 p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300 group">
                       <div className="relative">
                         <div className={`w-10 h-10 rounded-xl ${member.color} flex items-center justify-center text-[11px] font-bold group-hover:scale-110 transition-transform`}>
                           {member.initials}
@@ -357,35 +357,35 @@ export default function StatisticsPage() {
                   ].map((meeting, i) => (
                     <div
                       key={i}
-                      className="bg-[#0f1115] border border-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+                      className="bg-[#FFFDF8] border border-[#E4E0D6] p-5 rounded-2xl shadow-warm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
                           meeting.platform === 'Native'
                             ? 'bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white border-[#FF416C]/30'
-                            : 'bg-white/10 text-white/60 border-white/10'
+                            : 'bg-[#FAF9F5] text-[#8C8880] border-[#E4E0D6]/20'
                         }`}>
                           <span className="material-symbols-outlined text-[20px]">
                             {meeting.platform === 'Native' ? 'videocam' : meeting.platform === 'Zoom' ? 'videocam' : meeting.platform === 'Meet' ? 'groups' : 'meeting_room'}
                           </span>
                         </div>
                         <div className="flex gap-1.5">
-                          <span className="bg-white/10 border border-white/10 text-white/60 px-2 py-0.5 rounded text-[9px] font-bold font-helvetica">
+                          <span className="bg-[#FAF9F5] border border-[#E4E0D6]/20 text-[#8C8880] px-2 py-0.5 rounded text-[9px] font-bold font-helvetica">
                             {meeting.languages.join(' + ')}
                           </span>
                           <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider font-helvetica ${
                             meeting.platform === 'Native'
                               ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20'
-                              : 'bg-white/10 text-white/50 border border-white/10'
+                              : 'bg-[#FAF9F5] text-[#8C8880] border border-[#E4E0D6]/20'
                           }`}>
                             {meeting.platform}
                           </span>
                         </div>
                       </div>
-                      <h3 className="font-bold text-white mb-1 group-hover:text-[#FF416C] transition-colors font-helvetica">
+                      <h3 className="font-bold text-[#1c1b1b] mb-1 group-hover:text-[#FF416C] transition-colors font-helvetica">
                         {meeting.title}
                       </h3>
-                      <p className="text-white/50 text-xs">
+                      <p className="text-[#8C8880] text-xs">
                         {meeting.date} · {meeting.duration} · {meeting.participants} participants
                       </p>
                     </div>
@@ -395,7 +395,7 @@ export default function StatisticsPage() {
 
             {/* Usage Summary (Owner only) */}
             {isOrg && hasPermission('owner') && (
-              <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -403,8 +403,8 @@ export default function StatisticsPage() {
                       <span className="material-symbols-outlined text-white text-[24px]">payments</span>
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">Workspace Usage</h3>
-                      <p className="text-xs text-white/50">142h of 200h monthly limit used · Renews in 12 days</p>
+                      <h3 className="text-sm font-bold text-[#1c1b1b]">Workspace Usage</h3>
+                      <p className="text-xs text-[#8C8880]">142h of 200h monthly limit used · Renews in 12 days</p>
                     </div>
                   </div>
                   <Link href="/dashboard/billing" className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-lg shadow-[#FF416C]/20 flex items-center gap-2">
@@ -412,12 +412,12 @@ export default function StatisticsPage() {
                     Manage Billing
                   </Link>
                 </div>
-                <div className="mt-4 w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="mt-4 w-full h-2 bg-[#E4E0D6]/30 rounded-full overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: '71%', background: 'linear-gradient(to right, #FF416C, #FF4B2B)' }} />
                 </div>
                 <div className="flex justify-between mt-2">
-                  <span className="text-[10px] text-white/40">0h</span>
-                  <span className="text-[10px] text-white/40">200h</span>
+                  <span className="text-[10px] text-[#8C8880]">0h</span>
+                  <span className="text-[10px] text-[#8C8880]">200h</span>
                 </div>
               </div>
             )}
@@ -437,7 +437,7 @@ function MetricCard({ icon, color, value, label, change }: {
   change: string;
 }) {
   return (
-    <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all duration-300 group">
+    <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all duration-300 group">
       <div className="flex items-center justify-between mb-4">
         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 group-hover:scale-110 transition-transform">
           <span className="material-symbols-outlined text-white text-[20px]">{icon}</span>

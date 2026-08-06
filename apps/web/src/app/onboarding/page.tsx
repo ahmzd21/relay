@@ -104,7 +104,7 @@ export default function OnboardingPage() {
                 <p className="text-slate-500 text-lg">Let's get your personalized AI studio set up.</p>
               </div>
 
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-8 shadow-sm space-y-8">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-8 shadow-warm space-y-8">
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white font-bold text-3xl shadow-lg shadow-[#FF416C]/20 relative group cursor-pointer overflow-hidden">
                     ET
@@ -122,7 +122,7 @@ export default function OnboardingPage() {
                       type="text"
                       value={jobRole}
                       onChange={(e) => setJobRole(e.target.value)}
-                      className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-full py-4 px-6 text-[#1c1b1b] text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                      className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-full py-4 px-6 text-[#1c1b1b] text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
                       placeholder="e.g. Product Manager"
                     />
                   </div>
@@ -139,7 +139,7 @@ export default function OnboardingPage() {
                 <p className="text-slate-500 text-lg">Configure how you sound and translate.</p>
               </div>
 
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-8 shadow-sm space-y-8">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-8 shadow-warm space-y-8">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <label className="block text-[10px] uppercase tracking-[0.1em] font-bold text-[#8C8880] ml-4">I Speak</label>
@@ -147,7 +147,7 @@ export default function OnboardingPage() {
                       <select
                         value={speakingLanguage}
                         onChange={(e) => setSpeakingLanguage(e.target.value)}
-                        className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-2xl py-4 pl-5 pr-10 text-[#1c1b1b] text-sm font-medium focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
+                        className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-2xl py-4 pl-5 pr-10 text-[#1c1b1b] text-sm font-medium focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
                       >
                         <option>English</option>
                         <option>Spanish</option>
@@ -164,7 +164,7 @@ export default function OnboardingPage() {
                       <select
                         value={hearingLanguage}
                         onChange={(e) => setHearingLanguage(e.target.value)}
-                        className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-2xl py-4 pl-5 pr-10 text-[#1c1b1b] text-sm font-medium focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
+                        className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-2xl py-4 pl-5 pr-10 text-[#1c1b1b] text-sm font-medium focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
                       >
                         <option>Spanish</option>
                         <option>English</option>
@@ -181,7 +181,7 @@ export default function OnboardingPage() {
                       <select
                         value={subtitleLanguage}
                         onChange={(e) => setSubtitleLanguage(e.target.value)}
-                        className="w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-2xl py-4 pl-5 pr-10 text-[#1c1b1b] text-sm font-medium focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
+                        className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-2xl py-4 pl-5 pr-10 text-[#1c1b1b] text-sm font-medium focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
                       >
                         <option>English</option>
                         <option>Spanish</option>
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-[#c4c7c7]/30">
+                <div className="space-y-4 pt-4 border-t border-[#E4E0D6]/30">
                   <label className="block text-[10px] uppercase tracking-[0.1em] font-bold text-[#8C8880] ml-4">AI Output Voice Style</label>
                   <div className="grid grid-cols-1 gap-3">
                     {[
@@ -207,7 +207,7 @@ export default function OnboardingPage() {
                         className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${
                           selectedVoice === voice.id
                             ? 'border-[#FF416C] bg-gradient-to-br from-[#FF416C]/[0.03] to-transparent'
-                            : 'border-[#c4c7c7]/30 hover:border-[#FF416C]/30 bg-white'
+                            : 'border-[#E4E0D6]/30 hover:border-[#FF416C]/30 bg-white'
                         }`}
                       >
                         <div className="flex items-center gap-4">
@@ -219,7 +219,7 @@ export default function OnboardingPage() {
                             <p className="text-[#8C8880] text-xs">{voice.desc}</p>
                           </div>
                         </div>
-                        <button className="w-8 h-8 rounded-full bg-white border border-[#c4c7c7]/60 flex items-center justify-center hover:bg-gradient-to-br hover:from-[#FF416C] hover:to-[#FF4B2B] hover:text-white hover:border-transparent transition-all group">
+                        <button className="w-8 h-8 rounded-full bg-white border border-[#E4E0D6]/60 flex items-center justify-center hover:bg-gradient-to-br hover:from-[#FF416C] hover:to-[#FF4B2B] hover:text-white hover:border-transparent transition-all group">
                           <span className="material-symbols-outlined text-[18px] text-[#8C8880] group-hover:text-white">play_arrow</span>
                         </button>
                       </div>
@@ -244,7 +244,7 @@ export default function OnboardingPage() {
                   className={`p-6 bg-white border-2 rounded-2xl cursor-pointer transition-all ${
                     workspaceType === 'personal'
                       ? 'border-[#FF416C] shadow-lg shadow-[#FF416C]/10 scale-[1.02]'
-                      : 'border-[#c4c7c7]/30 hover:border-[#FF416C]/30 hover:scale-[1.01]'
+                      : 'border-[#E4E0D6]/30 hover:border-[#FF416C]/30 hover:scale-[1.01]'
                   }`}
                 >
                   <div className="w-12 h-12 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF416C]/20 mb-6">
@@ -259,7 +259,7 @@ export default function OnboardingPage() {
                   className={`p-6 bg-white border-2 rounded-2xl cursor-pointer transition-all ${
                     workspaceType === 'organization'
                       ? 'border-[#FF416C] shadow-lg shadow-[#FF416C]/10 scale-[1.02]'
-                      : 'border-[#c4c7c7]/30 hover:border-[#FF416C]/30 hover:scale-[1.01]'
+                      : 'border-[#E4E0D6]/30 hover:border-[#FF416C]/30 hover:scale-[1.01]'
                   }`}
                 >
                   <div className="w-12 h-12 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF416C]/20 mb-6">
@@ -278,7 +278,7 @@ export default function OnboardingPage() {
                       type="text"
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
-                      className="w-full bg-white border border-[#c4c7c7]/30 rounded-full py-4 px-6 text-[#1c1b1b] text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 shadow-sm transition-all"
+                      className="w-full bg-white border border-[#E4E0D6]/30 rounded-full py-4 px-6 text-[#1c1b1b] text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 shadow-sm transition-all"
                       placeholder="e.g. Acme Corp"
                     />
                   </div>

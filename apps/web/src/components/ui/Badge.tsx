@@ -24,9 +24,9 @@ interface BadgeProps {
 const variantStyles: Record<BadgeVariant, string> = {
   gradient:
     "bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20",
-  dark: "bg-[#0f1115] text-white shadow-md",
+  dark: "bg-[#FFFDF8] text-[#1c1b1b] border border-[#E4E0D6]",
   outline:
-    "bg-white border border-[#c4c7c7]/30 text-slate-600",
+    "bg-white border border-[#E4E0D6]/30 text-slate-600",
   success:
     "bg-emerald-500/10 border border-emerald-500/30 text-emerald-600",
   warning:

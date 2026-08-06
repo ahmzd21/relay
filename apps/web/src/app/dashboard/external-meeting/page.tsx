@@ -202,17 +202,17 @@ export default function ExternalMeetingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
               {/* Connect Platform — Dark Card */}
-              <div className="lg:col-span-1 bg-[#0f1115] text-white rounded-2xl p-8 shadow-md shadow-black/20 relative overflow-hidden group flex flex-col justify-between min-h-[220px] border border-slate-800">
+              <div className="lg:col-span-1 bg-[#FFFDF8] text-[#1c1b1b] rounded-2xl p-8 shadow-warm-md relative overflow-hidden group flex flex-col justify-between min-h-[220px] border border-[#E4E0D6]">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
                 <div className="relative z-10 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="w-12 h-12 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF416C]/20 mb-5 group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-white text-[24px]">hub</span>
                     </div>
-                    <h2 className="text-2xl font-bold font-helvetica tracking-tight text-white mb-2">
+                    <h2 className="text-2xl font-bold font-helvetica tracking-tight text-[#1c1b1b] mb-2">
                       Connect a Platform
                     </h2>
-                    <p className="text-white/50 text-sm leading-relaxed max-w-xs">
+                    <p className="text-[#8C8880] text-sm leading-relaxed max-w-xs">
                       Link your Zoom, Google Meet, or Teams account for seamless translation.
                     </p>
                   </div>
@@ -224,7 +224,7 @@ export default function ExternalMeetingPage() {
               </div>
 
               {/* Quick Join — Light Card */}
-              <div className="lg:col-span-2 bg-white rounded-2xl p-8 border border-[#c4c7c7]/30 shadow-sm relative overflow-hidden group hover:shadow-lg hover:-translate-y-1 hover:border-[#FF416C]/30 transition-all duration-300">
+              <div className="lg:col-span-2 bg-[#FFFDF8] rounded-2xl p-8 border border-[#E4E0D6]/30 shadow-warm relative overflow-hidden group hover:shadow-lg hover:-translate-y-1 hover:border-[#FF416C]/30 transition-all duration-300">
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#FF416C]/10 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
                 <div className="relative z-10 h-full flex flex-col justify-between">
@@ -242,7 +242,7 @@ export default function ExternalMeetingPage() {
                       value={meetingLink}
                       onChange={(e) => setMeetingLink(e.target.value)}
                       placeholder="Paste meeting link..."
-                      className="flex-1 bg-[#FAF9F5] border border-[#c4c7c7]/30 rounded-full py-3 px-5 text-[15px] text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                      className="flex-1 bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-full py-3 px-5 text-[15px] text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
                       disabled={isConnecting}
                     />
                     <button
@@ -280,7 +280,7 @@ export default function ExternalMeetingPage() {
                 ].map((platform) => (
                   <div
                     key={platform.name}
-                    className="group bg-white border border-[#c4c7c7]/30 rounded-2xl p-5 hover:border-[#FF416C]/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                    className="group bg-[#FFFDF8] border border-[#E4E0D6]/30 rounded-2xl p-5 hover:border-[#FF416C]/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 group-hover:scale-110 transition-transform">
@@ -288,7 +288,7 @@ export default function ExternalMeetingPage() {
                           {platform.icon}
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold text-[#8C8880] bg-[#FAF9F5] border border-[#c4c7c7]/30 px-2 py-1 rounded-lg">
+                      <span className="text-[10px] font-bold text-[#8C8880] bg-[#FAF9F5] border border-[#E4E0D6]/30 px-2 py-1 rounded-lg">
                         {platform.users} users
                       </span>
                     </div>
@@ -310,7 +310,7 @@ export default function ExternalMeetingPage() {
                   <span className="material-symbols-outlined text-[#8C8880] text-[20px]">history</span>
                   Recent External Meetings
                 </h2>
-                <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl self-start sm:self-auto">
+                <div className="flex gap-1 bg-[#FFFDF8] border border-[#E4E0D6]/30 p-1 rounded-xl self-start sm:self-auto">
                   {tabs.map((tab) => (
                     <button
                       key={tab.key}
@@ -328,7 +328,7 @@ export default function ExternalMeetingPage() {
               </div>
 
               {filteredMeetings.length === 0 ? (
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-12 text-center shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-12 text-center shadow-warm">
                   <div className="w-16 h-16 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#FF416C]/20">
                     <span className="material-symbols-outlined text-white text-[32px]">link_off</span>
                   </div>
@@ -345,7 +345,7 @@ export default function ExternalMeetingPage() {
                     <Link
                       key={meeting.id}
                       href={`/dashboard/external-meeting/${meeting.id}`}
-                      className="bg-[#0f1115] border border-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]"
+                      className="bg-[#FFFDF8] border border-[#E4E0D6] p-5 rounded-2xl shadow-warm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]"
                     >
                       <div>
                         <div className="flex justify-between items-start mb-4">
@@ -354,7 +354,7 @@ export default function ExternalMeetingPage() {
                               ? 'bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white border-[#FF416C]/30'
                               : meeting.status === 'processing'
                                 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                : 'bg-white/10 text-slate-400 border-white/10'
+                                : 'bg-[#FAF9F5] text-[#8C8880] border-[#E4E0D6]/20'
                           }`}>
                             <span className="material-symbols-outlined text-[20px]">{platform.icon}</span>
                           </div>
@@ -364,19 +364,19 @@ export default function ExternalMeetingPage() {
                                 ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20'
                                 : meeting.status === 'processing'
                                   ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                  : 'bg-white/10 text-white/40 border border-white/10'
+                                  : 'bg-[#FAF9F5] text-[#8C8880] border border-[#E4E0D6]/20'
                             }`}>
                               {meeting.status}
                             </span>
-                            <span className="bg-white/10 border border-white/10 text-white/60 px-2 py-0.5 rounded text-[9px] font-bold font-helvetica">
+                            <span className="bg-[#FAF9F5] border border-[#E4E0D6]/20 text-[#8C8880] px-2 py-0.5 rounded text-[9px] font-bold font-helvetica">
                               {meeting.languages.slice(0, 2).join(' → ')}
                             </span>
                           </div>
                         </div>
-                        <h3 className="font-bold text-white mb-1 group-hover:text-[#FF416C] transition-colors font-helvetica">
+                        <h3 className="font-bold text-[#1c1b1b] mb-1 group-hover:text-[#FF416C] transition-colors font-helvetica">
                           {meeting.title}
                         </h3>
-                        <p className="text-white/50 text-xs mb-4">
+                        <p className="text-[#8C8880] text-xs mb-4">
                           {platform.name} · {formatDate(meeting.date)} at {formatTime(meeting.time)} · {meeting.duration}
                         </p>
                       </div>
@@ -385,19 +385,19 @@ export default function ExternalMeetingPage() {
                           {meeting.participants.slice(0, 4).map((p, i) => (
                             <div
                               key={i}
-                              className={`w-6 h-6 rounded-full border-2 border-[#0f1115] ${p.color} flex items-center justify-center text-[8px] font-bold`}
+                              className={`w-6 h-6 rounded-full border-2 border-[#FFFDF8] ${p.color} flex items-center justify-center text-[8px] font-bold`}
                               title={p.name}
                             >
                               {p.initials}
                             </div>
                           ))}
                           {meeting.participants.length > 4 && (
-                            <div className="w-6 h-6 rounded-full border-2 border-[#0f1115] bg-white/10 text-white/60 flex items-center justify-center text-[8px] font-bold">
+                            <div className="w-6 h-6 rounded-full border-2 border-[#FFFDF8] bg-[#FAF9F5] text-[#8C8880] flex items-center justify-center text-[8px] font-bold">
                               +{meeting.participants.length - 4}
                             </div>
                           )}
                         </div>
-                        <span className="material-symbols-outlined text-white/30 text-[18px] group-hover:text-[#FF416C] transition-colors">arrow_forward</span>
+                        <span className="material-symbols-outlined text-[#c4c7c7] text-[18px] group-hover:text-[#FF416C] transition-colors">arrow_forward</span>
                       </div>
                     </Link>
                     );

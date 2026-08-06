@@ -17,7 +17,7 @@ interface TabsProps {
 export default function Tabs({ tabs, activeTab, onChange, className = "" }: TabsProps) {
   return (
     <div
-      className={`flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl overflow-x-auto no-scrollbar ${className}`}
+      className={`flex gap-1 bg-[#FFFDF8] border border-[#E4E0D6] p-1 rounded-xl overflow-x-auto no-scrollbar ${className}`}
     >
       {tabs.map((tab) => (
         <button
