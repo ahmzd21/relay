@@ -1,0 +1,6 @@
+livekit-agents>=0.8.0
+livekit-plugins-deepgram
+livekit-plugins-elevenlabs
+deepl
+aiohttp
+python-dotenv

@@ -24,6 +24,11 @@ export async function hasValidMxRecord(email: string): Promise<boolean> {
   const domain = email.split('@')[1];
   if (!domain) return false;
 
+  // In development / local testing or with Mailpit, allow local/mock domains
+  if (process.env.NODE_ENV !== 'production' || process.env.EMAIL_PROVIDER === 'mailpit') {
+    return true;
+  }
+
   return new Promise((resolve) => {
     dns.resolveMx(domain, (err, addresses) => {
       if (err || !addresses || addresses.length === 0) {
@@ -34,3 +39,4 @@ export async function hasValidMxRecord(email: string): Promise<boolean> {
     });
   });
 }
+

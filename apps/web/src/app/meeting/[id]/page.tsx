@@ -1,36 +1,54 @@
 'use client';
 
-import React, { useState, use } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { LiveKitRoom } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { MeetingRoom } from '@/components/meeting/MeetingRoom';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface GuestMeetingPageProps {
+interface MeetingPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
+export default function MeetingPage({ params }: MeetingPageProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const resolvedParams = use(params);
   const meetingId = resolvedParams.id;
 
-  const [guestName, setGuestName] = useState('');
+  // Pre-join configuration state
+  const [name, setName] = useState(user?.fullName || '');
   const [spokenLang, setSpokenLang] = useState('en');
   const [subtitleLang, setSubtitleLang] = useState('en');
   const [audioLang, setAudioLang] = useState('none');
   const [chatLang, setChatLang] = useState('en');
 
+  // Host configuration
+  const [isHostMode, setIsHostMode] = useState(true);
+  const [enableWaitingRoom, setEnableWaitingRoom] = useState(false);
+  const [hostKey] = useState(() => Math.random().toString(36).substring(2, 10));
+
+  // Connection details state
   const [connectionDetails, setConnectionDetails] = useState<{
     serverUrl: string;
     token: string;
+    isHost: boolean;
+    hostKey: string;
   } | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Sync user's name when auth loads
+  useEffect(() => {
+    if (user?.fullName && !name) {
+      setName(user.fullName);
+    }
+  }, [user?.fullName, name]);
+
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!guestName.trim()) return;
+    if (!name.trim()) return;
 
     setIsConnecting(true);
     setError(null);
@@ -39,11 +57,16 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       const url = new URL(`${apiUrl}/api/meetings/token`);
       url.searchParams.append('roomName', meetingId);
-      url.searchParams.append('username', guestName.trim());
+      url.searchParams.append('username', name.trim());
       url.searchParams.append('spokenLang', spokenLang);
       url.searchParams.append('subtitleLang', subtitleLang);
       url.searchParams.append('audioLang', audioLang);
       url.searchParams.append('chatLang', chatLang);
+      if (isHostMode) {
+        url.searchParams.append('isHost', 'true');
+        url.searchParams.append('hostKey', hostKey);
+        if (enableWaitingRoom) url.searchParams.append('waitingRoom', 'true');
+      }
 
       const res = await fetch(url.toString(), {
         credentials: 'include',
@@ -57,15 +80,18 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
       setConnectionDetails({
         serverUrl: data.serverUrl,
         token: data.token,
+        isHost: data.isHost || isHostMode,
+        hostKey: data.hostKey || hostKey,
       });
     } catch (err: any) {
-      console.error('Guest connection error:', err);
-      setError(err.message || 'Unable to join meeting as guest.');
+      console.error('Connection error:', err);
+      setError(err.message || 'Unable to join meeting. Please ensure the backend server is running.');
     } finally {
       setIsConnecting(false);
     }
   };
 
+  // 1. LiveKit Active Room View
   if (connectionDetails) {
     return (
       <LiveKitRoom
@@ -79,36 +105,44 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
       >
         <MeetingRoom
           meetingId={meetingId}
-          onLeave={() => router.push('/')}
+          onLeave={() => router.push('/dashboard/native-meeting')}
+          isHost={connectionDetails.isHost}
+          hostKey={connectionDetails.hostKey}
         />
       </LiveKitRoom>
     );
   }
 
+  // 2. Pre-Join Screen
   return (
     <div className="min-h-screen bg-[#070709] text-white flex flex-col font-sans">
       {/* Header */}
-      <header className="h-16 border-b border-white/10 flex items-center px-6 bg-black/40 backdrop-blur-md">
+      <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-black/40 backdrop-blur-md">
         <div className="flex items-center gap-2.5">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="h-6 w-6 text-white">
             <path d="M30 20 L70 50 L30 80 L50 50 Z" fill="currentColor" />
             <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" />
           </svg>
           <span className="text-lg font-bold tracking-tight">Relay</span>
-          <span className="text-[10px] bg-white/10 text-white/60 px-2 py-0.5 rounded font-bold uppercase tracking-wider ml-1">
-            Guest Portal
-          </span>
         </div>
+
+        <button
+          onClick={() => router.push('/dashboard/native-meeting')}
+          className="text-xs text-white/50 hover:text-white transition-colors flex items-center gap-1"
+        >
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <span>Back to Dashboard</span>
+        </button>
       </header>
 
-      {/* Join Screen */}
+      {/* Main Pre-Join Card */}
       <main className="flex-1 flex items-center justify-center p-6">
         <div className="max-w-xl w-full bg-[#111116] border border-white/10 rounded-3xl p-8 shadow-2xl space-y-6">
           <div className="text-center space-y-2">
             <div className="w-14 h-14 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-center mx-auto text-rose-400">
-              <span className="material-symbols-outlined text-[28px]">group</span>
+              <span className="material-symbols-outlined text-[28px]">videocam</span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">Join as Guest</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Join Meeting</h1>
             <p className="text-white/40 text-xs">
               Room ID: <span className="text-white font-mono font-bold">{meetingId}</span>
             </p>
@@ -121,22 +155,56 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
           )}
 
           <form onSubmit={handleJoin} className="space-y-5">
+            {/* Display Name */}
             <div className="space-y-1.5">
               <label className="block text-[11px] uppercase tracking-wider font-bold text-white/50">
-                Your Name
+                Your Display Name
               </label>
               <input
                 type="text"
-                value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/30 transition-colors"
-                placeholder="Enter your name to join"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
                 required
+                className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/30 transition-colors"
               />
+            </div>
+
+            {/* Host Options */}
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] uppercase tracking-wider font-bold text-white/50 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[13px] text-white/40">shield_person</span>
+                  Join as Host
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsHostMode(!isHostMode)}
+                  className={`w-10 h-5 rounded-full transition-colors relative ${isHostMode ? 'bg-rose-500' : 'bg-white/20'}`}
+                >
+                  <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${isHostMode ? 'left-5.5 right-0.5' : 'left-0.5'}`} style={{ left: isHostMode ? '22px' : '2px' }} />
+                </button>
+              </div>
+              {isHostMode && (
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-white/50 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[13px] text-white/40">hourglass_top</span>
+                    Enable Waiting Room
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setEnableWaitingRoom(!enableWaitingRoom)}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${enableWaitingRoom ? 'bg-rose-500' : 'bg-white/20'}`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all`} style={{ left: enableWaitingRoom ? '22px' : '2px' }} />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Language Preferences Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+              {/* Spoken Language */}
               <div className="space-y-1.5">
                 <label className="block text-[10px] uppercase tracking-wider font-bold text-white/50 flex items-center gap-1">
                   <span className="material-symbols-outlined text-[13px] text-white/40">mic</span>
@@ -155,6 +223,7 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
                 </select>
               </div>
 
+              {/* Subtitle Language */}
               <div className="space-y-1.5">
                 <label className="block text-[10px] uppercase tracking-wider font-bold text-white/50 flex items-center gap-1">
                   <span className="material-symbols-outlined text-[13px] text-white/40">subtitles</span>
@@ -174,6 +243,7 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
                 </select>
               </div>
 
+              {/* Audio Dubbing Language */}
               <div className="space-y-1.5">
                 <label className="block text-[10px] uppercase tracking-wider font-bold text-white/50 flex items-center gap-1">
                   <span className="material-symbols-outlined text-[13px] text-white/40">headphones</span>
@@ -193,6 +263,7 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
                 </select>
               </div>
 
+              {/* Chat Translation */}
               <div className="space-y-1.5">
                 <label className="block text-[10px] uppercase tracking-wider font-bold text-white/50 flex items-center gap-1">
                   <span className="material-symbols-outlined text-[13px] text-white/40">chat</span>
@@ -212,27 +283,28 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
               </div>
             </div>
 
+            {/* Join Submit Button */}
             <button
               type="submit"
-              disabled={isConnecting || !guestName.trim()}
-              className="w-full py-3.5 bg-white text-black rounded-2xl text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              disabled={isConnecting || !name.trim()}
+              className="w-full py-3.5 bg-white text-black hover:bg-white/90 disabled:opacity-50 rounded-2xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 mt-4"
             >
               {isConnecting ? (
                 <>
                   <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  <span>Connecting...</span>
+                  <span>Connecting to LiveKit...</span>
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-[18px]">login</span>
-                  <span>Join Meeting</span>
+                  <span>Enter Meeting</span>
                 </>
               )}
             </button>
           </form>
 
           <p className="text-center text-[11px] text-white/30">
-            Guest access powered by Relay Real-Time Audio & Subtitle Translation
+            Powered by Relay Real-Time Multilingual WebRTC Infrastructure
           </p>
         </div>
       </main>

@@ -431,25 +431,67 @@ const googleSchema = z.object({
 router.post('/google', async (req: Request, res: Response) => {
   try {
     const body = googleSchema.parse(req.body);
+    let payload: { email?: string; name?: string; picture?: string; sub?: string } | null = null;
 
-    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: `Bearer ${body.credential}` },
-    });
+    // 1. Try treating credential as an OAuth2 access token
+    try {
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${body.credential}` },
+      });
+      if (userInfoResponse.ok) {
+        payload = await userInfoResponse.json();
+      }
+    } catch {}
 
-    if (!userInfoResponse.ok) {
-      return res.status(401).json({ error: 'Invalid Google access token' });
+    // 2. If access token failed, try verifying as an ID token / JWT
+    if (!payload?.email) {
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: body.credential,
+          audience: [
+            process.env.GOOGLE_CLIENT_ID || '',
+            process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '432546754961-schqiqqncgmef7fstqmsl09fct7j1nos.apps.googleusercontent.com',
+          ].filter(Boolean),
+        });
+        const ticketPayload = ticket.getPayload();
+        if (ticketPayload?.email) {
+          payload = {
+            email: ticketPayload.email,
+            name: ticketPayload.name,
+            picture: ticketPayload.picture,
+            sub: ticketPayload.sub,
+          };
+        }
+      } catch {}
     }
 
-    const payload = await userInfoResponse.json();
+    // 3. Fallback: check Google tokeninfo API directly
+    if (!payload?.email) {
+      try {
+        const tokenInfoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(body.credential)}`);
+        if (tokenInfoRes.ok) {
+          const info = await tokenInfoRes.json();
+          if (info.email) {
+            payload = {
+              email: info.email,
+              name: info.name,
+              picture: info.picture,
+              sub: info.sub,
+            };
+          }
+        }
+      } catch {}
+    }
+
     if (!payload || !payload.email) {
-      return res.status(401).json({ error: 'Invalid Google token payload' });
+      return res.status(401).json({ error: 'Invalid Google credentials or token expired' });
     }
 
     const result = await findOrCreateGoogleUser({
       email: normalizeEmail(payload.email),
       fullName: payload.name || payload.email.split('@')[0],
       avatar: payload.picture || null,
-      providerAccountId: payload.sub,
+      providerAccountId: payload.sub || payload.email,
     });
 
     const token = await signSessionToken({

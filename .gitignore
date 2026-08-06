@@ -24,9 +24,17 @@ coverage/
 
 # env files
 .env
+.env*.local
 .env.*
 !.env.example
 .env.local
+
+# python
+__pycache__/
+*.pyc
+venv/
+.venv/
+apps/translation-agent/venv/
 
 # vercel
 .vercel

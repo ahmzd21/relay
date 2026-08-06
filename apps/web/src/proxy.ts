@@ -11,10 +11,11 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   // Protect specific routes
+  const isGuestMeeting = path.startsWith('/meeting') && path.includes('/guest');
   const protectedPaths = ["/dashboard", "/onboarding", "/meeting"];
   const isProtectedPath = protectedPaths.some(p => path.startsWith(p));
 
-  if (isProtectedPath) {
+  if (isProtectedPath && !isGuestMeeting) {
     if (!sessionCookie || !sessionCookie.value) {
       return NextResponse.redirect(new URL("/login", request.url));
     }

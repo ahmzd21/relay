@@ -5,8 +5,9 @@
   "packageManager": "pnpm@11.10.0",
   "scripts": {
     "dev": "turbo dev",
-    "dev:web": "turbo dev --filter=web",
-    "dev:api": "turbo dev --filter=api",
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter relay-api dev",
+    "dev:agent": "..\\meet\\agent\\venv\\Scripts\\python.exe apps/translation-agent/main.py dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "db:push": "pnpm --filter shared db:push",
