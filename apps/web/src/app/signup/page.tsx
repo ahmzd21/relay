@@ -92,6 +92,18 @@ export default function SignupPage() {
         },
       });
       client.requestAccessToken();
+    } else if (window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '432546754961-schqiqqncgmef7fstqmsl09fct7j1nos.apps.googleusercontent.com',
+        callback: (response) => {
+          if (response.credential) {
+            handleGoogleResponse({ credential: response.credential });
+          }
+        },
+      });
+      window.google.accounts.id.prompt();
+    } else {
+      setErrorMsg('Google Sign-In is initializing. Please wait a second and try again.');
     }
   };
 
