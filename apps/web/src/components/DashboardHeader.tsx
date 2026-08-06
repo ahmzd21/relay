@@ -38,7 +38,7 @@ export default function DashboardHeader({
           <input
             type="text"
             placeholder={searchPlaceholder}
-            className="w-full bg-white border border-[#c4c7c7]/30 rounded-full py-2.5 pl-12 pr-4 text-[15px] text-[#1c1b1b] placeholder:text-[#8C8880] focus:outline-none focus:border-[#FF416C]/50 focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+            className="w-full bg-white border border-[#E4E0D6]/30 rounded-full py-2.5 pl-12 pr-4 text-[15px] text-[#1c1b1b] placeholder:text-[#8C8880] focus:outline-none focus:border-[#FF416C]/50 focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
           />
         </div>
       ) : (
@@ -53,7 +53,7 @@ export default function DashboardHeader({
         <div className="relative">
           <button
             onClick={() => setShowBellDropdown(!showBellDropdown)}
-            className="relative h-9 w-9 md:h-10 md:w-10 rounded-xl bg-white border border-[#c4c7c7]/30 flex items-center justify-center shadow-sm hover:border-[#FF416C]/30 hover:shadow-md transition-all"
+            className="relative h-9 w-9 md:h-10 md:w-10 rounded-xl bg-[#FFFDF8] border border-[#E4E0D6] flex items-center justify-center shadow-warm hover:border-[#FF416C]/30 hover:shadow-warm-md transition-all"
             aria-label="Notifications"
           >
             <span className="material-symbols-outlined text-[#1c1b1b] text-[20px]">notifications</span>
@@ -68,8 +68,8 @@ export default function DashboardHeader({
           {showBellDropdown && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowBellDropdown(false)} />
-              <div className="absolute right-0 mt-2 z-50 w-80 bg-white border border-[#c4c7c7]/30 rounded-2xl shadow-xl overflow-hidden">
-                <div className="p-4 border-b border-[#c4c7c7]/20">
+              <div className="absolute right-0 mt-2 z-50 w-80 bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl shadow-warm-md overflow-hidden">
+                <div className="p-4 border-b border-[#E4E0D6]/50">
                   <p className="text-sm font-bold font-helvetica text-slate-900">Notifications</p>
                 </div>
                 <div className="max-h-80 overflow-y-auto">
@@ -82,7 +82,7 @@ export default function DashboardHeader({
                     notifications.map((n) => (
                       <div
                         key={n.id}
-                        className={`p-4 border-b border-[#c4c7c7]/10 hover:bg-[#FAF9F5] cursor-pointer transition-colors ${!n.read ? 'bg-[#FF416C]/5' : ''}`}
+                        className={`p-4 border-b border-[#E4E0D6]/30 hover:bg-[#F0EDE6]/50 cursor-pointer transition-colors ${!n.read ? 'bg-[#FF416C]/5' : ''}`}
                         onClick={() => dismissNotification(n.id)}
                       >
                         <p className="text-sm font-bold text-slate-900">{n.title}</p>

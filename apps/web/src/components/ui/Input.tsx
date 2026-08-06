@@ -30,7 +30,7 @@ export default function Input({
   const radiusClass = radius === "full" ? "rounded-full" : "rounded-xl";
 
   const baseInput =
-    "w-full bg-[#FAF9F5] border border-[#c4c7c7]/30 py-3 px-5 text-sm text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-[#FF416C]/40 focus:ring-1 focus:ring-[#FF416C]/10 transition-all";
+    "w-full bg-[#FAF9F5] border border-[#E4E0D6] py-3 px-5 text-sm text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-[#FF416C]/40 focus:ring-1 focus:ring-[#FF416C]/10 transition-all";
 
   const hasLeftIcon = !!leftIcon;
   const hasRightAction = isPassword || !!rightIcon;

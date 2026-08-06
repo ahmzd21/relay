@@ -41,7 +41,7 @@ export default function BillingPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-white border border-[#c4c7c7]/30 p-1 rounded-xl w-fit overflow-x-auto no-scrollbar">
+            <div className="flex gap-1 bg-[#FFFDF8] border border-[#E4E0D6]/30 p-1 rounded-xl w-fit overflow-x-auto no-scrollbar">
               {tabs.map((t) => (
                 <button
                   key={t.key}
@@ -85,8 +85,8 @@ export default function BillingPage() {
             {/* ==================== INVOICES TAB ==================== */}
             {tab === 'invoices' && (
               <div className="space-y-6">
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-[#c4c7c7]/30">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl shadow-warm overflow-hidden">
+                  <div className="p-6 border-b border-[#E4E0D6]/30">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">
                         {isOrg ? 'Organization Invoices' : 'Your Invoices'}
@@ -119,7 +119,7 @@ export default function BillingPage() {
                                 ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20'
                                 : 'bg-amber-50 text-amber-600 border border-amber-200'
                             }`}>{invoice.status}</span>
-                            <button className="w-8 h-8 rounded-xl border border-[#c4c7c7]/30 flex items-center justify-center text-slate-500 hover:text-[#FF416C] hover:border-[#FF416C]/30 transition-all">
+                            <button className="w-8 h-8 rounded-xl border border-[#E4E0D6]/30 flex items-center justify-center text-slate-500 hover:text-[#FF416C] hover:border-[#FF416C]/30 transition-all">
                               <span className="material-symbols-outlined text-[18px]">download</span>
                             </button>
                           </div>
@@ -136,7 +136,7 @@ export default function BillingPage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Payment Methods */}
-                  <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                  <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">Payment Methods</h2>
                       <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors flex items-center gap-1">
@@ -149,7 +149,7 @@ export default function BillingPage() {
                         <div key={i} className={`p-4 rounded-2xl relative transition-all ${
                           method.default
                             ? 'border-2 border-[#FF416C]/30 bg-[#FF416C]/5'
-                            : 'border border-[#c4c7c7]/30 hover:border-[#c4c7c7]/60'
+                            : 'border border-[#E4E0D6]/30 hover:border-[#E4E0D6]/60'
                         }`}>
                           {method.default && (
                             <div className="absolute top-3 right-3 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm shadow-[#FF416C]/20">Default</div>
@@ -175,7 +175,7 @@ export default function BillingPage() {
                   </div>
 
                   {/* Billing Address */}
-                  <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                  <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">
                         {isOrg ? 'Organization Address' : 'Billing Address'}
@@ -194,9 +194,9 @@ export default function BillingPage() {
                 </div>
 
                 {/* Auto-Pay Settings */}
-                <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                   <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900 mb-4">Auto-Pay Settings</h2>
-                  <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl">
                     <div>
                       <p className="text-sm font-bold text-slate-900">Automatic Payments</p>
                       <p className="text-xs text-slate-500">Automatically pay invoices on due date</p>
@@ -220,25 +220,25 @@ export default function BillingPage() {
 
 function PersonalPlanCard() {
   return (
-    <div className="bg-[#0f1115] rounded-2xl p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+    <div className="bg-[#FFFDF8] rounded-2xl p-8 text-[#1c1b1b] shadow-warm-md relative overflow-hidden border border-[#E4E0D6]">
       <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-6">
           <div>
             <span className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-3 inline-block shadow-sm shadow-[#FF416C]/20">Current Plan</span>
             <h2 className="text-3xl font-bold font-helvetica tracking-tight mb-2">Pro Plan</h2>
-            <p className="text-white/50 text-sm">5,000 translation minutes · 100 GB storage · Advanced analytics</p>
+            <p className="text-[#8C8880] text-sm">5,000 translation minutes · 100 GB storage · Advanced analytics</p>
           </div>
           <div className="text-right">
             <p className="text-4xl font-bold font-helvetica">$29</p>
-            <p className="text-white/50 text-sm">/month</p>
+            <p className="text-[#8C8880] text-sm">/month</p>
           </div>
         </div>
         <div className="flex gap-3">
           <button className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all shadow-lg shadow-[#FF416C]/20">
             Upgrade Plan
           </button>
-          <button className="border border-white/20 text-white px-6 py-3 rounded-full text-sm font-bold hover:bg-white/10 transition-all">
+          <button className="border border-[#E4E0D6] text-[#1c1b1b] px-6 py-3 rounded-full text-sm font-bold hover:bg-[#FAF9F5] transition-all">
             View All Plans
           </button>
         </div>
@@ -249,18 +249,18 @@ function PersonalPlanCard() {
 
 function OrgPlanCard({ isOwner }: { isOwner: boolean }) {
   return (
-    <div className="bg-[#0f1115] rounded-2xl p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+    <div className="bg-[#FFFDF8] rounded-2xl p-8 text-[#1c1b1b] shadow-warm-md relative overflow-hidden border border-[#E4E0D6]">
       <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-6">
           <div>
             <span className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-3 inline-block shadow-sm shadow-[#FF416C]/20">Organization Plan</span>
             <h2 className="text-3xl font-bold font-helvetica tracking-tight mb-2">Enterprise Plan</h2>
-            <p className="text-white/50 text-sm">Unlimited translation · 12 seats · Priority support · SSO</p>
+            <p className="text-[#8C8880] text-sm">Unlimited translation · 12 seats · Priority support · SSO</p>
           </div>
           <div className="text-right">
             <p className="text-4xl font-bold font-helvetica">$499</p>
-            <p className="text-white/50 text-sm">/month · 12 seats</p>
+            <p className="text-[#8C8880] text-sm">/month · 12 seats</p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -269,12 +269,12 @@ function OrgPlanCard({ isOwner }: { isOwner: boolean }) {
               <button className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all shadow-lg shadow-[#FF416C]/20">
                 Manage Plan
               </button>
-              <button className="border border-white/20 text-white px-6 py-3 rounded-full text-sm font-bold hover:bg-white/10 transition-all">
+              <button className="border border-[#E4E0D6] text-[#1c1b1b] px-6 py-3 rounded-full text-sm font-bold hover:bg-[#FAF9F5] transition-all">
                 Add Seats
               </button>
             </>
           ) : (
-            <p className="text-white/40 text-sm">Contact your workspace owner to manage this plan.</p>
+            <p className="text-[#8C8880] text-sm">Contact your workspace owner to manage this plan.</p>
           )}
         </div>
       </div>
@@ -312,7 +312,7 @@ function UsageCard({ icon, color, label, used, limit, unit }: {
 }) {
   const pct = Math.round((used / limit) * 100);
   return (
-    <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all duration-300 group">
+    <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all duration-300 group">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 group-hover:scale-110 transition-transform">
           <span className="material-symbols-outlined text-white text-[20px]">{icon}</span>
@@ -349,7 +349,7 @@ function OrgMemberUsage() {
   ];
 
   return (
-    <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+    <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">Member Usage</h2>
         <Link href="/dashboard/statistics" className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors">
@@ -360,7 +360,7 @@ function OrgMemberUsage() {
         {members.map((m, i) => {
           const pct = Math.round((m.minutes / 5000) * 100 * 10);
           return (
-            <div key={i} className="bg-[#FAF9F5] border border-[#c4c7c7]/20 p-4 rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300 group">
+            <div key={i} className="bg-[#FAF9F5] border border-[#E4E0D6]/20 p-4 rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300 group">
               <div className="flex items-center gap-3 mb-3">
                 <div className={`w-9 h-9 rounded-lg ${m.color} flex items-center justify-center text-[10px] font-bold group-hover:scale-110 transition-transform`}>{m.initials}</div>
                 <div className="flex-1 min-w-0">
@@ -398,7 +398,7 @@ function OrgMemberUsage() {
 
 function BillingSummary({ isOrg }: { isOrg: boolean }) {
   return (
-    <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+    <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
       <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900 mb-6">Billing Summary</h2>
       <div className="space-y-4">
         <BillingRow label={isOrg ? 'Enterprise Plan (12 seats)' : 'Pro Plan'} sub="Monthly subscription" amount={isOrg ? '$499.00' : '$29.00'} />
@@ -419,7 +419,7 @@ function BillingSummary({ isOrg }: { isOrg: boolean }) {
 
 function BillingRow({ label, sub, amount }: { label: string; sub: string; amount: string }) {
   return (
-    <div className="flex justify-between items-center py-3 border-b border-[#c4c7c7]/20">
+    <div className="flex justify-between items-center py-3 border-b border-[#E4E0D6]/20">
       <div>
         <p className="text-sm font-bold text-slate-900">{label}</p>
         <p className="text-[10px] text-slate-500 uppercase tracking-wider">{sub}</p>

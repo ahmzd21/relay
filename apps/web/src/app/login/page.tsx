@@ -276,9 +276,9 @@ function LoginForm() {
                         </div>
 
                         <div className="flex items-center gap-4 py-2">
-                            <div className="h-[1px] flex-grow bg-[#c4c7c7]/40"></div>
+                            <div className="h-[1px] flex-grow bg-[#E4E0D6]"></div>
                             <span className="text-[12px] text-slate-400 uppercase tracking-widest font-bold">or</span>
-                            <div className="h-[1px] flex-grow bg-[#c4c7c7]/40"></div>
+                            <div className="h-[1px] flex-grow bg-[#E4E0D6]"></div>
                         </div>
 
                         <Button
@@ -323,32 +323,32 @@ export default function LoginPage() {
             <div className="flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden min-h-screen">
 
                 {/* Left Side (Desktop Editorial) */}
-                <section className="hidden lg:flex bg-black lg:w-[50%] relative flex-col p-[128px] pb-[48px] justify-between min-h-screen">
+                <section className="hidden lg:flex bg-[#F0EDE6] lg:w-[50%] relative flex-col p-[128px] pb-[48px] justify-between min-h-screen">
                     <div className="relative z-10 flex flex-col gap-[64px]">
                         <div className="flex items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="h-10 w-10 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="h-10 w-10 text-slate-900">
                                 <path d="M30 20 L70 50 L30 80 L50 50 Z" fill="currentColor" />
                                 <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" />
                             </svg>
-                            <Link href="/" className="text-[32px] font-bold tracking-tight font-helvetica text-white">Relay</Link>
+                            <Link href="/" className="text-[32px] font-bold tracking-tight font-helvetica text-slate-900">Relay</Link>
                         </div>
                         <div className="max-w-lg">
-                            <h2 className="text-[64px] font-bold tracking-tight font-helvetica leading-[1.05] text-white mb-[64px]">
+                            <h2 className="text-[64px] font-bold tracking-tight font-helvetica leading-[1.05] text-slate-900 mb-[64px]">
                                 Connect with clarity, speak with confidence.
                             </h2>
                             <div className="h-1 w-24 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] mb-[16px]"></div>
-                            <p className="text-white/60 text-[18px] leading-relaxed font-helvetica">
+                            <p className="text-[#8C8880] text-[18px] leading-relaxed font-helvetica">
                                 Real-time translation for meetings that matter. Break language barriers without breaking your workflow.
                             </p>
                         </div>
                     </div>
                     <footer className="relative z-10 flex flex-col items-center justify-center gap-y-4 w-full mt-auto">
                         <div className="flex items-center justify-center gap-x-[64px]">
-                            <a className="text-[11px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-[0.1em]" href="#">Privacy</a>
-                            <a className="text-[11px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-[0.1em]" href="#">Terms</a>
-                            <a className="text-[11px] font-bold text-white/60 hover:text-white transition-colors uppercase tracking-[0.1em]" href="#">Security</a>
+                            <a className="text-[11px] font-bold text-[#8C8880] hover:text-slate-900 transition-colors uppercase tracking-[0.1em]" href="#">Privacy</a>
+                            <a className="text-[11px] font-bold text-[#8C8880] hover:text-slate-900 transition-colors uppercase tracking-[0.1em]" href="#">Terms</a>
+                            <a className="text-[11px] font-bold text-[#8C8880] hover:text-slate-900 transition-colors uppercase tracking-[0.1em]" href="#">Security</a>
                         </div>
-                        <span className="text-[11px] font-bold text-white/40 uppercase tracking-[0.1em]">&copy; 2026 Relay AI</span>
+                        <span className="text-[11px] font-bold text-[#8C8880]/60 uppercase tracking-[0.1em]">&copy; 2026 Relay AI</span>
                     </footer>
                 </section>
 

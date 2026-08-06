@@ -180,7 +180,7 @@ export default function MeetingDetailPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="bg-white border border-[#c4c7c7]/30 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
+                  <button className="bg-white border border-[#E4E0D6]/30 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
                     <span className="material-symbols-outlined text-[16px]">download</span>
                     Export
                   </button>
@@ -200,7 +200,7 @@ export default function MeetingDetailPage() {
                 { label: 'Participants', value: `${meeting.participants.length}`, icon: 'group', color: 'text-emerald-600 bg-emerald-50' },
                 { label: 'AI Analysis', value: meeting.aiReady ? 'Complete' : 'Pending', icon: 'smart_toy', color: meeting.aiReady ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50' },
               ].map((stat) => (
-                <div key={stat.label} className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-4 shadow-sm">
+                <div key={stat.label} className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 shadow-warm">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${stat.color}`}>
                     <span className="material-symbols-outlined text-[18px]">{stat.icon}</span>
                   </div>
@@ -211,11 +211,11 @@ export default function MeetingDetailPage() {
             </div>
 
             {/* Participants */}
-            <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+            <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
               <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900 mb-4">Participants</h2>
               <div className="flex flex-wrap gap-3">
                 {meeting.participants.map((p, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl px-4 py-2.5">
+                  <div key={i} className="flex items-center gap-3 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl px-4 py-2.5">
                     <div className={`w-8 h-8 rounded-lg ${p.color} flex items-center justify-center text-[11px] font-bold`}>
                       {p.initials}
                     </div>
@@ -251,7 +251,7 @@ export default function MeetingDetailPage() {
 
             {/* Tab Content */}
             {activeTab === 'summary' && (
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
                     <span className="material-symbols-outlined text-indigo-600 text-[20px]">smart_toy</span>
@@ -266,7 +266,7 @@ export default function MeetingDetailPage() {
             )}
 
             {activeTab === 'transcript' && (
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
@@ -300,7 +300,7 @@ export default function MeetingDetailPage() {
             )}
 
             {activeTab === 'actions' && (
-              <div className="bg-white border border-[#c4c7c7]/30 rounded-2xl p-6 shadow-sm">
+              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
                     <span className="material-symbols-outlined text-amber-600 text-[20px]">checklist</span>
@@ -312,8 +312,8 @@ export default function MeetingDetailPage() {
                 </div>
                 <div className="space-y-3">
                   {meeting.actionItems.map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 bg-[#FAF9F5] border border-[#c4c7c7]/20 rounded-xl">
-                      <div className="w-5 h-5 rounded border border-[#c4c7c7]/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div key={i} className="flex items-start gap-3 p-3 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl">
+                      <div className="w-5 h-5 rounded border border-[#E4E0D6]/40 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-[10px] text-slate-400 font-bold">{i + 1}</span>
                       </div>
                       <p className="text-sm text-slate-700 leading-relaxed">{item}</p>
@@ -324,19 +324,19 @@ export default function MeetingDetailPage() {
             )}
 
             {/* Recording */}
-            <div className="bg-[#0f1115] border border-slate-800 rounded-2xl p-6 shadow-sm">
+            <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white text-[24px]">play_circle</span>
+                  <div className="w-12 h-12 rounded-xl bg-[#FAF9F5] flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[#1c1b1b] text-[24px]">play_circle</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Meeting Recording</h3>
-                    <p className="text-xs text-white/50">{meeting.duration} · {meeting.languages.join(' + ')} audio</p>
+                    <h3 className="text-sm font-bold text-[#1c1b1b]">Meeting Recording</h3>
+                    <p className="text-xs text-[#8C8880]">{meeting.duration} · {meeting.languages.join(' + ')} audio</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="bg-white/10 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-white/20 transition-all flex items-center gap-2">
+                  <button className="bg-[#FAF9F5] text-[#1c1b1b] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#E4E0D6]/30 transition-all flex items-center gap-2">
                     <span className="material-symbols-outlined text-[16px]">download</span>
                     Download
                   </button>
