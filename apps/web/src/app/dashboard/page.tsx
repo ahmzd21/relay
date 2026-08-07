@@ -176,18 +176,7 @@ export default function MainDashboardPage() {
   const [externalLink, setExternalLink] = useState("");
 
   // Schedule state
-  const [meetings, setMeetings] = useState<ScheduledMeeting[]>(() => {
-    if (typeof window === 'undefined') return DEFAULT_MEETINGS;
-    const saved = localStorage.getItem("relay-scheduled-meetings");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return DEFAULT_MEETINGS;
-      }
-    }
-    return DEFAULT_MEETINGS;
-  });
+  const [meetings, setMeetings] = useState<ScheduledMeeting[]>(DEFAULT_MEETINGS);
   const [scheduleTab, setScheduleTab] = useState<"today" | "week" | "all">(
     "today",
   );
@@ -199,6 +188,21 @@ export default function MainDashboardPage() {
     duration: "30m",
     platform: "Native" as ScheduledMeeting["platform"],
   });
+
+  // Hydrate from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("relay-scheduled-meetings");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMeetings(parsed);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Persist to localStorage
   useEffect(() => {
