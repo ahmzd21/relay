@@ -110,7 +110,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('current-workspace', currentWorkspaceId);
   }, [currentWorkspaceId, isInitialized]);
 
-  const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId) || workspaces[0];
+  const defaultWorkspace: Workspace = { id: 'personal', type: 'personal', name: 'Personal Profile', role: 'owner' };
+  const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId) || workspaces[0] || defaultWorkspace;
 
   const switchWorkspace = (workspaceId: string) => {
     const workspace = workspaces.find(w => w.id === workspaceId);
