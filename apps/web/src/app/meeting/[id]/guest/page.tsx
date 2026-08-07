@@ -24,12 +24,13 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
   const [connectionDetails, setConnectionDetails] = useState<{
     serverUrl: string;
     token: string;
+    status: string;
   } | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleJoin = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!guestName.trim()) return;
 
     setIsConnecting(true);
@@ -50,13 +51,15 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
       });
 
       if (!res.ok) {
-        throw new Error(`Failed to fetch meeting token (${res.status})`);
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Failed to fetch meeting token (${res.status})`);
       }
 
       const data = await res.json();
       setConnectionDetails({
         serverUrl: data.serverUrl,
         token: data.token,
+        status: data.status || 'active',
       });
     } catch (err: any) {
       console.error('Guest connection error:', err);
@@ -67,19 +70,26 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
   };
 
   if (connectionDetails) {
+    const isWaiting = connectionDetails.status === 'waiting';
     return (
       <LiveKitRoom
         token={connectionDetails.token}
         serverUrl={connectionDetails.serverUrl}
         connect={true}
-        video={true}
-        audio={true}
+        // Do not open the camera/mic while stuck in the waiting room.
+        video={!isWaiting}
+        audio={!isWaiting}
         data-lk-theme="default"
         style={{ height: '100vh', width: '100vw' }}
       >
         <MeetingRoom
           meetingId={meetingId}
           onLeave={() => router.push('/')}
+          onRejoin={() => {
+            setConnectionDetails(null);
+            handleJoin();
+          }}
+          initialStatus={connectionDetails.status}
         />
       </LiveKitRoom>
     );

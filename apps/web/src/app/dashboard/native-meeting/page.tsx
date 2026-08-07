@@ -24,7 +24,7 @@ export default function NativeMeetingPage() {
   const handleStartMeeting = () => {
     const meetingId = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    router.push(`/meeting/${meetingId}`);
+    router.push(`/meeting/${meetingId}?create=1`);
   };
 
   const handleJoinMeeting = (e: React.FormEvent) => {
@@ -32,7 +32,11 @@ export default function NativeMeetingPage() {
 
     if (!joinLink.trim()) return;
 
-    const meetingId = joinLink.split("/").pop() || joinLink;
+    // Strip any query string / hash so a pasted host URL cannot smuggle in
+    // ?create=1 and hand host status to whoever pasted it.
+    const rawId = joinLink.split("/").pop() || joinLink;
+    const meetingId = rawId.split(/[?#]/)[0];
+    if (!meetingId) return;
 
     router.push(`/meeting/${meetingId}`);
   };

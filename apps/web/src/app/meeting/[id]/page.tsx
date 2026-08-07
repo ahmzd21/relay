@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LiveKitRoom } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { MeetingRoom } from '@/components/meeting/MeetingRoom';
@@ -17,6 +17,11 @@ export default function MeetingPage({ params }: MeetingPageProps) {
   const resolvedParams = use(params);
   const meetingId = resolvedParams.id;
 
+  // "?create=1" is set only by the Start Meeting action. It marks this user as the
+  // one starting the meeting, so arriving first at a shared link never grants host.
+  const searchParams = useSearchParams();
+  const isStartingMeeting = searchParams.get('create') === '1';
+
   // Pre-join configuration state
   const [name, setName] = useState(user?.fullName || '');
   const [spokenLang, setSpokenLang] = useState('en');
@@ -24,10 +29,53 @@ export default function MeetingPage({ params }: MeetingPageProps) {
   const [audioLang, setAudioLang] = useState('none');
   const [chatLang, setChatLang] = useState('en');
 
-  // Host configuration
-  const [isHostMode, setIsHostMode] = useState(true);
+  // Host configuration - stored in localStorage to persist across reloads
+  const [isHostMode, setIsHostMode] = useState(false);
   const [enableWaitingRoom, setEnableWaitingRoom] = useState(false);
-  const [hostKey] = useState(() => Math.random().toString(36).substring(2, 10));
+  const [hostKey, setHostKey] = useState<string>('');
+  const [isCreatingMeeting, setIsCreatingMeeting] = useState(false);
+
+  // Check if this user is creating a new meeting or joining existing
+  useEffect(() => {
+    const checkMeetingStatus = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const res = await fetch(`${apiUrl}/api/meetings/check/${meetingId}`, {
+          credentials: 'include',
+        });
+
+        if (res.status === 404) {
+          // Room not started yet. Only show host setup to someone who actually
+          // started this meeting (?create=1). Everyone else is a participant who
+          // arrived early — do NOT mint a host key here, since the server has not
+          // granted host and a stale key would linger in localStorage forever.
+          setIsCreatingMeeting(isStartingMeeting);
+          setIsHostMode(isStartingMeeting);
+
+          if (isStartingMeeting) {
+            const storageKey = `meeting_host_${meetingId}`;
+            let storedKey = localStorage.getItem(storageKey);
+            if (!storedKey) {
+              storedKey = Math.random().toString(36).substring(2, 10);
+              localStorage.setItem(storageKey, storedKey);
+            }
+            setHostKey(storedKey);
+          }
+        } else {
+          // Meeting exists - joining as participant
+          setIsCreatingMeeting(false);
+          setIsHostMode(false);
+        }
+      } catch (err) {
+        console.error('Failed to check meeting status:', err);
+        // Default to participant mode on error
+        setIsCreatingMeeting(false);
+        setIsHostMode(false);
+      }
+    };
+
+    checkMeetingStatus();
+  }, [meetingId, isStartingMeeting]);
 
   // Connection details state
   const [connectionDetails, setConnectionDetails] = useState<{
@@ -35,6 +83,7 @@ export default function MeetingPage({ params }: MeetingPageProps) {
     token: string;
     isHost: boolean;
     hostKey: string;
+    status: string;
   } | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,8 +95,8 @@ export default function MeetingPage({ params }: MeetingPageProps) {
     }
   }, [user?.fullName, name]);
 
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleJoin = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!name.trim()) return;
 
     setIsConnecting(true);
@@ -62,10 +111,21 @@ export default function MeetingPage({ params }: MeetingPageProps) {
       url.searchParams.append('subtitleLang', subtitleLang);
       url.searchParams.append('audioLang', audioLang);
       url.searchParams.append('chatLang', chatLang);
-      if (isHostMode) {
+
+      // Always present a stored host key if we have one for this meeting — that is
+      // how a host who reloads the page reclaims host status. The server decides.
+      const storedKey = localStorage.getItem(`meeting_host_${meetingId}`);
+      const keyToSend = hostKey || storedKey || '';
+
+      if (isCreatingMeeting || keyToSend) {
         url.searchParams.append('isHost', 'true');
-        url.searchParams.append('hostKey', hostKey);
-        if (enableWaitingRoom) url.searchParams.append('waitingRoom', 'true');
+        if (keyToSend) url.searchParams.append('hostKey', keyToSend);
+        // Only the explicit "start meeting" flow may create the room and claim
+        // host. Arriving first at an invite link must not be enough.
+        if (isStartingMeeting) {
+          url.searchParams.append('create', 'true');
+          if (enableWaitingRoom) url.searchParams.append('waitingRoom', 'true');
+        }
       }
 
       const res = await fetch(url.toString(), {
@@ -73,15 +133,24 @@ export default function MeetingPage({ params }: MeetingPageProps) {
       });
 
       if (!res.ok) {
-        throw new Error(`Failed to fetch meeting token (${res.status})`);
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Failed to fetch meeting token (${res.status})`);
       }
 
       const data = await res.json();
+
+      // The server is authoritative about host status. Persist the key it hands
+      // back so a reload keeps us as host.
+      if (data.isHost && data.hostKey) {
+        localStorage.setItem(`meeting_host_${meetingId}`, data.hostKey);
+      }
+
       setConnectionDetails({
         serverUrl: data.serverUrl,
         token: data.token,
-        isHost: data.isHost || isHostMode,
-        hostKey: data.hostKey || hostKey,
+        isHost: !!data.isHost,
+        hostKey: data.hostKey || '',
+        status: data.status || 'active',
       });
     } catch (err: any) {
       console.error('Connection error:', err);
@@ -93,21 +162,29 @@ export default function MeetingPage({ params }: MeetingPageProps) {
 
   // 1. LiveKit Active Room View
   if (connectionDetails) {
+    const isWaiting = connectionDetails.status === 'waiting';
     return (
       <LiveKitRoom
         token={connectionDetails.token}
         serverUrl={connectionDetails.serverUrl}
         connect={true}
-        video={true}
-        audio={true}
+        // Do not open the camera/mic while stuck in the waiting room.
+        video={!isWaiting}
+        audio={!isWaiting}
         data-lk-theme="default"
         style={{ height: '100vh', width: '100vw' }}
       >
         <MeetingRoom
           meetingId={meetingId}
           onLeave={() => router.push('/dashboard/native-meeting')}
+          onRejoin={() => {
+            // Drop the dead connection and request a fresh token for the same room.
+            setConnectionDetails(null);
+            handleJoin();
+          }}
           isHost={connectionDetails.isHost}
           hostKey={connectionDetails.hostKey}
+          initialStatus={connectionDetails.status}
         />
       </LiveKitRoom>
     );
@@ -170,22 +247,13 @@ export default function MeetingPage({ params }: MeetingPageProps) {
               />
             </div>
 
-            {/* Host Options */}
-            <div className="space-y-3 pt-2 border-t border-white/5">
-              <div className="flex items-center justify-between">
-                <label className="block text-[10px] uppercase tracking-wider font-bold text-white/50 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[13px] text-white/40">shield_person</span>
-                  Join as Host
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsHostMode(!isHostMode)}
-                  className={`w-10 h-5 rounded-full transition-colors relative ${isHostMode ? 'bg-rose-500' : 'bg-white/20'}`}
-                >
-                  <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${isHostMode ? 'left-5.5 right-0.5' : 'left-0.5'}`} style={{ left: isHostMode ? '22px' : '2px' }} />
-                </button>
-              </div>
-              {isHostMode && (
+            {/* Host Options — only the person starting the meeting configures it */}
+            {isCreatingMeeting && (
+              <div className="space-y-3 pt-2 border-t border-white/5">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-rose-400">
+                  <span className="material-symbols-outlined text-[13px]">shield_person</span>
+                  <span>You are starting this meeting as host</span>
+                </div>
                 <div className="flex items-center justify-between">
                   <label className="block text-[10px] uppercase tracking-wider font-bold text-white/50 flex items-center gap-1">
                     <span className="material-symbols-outlined text-[13px] text-white/40">hourglass_top</span>
@@ -199,8 +267,8 @@ export default function MeetingPage({ params }: MeetingPageProps) {
                     <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all`} style={{ left: enableWaitingRoom ? '22px' : '2px' }} />
                   </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Language Preferences Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">

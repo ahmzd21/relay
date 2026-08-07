@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRoomContext, useParticipants } from '@livekit/components-react';
+import { ParticipantKind } from 'livekit-client';
 
 interface HostControlsPanelProps {
   isOpen: boolean;
@@ -12,10 +13,23 @@ interface HostControlsPanelProps {
 
 export default function HostControlsPanel({ isOpen, onClose, meetingId, hostKey }: HostControlsPanelProps) {
   const room = useRoomContext();
-  const participants = useParticipants();
-  
+  const allParticipants = useParticipants();
+
   const [revokedPerms, setRevokedPerms] = useState<Record<string, { mic?: boolean, cam?: boolean }>>({});
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+
+  // Exclude the translation agent and ourselves — a host cannot moderate itself.
+  const participants = useMemo(
+    () =>
+      allParticipants.filter(
+        (p) =>
+          p.kind !== ParticipantKind.AGENT &&
+          !p.identity.startsWith('agent-') &&
+          !p.identity.startsWith('translation') &&
+          p.identity !== room.localParticipant?.identity,
+      ),
+    [allParticipants, room.localParticipant?.identity],
+  );
 
   const waitingParticipants = participants.filter(p => {
     try {
@@ -31,7 +45,7 @@ export default function HostControlsPanel({ isOpen, onClose, meetingId, hostKey 
       const meta = JSON.parse(p.metadata || '{}');
       return meta.status !== 'waiting' && meta.role !== 'host';
     } catch(e) {
-      return p.identity !== undefined && p.identity !== room.localParticipant.identity;
+      return true;
     }
   });
 
@@ -72,25 +86,21 @@ export default function HostControlsPanel({ isOpen, onClose, meetingId, hostKey 
   const handleAction = async (action: string, targetIdentity?: string) => {
     if (action === 'mute-all') {
       activeParticipants.forEach(p => {
-        sendHostCommand(p.identity, 'revoke-mic');
         setRevokedPerms(prev => ({ ...prev, [p.identity]: { ...prev[p.identity], mic: true } }));
       });
-      return;
     }
-    
+
     if (action === 'disable-video-all') {
       activeParticipants.forEach(p => {
-        sendHostCommand(p.identity, 'revoke-camera');
         setRevokedPerms(prev => ({ ...prev, [p.identity]: { ...prev[p.identity], cam: true } }));
       });
-      return;
     }
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-      const body: any = { meetingId, action, hostKey };
-      if (targetIdentity) body.targetIdentity = targetIdentity;
-      
+      const body: any = { roomName: meetingId, action, hostKey };
+      if (targetIdentity) body.targetParticipantId = targetIdentity;
+
       const res = await fetch(`${baseUrl}/api/meetings/control`, {
         method: 'POST',
         credentials: 'include',
@@ -271,8 +281,8 @@ export default function HostControlsPanel({ isOpen, onClose, meetingId, hostKey 
                         </svg>
                       )}
                     </button>
-                    <button 
-                      onClick={() => handleAction('kick-participant', p.identity)}
+                    <button
+                      onClick={() => handleAction('kick', p.identity)}
                       className="p-1.5 bg-white/5 text-white/70 hover:text-red-400 hover:bg-red-500/10 rounded transition"
                       title="Kick"
                     >

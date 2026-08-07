@@ -17,6 +17,32 @@ const roomService = new RoomServiceClient(
 );
 
 /**
+ * GET /api/meetings/check/:roomName
+ * Check whether a room already exists. Used by the client to decide
+ * whether the current user is creating the meeting (host) or joining it.
+ */
+router.get('/check/:roomName', async (req: Request, res: Response) => {
+  try {
+    const roomName = req.params.roomName as string;
+    const rooms = await roomService.listRooms([roomName]);
+
+    if (rooms.length === 0) {
+      return res.status(404).json({ exists: false });
+    }
+
+    const meta = JSON.parse(rooms[0].metadata || '{}');
+    return res.json({
+      exists: true,
+      waitingRoomEnabled: !!meta.waitingRoomEnabled,
+      numParticipants: rooms[0].numParticipants,
+    });
+  } catch (error: any) {
+    console.error('[Meetings API] Error checking room:', error);
+    return res.status(500).json({ error: 'Failed to check room' });
+  }
+});
+
+/**
  * GET /api/meetings/token
  * Generate LiveKit access token with language preferences and host permissions in metadata
  */
@@ -24,10 +50,13 @@ router.get('/token', async (req: Request, res: Response) => {
   try {
     const roomName = (req.query.roomName as string) || (req.query.meetingId as string) || 'default-room';
     let username = (req.query.username as string) || (req.query.participantName as string) || '';
-    let isHost = req.query.isHost === 'true';
+    const requestedHost = req.query.isHost === 'true';
     const waitingRoom = req.query.waitingRoom === 'true';
     const hostKey = (req.query.hostKey as string) || '';
-    
+    // Set only by the "start a meeting" flow. Required to create a room and take
+    // host; opening an invite link never sets it.
+    const isCreateIntent = req.query.create === 'true';
+
     // Language preferences
     const spokenLang = (req.query.spokenLang as string) || 'en';
     const chatLang = (req.query.chatLang as string) || 'en';
@@ -65,48 +94,83 @@ router.get('/token', async (req: Request, res: Response) => {
       }
     }
 
+    // LiveKit identities must be unique per connection. Using the bare userId
+    // means a second tab, a reload, or a rejoin arrives with an identity that
+    // already exists, and the server evicts the older connection with
+    // DUPLICATE_IDENTITY — which reads to the user as the host being dropped the
+    // moment someone joins. Suffix a per-connection nonce and keep the stable
+    // userId in metadata for host reclaim.
+    const participantIdentity = `${userId}__${Math.random().toString(36).substring(2, 10)}`;
+
+    // 2. Determine host status authoritatively from server state.
+    //    The client cannot simply claim to be host — either the room does not
+    //    exist yet (this user is creating it) or they present the correct hostKey.
+    let existingRoom: any = null;
+    try {
+      const rooms = await roomService.listRooms([roomName]);
+      existingRoom = rooms.length > 0 ? rooms[0] : null;
+    } catch (e) {
+      console.warn('[Meetings API] Failed to list rooms', e);
+      return res.status(500).json({ error: 'Failed to verify room' });
+    }
+
+    let isHost = false;
+    let effectiveHostKey = '';
     let participantStatus = 'active';
 
-    if (isHost) {
+    if (!existingRoom) {
+      // Room does not exist. Only someone who explicitly started this meeting may
+      // create it. Merely being the first to open an invite link must NOT grant
+      // host — otherwise an invitee who clicks early takes host and locks the real
+      // host out of their own meeting.
+      if (!requestedHost || !isCreateIntent) {
+        return res
+          .status(404)
+          .json({ error: 'Meeting has not started yet. Please wait for the host.' });
+      }
+
+      isHost = true;
+      effectiveHostKey = hostKey || Math.random().toString(36).substring(2, 10);
+
       try {
         await roomService.createRoom({
           name: roomName,
-          emptyTimeout: 10 * 60,
+          // Keep the room alive through brief host reconnects and while the
+          // last participant steps away, so meetings do not close on their own.
+          emptyTimeout: 30 * 60,
+          departureTimeout: 5 * 60,
           metadata: JSON.stringify({
             waitingRoomEnabled: waitingRoom,
-            hostKey: hostKey
-          })
+            hostKey: effectiveHostKey,
+            hostIdentity: userId,
+            createdAt: Date.now(),
+          }),
         });
-        await roomService.updateRoomMetadata(roomName, JSON.stringify({
-          waitingRoomEnabled: waitingRoom,
-          hostKey: hostKey
-        }));
       } catch (e) {
-        console.warn('Failed to create/update room metadata', e);
+        console.warn('[Meetings API] Failed to create room', e);
+        return res.status(500).json({ error: 'Failed to create meeting room' });
       }
     } else {
-      try {
-        const rooms = await roomService.listRooms([roomName]);
-        if (rooms.length === 0) {
-          return res.status(404).json({ error: 'Meeting has not started yet. Please wait for the host.' });
-        }
-        
-        const roomMeta = JSON.parse(rooms[0].metadata || '{}');
-        if (roomMeta.waitingRoomEnabled) {
-          participantStatus = 'waiting';
-        }
-      } catch (e) {
-        console.warn('Failed to fetch room details', e);
-        return res.status(500).json({ error: 'Failed to verify room' });
+      const roomMeta = JSON.parse(existingRoom.metadata || '{}');
+
+      // Rejoining host: matching hostKey, or same identity that created the room.
+      const keyMatches = !!roomMeta.hostKey && hostKey === roomMeta.hostKey;
+      const identityMatches = !!roomMeta.hostIdentity && roomMeta.hostIdentity === userId;
+
+      if (requestedHost && (keyMatches || identityMatches)) {
+        isHost = true;
+        effectiveHostKey = roomMeta.hostKey || '';
+      } else if (roomMeta.waitingRoomEnabled) {
+        participantStatus = 'waiting';
       }
     }
 
-    // 2. Build metadata JSON
+    // 3. Build metadata JSON
     const metadata = {
       isHost,
       role: isHost ? 'host' : 'participant',
       status: participantStatus,
-      hostKey: isHost ? hostKey : undefined,
+      hostKey: isHost ? effectiveHostKey : undefined,
       avatar: userAvatar,
       preferences: {
         spoken: spokenLang,
@@ -116,19 +180,21 @@ router.get('/token', async (req: Request, res: Response) => {
       },
     };
 
-    // 3. Create LiveKit Access Token
+    // 4. Create LiveKit Access Token
     const at = new AccessToken(apiKey, apiSecret, {
-      identity: userId,
+      identity: participantIdentity,
       name: username,
       metadata: JSON.stringify(metadata),
-      ttl: '4h',
+      ttl: '12h',
     });
 
     at.addGrant({
       room: roomName,
       roomJoin: true,
-      canPublish: true,
-      canSubscribe: true,
+      // Someone sitting in the waiting room must not be able to publish media
+      // into the meeting before the host admits them.
+      canPublish: participantStatus !== 'waiting',
+      canSubscribe: participantStatus !== 'waiting',
       canPublishData: true,
     });
 
@@ -139,9 +205,10 @@ router.get('/token', async (req: Request, res: Response) => {
       token,
       roomName,
       isHost,
-      hostKey: isHost ? hostKey : undefined,
+      hostKey: isHost ? effectiveHostKey : undefined,
       participantName: username,
       participantId: userId,
+      status: participantStatus,
     });
   } catch (error: any) {
     console.error('[Meetings API] Error generating token:', error);
@@ -155,7 +222,12 @@ router.get('/token', async (req: Request, res: Response) => {
  */
 router.post('/control', async (req: Request, res: Response) => {
   try {
-    const { roomName, action, hostKey, targetParticipantId } = req.body;
+    // Accept both naming conventions the clients use.
+    const roomName = req.body.roomName || req.body.meetingId;
+    const action = req.body.action;
+    const hostKey = req.body.hostKey;
+    const targetParticipantId = req.body.targetParticipantId || req.body.targetIdentity;
+
     if (!roomName || !action || !hostKey) {
       return res.status(400).json({ error: 'Missing required parameters: roomName, action, hostKey' });
     }
@@ -202,82 +274,75 @@ router.post('/control', async (req: Request, res: Response) => {
       }
 
       case 'decline-participant':
+      case 'kick-participant':
       case 'kick': {
         if (!targetParticipantId) return res.status(400).json({ error: 'Missing targetParticipantId' });
+
+        // Tell the participant why they are being removed so the client can show
+        // the correct screen instead of guessing from stale metadata.
+        try {
+          const reason = action === 'decline-participant' ? 'declined' : 'removed';
+          const payload = new TextEncoder().encode(
+            JSON.stringify({ type: 'host-command', command: 'removed', reason })
+          );
+          await roomService.sendData(roomName, payload, 0, {
+            destinationIdentities: [targetParticipantId],
+          });
+        } catch (e) {
+          console.warn('[Meetings API] Could not notify removed participant', e);
+        }
+
         await roomService.removeParticipant(roomName, targetParticipantId);
         return res.json({ success: true });
       }
 
       case 'mute-all': {
         const participants = await roomService.listParticipants(roomName);
-        for (const p of participants) {
-          const pMeta = JSON.parse(p.metadata || '{}');
-          if (pMeta.role === 'host' || pMeta.isHost) continue;
+        const nonHosts = participants.filter((p) => {
+          const meta = JSON.parse(p.metadata || '{}');
+          return meta.role !== 'host' && !meta.isHost;
+        });
 
-          let mutedAudio = false;
+        for (const p of nonHosts) {
           for (const pub of p.tracks) {
             if ([0, 2, 'AUDIO', 'MICROPHONE'].includes(pub.source) || [0, 2, 'AUDIO', 'MICROPHONE'].includes(pub.type)) {
               await roomService.mutePublishedTrack(roomName, p.identity, pub.sid, true);
-              mutedAudio = true;
             }
           }
-          if (!mutedAudio) {
-            await roomService.updateParticipant(roomName, p.identity, JSON.stringify(pMeta), {
-              canPublish: false,
-              canSubscribe: true,
-              canPublishData: true,
-            });
-          }
         }
-        
-        // Send data message to non-host participants
+
+        // Ask clients to lock their mic. We deliberately do not revoke canPublish
+        // here — that would also block camera and screen share.
         const encoder = new TextEncoder();
         const data = encoder.encode(JSON.stringify({ type: 'host-command', command: 'revoke-mic' }));
-        const nonHostIdentities = participants
-          .filter(p => {
-            const meta = JSON.parse(p.metadata || '{}');
-            return meta.role !== 'host' && !meta.isHost;
-          })
-          .map(p => p.identity);
-        
+        const nonHostIdentities = nonHosts.map((p) => p.identity);
+
         if (nonHostIdentities.length > 0) {
           await roomService.sendData(roomName, data, 0, { destinationIdentities: nonHostIdentities });
         }
-        
+
         return res.json({ success: true });
       }
 
       case 'disable-video-all': {
         const participants = await roomService.listParticipants(roomName);
-        for (const p of participants) {
-          const pMeta = JSON.parse(p.metadata || '{}');
-          if (pMeta.role === 'host' || pMeta.isHost) continue;
+        const nonHosts = participants.filter((p) => {
+          const meta = JSON.parse(p.metadata || '{}');
+          return meta.role !== 'host' && !meta.isHost;
+        });
 
-          let mutedVideo = false;
+        for (const p of nonHosts) {
           for (const pub of p.tracks) {
             if ([1, 'VIDEO', 'CAMERA'].includes(pub.source) || [1, 'VIDEO', 'CAMERA'].includes(pub.type)) {
               await roomService.mutePublishedTrack(roomName, p.identity, pub.sid, true);
-              mutedVideo = true;
             }
-          }
-          if (!mutedVideo) {
-            await roomService.updateParticipant(roomName, p.identity, JSON.stringify(pMeta), {
-              canPublish: false,
-              canSubscribe: true,
-              canPublishData: true,
-            });
           }
         }
 
         const encoder = new TextEncoder();
-        const data = encoder.encode(JSON.stringify({ type: 'host-command', command: 'revoke-cam' }));
-        const nonHostIdentities = participants
-          .filter(p => {
-            const meta = JSON.parse(p.metadata || '{}');
-            return meta.role !== 'host' && !meta.isHost;
-          })
-          .map(p => p.identity);
-        
+        const data = encoder.encode(JSON.stringify({ type: 'host-command', command: 'revoke-camera' }));
+        const nonHostIdentities = nonHosts.map((p) => p.identity);
+
         if (nonHostIdentities.length > 0) {
           await roomService.sendData(roomName, data, 0, { destinationIdentities: nonHostIdentities });
         }
@@ -286,6 +351,17 @@ router.post('/control', async (req: Request, res: Response) => {
       }
 
       case 'end-meeting': {
+        // Notify everyone before tearing the room down so clients can show
+        // "meeting ended" rather than a generic disconnect.
+        try {
+          const payload = new TextEncoder().encode(
+            JSON.stringify({ type: 'host-command', command: 'meeting-ended' })
+          );
+          await roomService.sendData(roomName, payload, 0, {});
+        } catch (e) {
+          console.warn('[Meetings API] Could not notify participants of meeting end', e);
+        }
+
         await roomService.deleteRoom(roomName);
         return res.json({ success: true });
       }
@@ -348,6 +424,69 @@ router.post('/participant-metadata', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Meetings API] Error updating participant metadata:', error);
     return res.status(500).json({ error: 'Failed to update participant metadata' });
+  }
+});
+
+/**
+ * POST /api/meetings/translate
+ * Translate chat message text into all supported target languages
+ */
+router.post('/translate', async (req: Request, res: Response) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Missing text parameter' });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const targetLanguages = ['en', 'es', 'fr', 'de', 'ja', 'zh', 'ar', 'ru', 'pt', 'it', 'hi', 'ko', 'tr', 'ur'];
+
+    if (apiKey) {
+      try {
+        const prompt = `Translate the following chat message into these target languages: English (en), Spanish (es), French (fr), German (de), Japanese (ja), Chinese (zh), Arabic (ar), Russian (ru), Portuguese (pt), Italian (it), Hindi (hi), Korean (ko), Turkish (tr), and Urdu (ur).
+Return ONLY a valid JSON object where the keys are exactly 'en', 'es', 'fr', 'de', 'ja', 'zh', 'ar', 'ru', 'pt', 'it', 'hi', 'ko', 'tr', 'ur', and the values are the accurately translated text strings. Do not wrap the response in markdown or backticks, output raw JSON only.
+
+Text to translate: "${text.replace(/"/g, '\\"')}"`;
+
+        const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const response = await fetch(geminiEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: 'application/json',
+            },
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (generatedText) {
+            const translations = JSON.parse(generatedText.trim());
+            for (const lang of targetLanguages) {
+              if (!translations[lang]) translations[lang] = text;
+            }
+            translations['original'] = text;
+            return res.json(translations);
+          }
+        }
+      } catch (e) {
+        console.warn('[Meetings API] Gemini translation error, using fallback:', e);
+      }
+    }
+
+    // Fallback if no API key or error: return original for all languages
+    const fallback: Record<string, string> = { original: text };
+    for (const lang of targetLanguages) {
+      fallback[lang] = text;
+    }
+    return res.json(fallback);
+  } catch (error: any) {
+    console.error('[Meetings API] Error translating chat message:', error);
+    return res.status(500).json({ error: 'Translation failed' });
   }
 });
 

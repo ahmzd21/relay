@@ -316,7 +316,9 @@ export default function MainDashboardPage() {
 
   const joinMeeting = (meeting: ScheduledMeeting) => {
     if (meeting.platform === "Native") {
-      router.push(`/meeting/${meeting.id}`);
+      // These are the signed-in user's own scheduled meetings, so they are the
+      // organizer and may start the room.
+      router.push(`/meeting/${meeting.id}?create=1`);
     } else {
       router.push(`/dashboard/external-meeting`);
     }
@@ -324,7 +326,7 @@ export default function MainDashboardPage() {
 
   const handleStartNativeMeeting = () => {
     const meetingId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    router.push(`/meeting/${meetingId}`);
+    router.push(`/meeting/${meetingId}?create=1`);
   };
 
   return (

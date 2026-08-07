@@ -85,7 +85,9 @@ async def translate_text(text: str, source_lang: str, target_lang: str, session:
 
     return text
 
-async def prewarm(proc: JobProcess):
+def prewarm(proc: JobProcess):
+    # Called synchronously by the worker before a job starts. Must NOT be async —
+    # livekit-agents 1.x invokes it directly, so an async def is never awaited.
     pass
 
 tts_engine = elevenlabs.TTS(model="eleven_multilingual_v2", api_key=eleven_key) if eleven_key else elevenlabs.TTS(model="eleven_multilingual_v2")
@@ -98,6 +100,24 @@ async def entrypoint(ctx: JobContext):
     audio_sources = {}
     audio_locks = {}
     http_session = aiohttp.ClientSession()
+
+    # Track real participants (non-agents). When they all leave, we leave too.
+    async def check_should_exit():
+        """Exit if no real participants remain — sitting alone in an empty room wastes resources."""
+        await asyncio.sleep(10)  # Give a grace period for reconnects
+        real_participants = [
+            p for p in ctx.room.remote_participants.values()
+            if not p.identity.startswith('agent-') and not p.identity.startswith('translation')
+        ]
+        if len(real_participants) == 0:
+            logger.info(f"No real participants left in {ctx.room.name}, agent exiting")
+            await ctx.room.disconnect()
+
+    @ctx.room.on("participant_disconnected")
+    def on_participant_disconnected(participant):
+        if not participant.identity.startswith('agent-') and not participant.identity.startswith('translation'):
+            logger.info(f"Real participant {participant.identity} left, checking if room is empty")
+            asyncio.create_task(check_should_exit())
 
     @ctx.room.on("track_subscribed")
     def on_track_subscribed(track: rtc.Track, publication: rtc.TrackPublication, participant: rtc.RemoteParticipant):
