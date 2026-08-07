@@ -9,9 +9,20 @@ interface HostControlsPanelProps {
   onClose: () => void;
   meetingId: string;
   hostKey: string;
+  screenShareRequests?: Array<{ applicantIdentity: string; applicantName: string }>;
+  onApproveScreenShare?: (applicantIdentity: string) => void;
+  onDeclineScreenShare?: (applicantIdentity: string) => void;
 }
 
-export default function HostControlsPanel({ isOpen, onClose, meetingId, hostKey }: HostControlsPanelProps) {
+export default function HostControlsPanel({
+  isOpen,
+  onClose,
+  meetingId,
+  hostKey,
+  screenShareRequests = [],
+  onApproveScreenShare,
+  onDeclineScreenShare,
+}: HostControlsPanelProps) {
   const room = useRoomContext();
   const allParticipants = useParticipants();
 
@@ -155,6 +166,40 @@ export default function HostControlsPanel({ isOpen, onClose, meetingId, hostKey 
             </svg>
           </button>
         </div>
+
+        {/* Screen Share Requests */}
+        {screenShareRequests.length > 0 && (
+          <div>
+            <h3 className="text-sm font-medium text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <span>🖥️</span> Screen Share Requests ({screenShareRequests.length})
+            </h3>
+            <div className="flex flex-col gap-2">
+              {screenShareRequests.map((req) => (
+                <div key={req.applicantIdentity} className="bg-[#111116] p-3 rounded-lg flex items-center justify-between border border-amber-500/30">
+                  <span className="text-sm font-medium truncate pr-2 text-white">{req.applicantName}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onApproveScreenShare && onApproveScreenShare(req.applicantIdentity)}
+                      className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded text-xs font-bold transition"
+                      title="Allow Screen Share & Takeover"
+                    >
+                      Allow
+                    </button>
+                    <button
+                      onClick={() => onDeclineScreenShare && onDeclineScreenShare(req.applicantIdentity)}
+                      className="p-1 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 rounded transition"
+                      title="Decline"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Waiting Room */}
         {waitingParticipants.length > 0 && (
