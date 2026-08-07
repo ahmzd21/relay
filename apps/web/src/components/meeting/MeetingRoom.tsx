@@ -90,15 +90,6 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
     [allParticipants],
   );
 
-  const [isMicMuted, setIsMicMuted] = useState(false);
-  const [isVideoMuted, setIsVideoMuted] = useState(false);
-
-  // Derive isScreenSharing from LiveKit tracks (single source of truth)
-  const isScreenSharing = useMemo(
-    () => screenTracks.some((t) => t.participant?.identity === localParticipant?.identity),
-    [screenTracks, localParticipant?.identity],
-  );
-
   // Single active screen track: prioritize remote/new sharer if one exists
   const activeScreenTrack = useMemo(() => {
     if (screenTracks.length === 0) return null;
@@ -366,12 +357,7 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
     return hrs > 0 ? `${hrs}:${mm}:${ss}` : `${mm}:${ss}`;
   }, [elapsedSeconds]);
 
-  // 2. Track mic and camera states
-  useEffect(() => {
-    if (!localParticipant) return;
-    setIsMicMuted(!localParticipant.isMicrophoneEnabled);
-    setIsVideoMuted(!localParticipant.isCameraEnabled);
-  }, [localParticipant?.isMicrophoneEnabled, localParticipant?.isCameraEnabled]);
+
   const toggleMic = async () => {
     if (!localParticipant || audioLocked) return;
     const newState = !localParticipant.isMicrophoneEnabled;
