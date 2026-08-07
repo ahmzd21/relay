@@ -16,6 +16,8 @@ import {
   RoomEvent,
   ParticipantEvent,
   DisconnectReason,
+  LocalTrackPublication,
+  type ScreenShareCaptureOptions,
 } from 'livekit-client';
 import { CustomAudioRenderer } from './CustomAudioRenderer';
 import { CustomSubtitles } from './CustomSubtitles';
@@ -87,7 +89,21 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
 
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
+
+  // Derive isScreenSharing from LiveKit tracks (single source of truth)
+  const isScreenSharing = useMemo(
+    () => screenTracks.some((t) => t.participant?.identity === localParticipant?.identity),
+    [screenTracks, localParticipant?.identity],
+  );
+
+  // Single active screen track: prioritize remote/new sharer if one exists
+  const activeScreenTrack = useMemo(() => {
+    if (screenTracks.length === 0) return null;
+    const remoteTrack = screenTracks.find(
+      (t) => t.participant?.identity && t.participant.identity !== localParticipant?.identity,
+    );
+    return remoteTrack || screenTracks[0];
+  }, [screenTracks, localParticipant?.identity]);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
@@ -118,6 +134,7 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
   const [toast, setToast] = useState<{ id: number; message: string; type: 'info' | 'warning' | 'error' | 'success' } | null>(null);
   const [screenShareRequests, setScreenShareRequests] = useState<Array<{ applicantIdentity: string; applicantName: string }>>([]);
   const [screenSharePending, setScreenSharePending] = useState(false);
+  const [screenShareApproved, setScreenShareApproved] = useState(false);
   const screenShareTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const showToast = useCallback((message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') => {
@@ -178,6 +195,7 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
 
         // 2. Participant receives response to screen share request
         if (msg.type === 'screen-share-response') {
+          if (msg.targetIdentity && localParticipant && msg.targetIdentity !== localParticipant.identity) return;
           setScreenSharePending(false);
           if (screenShareTimeoutRef.current) {
             clearTimeout(screenShareTimeoutRef.current);
@@ -185,29 +203,24 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
           }
 
           if (msg.approved) {
-            showToast('Your screen share request was approved by the host!', 'success');
-            if (localParticipant) {
-              localParticipant.setScreenShareEnabled(true).then(() => {
-                setIsScreenSharing(true);
-              }).catch((err) => {
-                console.error('Failed to enable screen share:', err);
-                showToast('Unable to start screen share. Permission denied.', 'error');
-              });
-            }
+            setScreenShareApproved(true);
+            showToast('Screen share approved by host! Click "Share Screen" below to start.', 'success');
           } else {
-            showToast('Your screen share request was declined by the host.', 'warning');
+            setScreenShareApproved(false);
+            showToast('Screen share request was declined by host.', 'warning');
           }
           return;
         }
 
         // 3. Active screen sharer receives command to stop screen share (taken over)
         if (msg.type === 'screen-share-stop') {
-          if (localParticipant && localParticipant.isScreenShareEnabled) {
-            localParticipant.setScreenShareEnabled(false).catch(() => {});
-            setIsScreenSharing(false);
+          if (msg.targetIdentity && localParticipant && msg.targetIdentity !== localParticipant.identity) return;
+          if (localParticipant) {
+            stopScreenShare();
+            setScreenShareApproved(false);
             const reasonText = msg.newSharerName
-              ? `Your screen share was stopped because ${msg.newSharerName} started sharing.`
-              : 'Your screen share was stopped by the host.';
+              ? `Screen share stopped — ${msg.newSharerName} is now sharing.`
+              : 'Screen share stopped by host.';
             showToast(reasonText, 'warning');
           }
           return;
@@ -353,8 +366,7 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
     if (!localParticipant) return;
     setIsMicMuted(!localParticipant.isMicrophoneEnabled);
     setIsVideoMuted(!localParticipant.isCameraEnabled);
-    setIsScreenSharing(localParticipant.isScreenShareEnabled);
-  }, [localParticipant?.isMicrophoneEnabled, localParticipant?.isCameraEnabled, localParticipant?.isScreenShareEnabled]);
+  }, [localParticipant?.isMicrophoneEnabled, localParticipant?.isCameraEnabled]);
 
   const toggleMic = async () => {
     if (!localParticipant || audioLocked) return;
@@ -375,52 +387,54 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
       const req = screenShareRequests.find((r) => r.applicantIdentity === applicantIdentity);
       const applicantName = req ? req.applicantName : 'Participant';
 
-      // 1. If another user (or host) is currently sharing screen, stop them!
+      // 1. If another user (or host) is currently sharing screen, stop them immediately!
       if (screenTracks.length > 0) {
-        const currentSharer = screenTracks[0].participant;
-        if (currentSharer && currentSharer.identity !== applicantIdentity) {
-          const stopMsg = JSON.stringify({
-            type: 'screen-share-stop',
-            reason: 'taken-over',
-            newSharerName: applicantName,
-          });
-          const stopData = new TextEncoder().encode(stopMsg);
-          room.localParticipant.publishData(stopData, {
-            reliable: true,
-            destinationIdentities: [currentSharer.identity],
-          });
-        }
+        screenTracks.forEach((t) => {
+          const currentSharer = t.participant;
+          if (currentSharer && currentSharer.identity !== applicantIdentity) {
+            if (currentSharer.identity === localParticipant?.identity) {
+              // Host is currently sharing -> stop locally immediately!
+              stopScreenShare();
+            } else {
+              // Remote participant is sharing -> send reliable takeover stop message
+              const stopMsg = JSON.stringify({
+                type: 'screen-share-stop',
+                targetIdentity: currentSharer.identity,
+                reason: 'taken-over',
+                newSharerName: applicantName,
+              });
+              const stopData = new TextEncoder().encode(stopMsg);
+              room.localParticipant.publishData(stopData, { reliable: true });
+            }
+          }
+        });
       }
 
       // 2. Send approval response to applicant
       const responseMsg = JSON.stringify({
         type: 'screen-share-response',
+        targetIdentity: applicantIdentity,
         approved: true,
       });
       const data = new TextEncoder().encode(responseMsg);
-      room.localParticipant.publishData(data, {
-        reliable: true,
-        destinationIdentities: [applicantIdentity],
-      });
+      room.localParticipant.publishData(data, { reliable: true });
 
       setScreenShareRequests((prev) => prev.filter((r) => r.applicantIdentity !== applicantIdentity));
       showToast(`Approved screen share for ${applicantName}`, 'success');
     },
-    [screenShareRequests, screenTracks, room.localParticipant, showToast],
+    [screenShareRequests, screenTracks, room.localParticipant, localParticipant, showToast],
   );
 
   const handleDeclineScreenShare = useCallback(
     (applicantIdentity: string) => {
       const responseMsg = JSON.stringify({
         type: 'screen-share-response',
+        targetIdentity: applicantIdentity,
         approved: false,
         reason: 'declined',
       });
       const data = new TextEncoder().encode(responseMsg);
-      room.localParticipant.publishData(data, {
-        reliable: true,
-        destinationIdentities: [applicantIdentity],
-      });
+      room.localParticipant.publishData(data, { reliable: true });
 
       setScreenShareRequests((prev) => prev.filter((r) => r.applicantIdentity !== applicantIdentity));
       showToast('Declined screen share request', 'info');
@@ -428,46 +442,188 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
     [room.localParticipant, showToast],
   );
 
+  const localScreenPubRef = useRef<LocalTrackPublication | null>(null);
+
+  // Start screen share directly with getDisplayMedia and CaptureController
+  const startScreenShare = async () => {
+    if (!localParticipant) return;
+    try {
+      // 1. If another participant is currently sharing, signal them to stop immediately
+      if (screenTracks.length > 0) {
+        screenTracks.forEach((t) => {
+          if (t.participant && t.participant.identity !== localParticipant.identity) {
+            const stopMsg = JSON.stringify({
+              type: 'screen-share-stop',
+              targetIdentity: t.participant.identity,
+              reason: 'taken-over',
+              newSharerName: localParticipant.name || 'Participant',
+            });
+            const stopData = new TextEncoder().encode(stopMsg);
+            localParticipant.publishData(stopData, { reliable: true });
+          }
+        });
+      }
+
+      let captureController: any = undefined;
+      if (typeof window !== 'undefined' && 'CaptureController' in window) {
+        try {
+          captureController = new (window as any).CaptureController();
+        } catch (e) {
+          console.debug('Failed to construct CaptureController:', e);
+        }
+      }
+
+      const displayMediaConstraints: DisplayMediaStreamOptions = {
+        video: {
+          displaySurface: 'monitor',
+          width: { ideal: 1920, max: 2560 },
+          height: { ideal: 1080, max: 1440 },
+          frameRate: { ideal: 30, max: 60 },
+        } as any,
+        audio: false,
+        // @ts-expect-error controller is supported in Chromium
+        controller: captureController,
+        selfBrowserSurface: 'exclude',
+        surfaceSwitching: 'exclude',
+        systemAudio: 'exclude',
+        preferCurrentTab: false,
+      };
+
+      // 2. Initiate getDisplayMedia directly
+      const streamPromise = navigator.mediaDevices.getDisplayMedia(displayMediaConstraints);
+
+      // Attempt before resolution in case engine supports pre-resolve
+      if (captureController && typeof captureController.setFocusBehavior === 'function') {
+        try {
+          captureController.setFocusBehavior('no-focus-change');
+        } catch (e) {}
+      }
+
+      const stream = await streamPromise;
+
+      // 3. Immediately after resolution (W3C standard): enforce no-focus-change so Chrome does not foreground the window
+      if (captureController && typeof captureController.setFocusBehavior === 'function') {
+        try {
+          captureController.setFocusBehavior('no-focus-change');
+        } catch (e) {
+          console.debug('CaptureController setFocusBehavior error after resolve:', e);
+        }
+      }
+
+      const mediaStreamTrack = stream.getVideoTracks()[0];
+      if (!mediaStreamTrack) {
+        throw new Error('No video track available in captured stream');
+      }
+
+      // Handle user stopping share from browser floating toolbar
+      mediaStreamTrack.onended = () => {
+        stopScreenShare();
+      };
+
+      // 4. Publish track directly to LiveKit
+      const pub = await localParticipant.publishTrack(mediaStreamTrack, {
+        source: Track.Source.ScreenShare,
+        name: 'screen_share',
+      });
+      localScreenPubRef.current = pub;
+    } catch (err: any) {
+      if (err?.name === 'NotAllowedError' || err?.name === 'AbortError' || err?.message?.includes('Permission denied')) {
+        console.log('Screen share cancelled by user');
+      } else {
+        console.error('Screen share error:', err);
+        showToast('Screen share was cancelled.', 'warning');
+      }
+    }
+  };
+
+  const stopScreenShare = async () => {
+    if (!localParticipant) return;
+    try {
+      if (localScreenPubRef.current) {
+        try {
+          if (localScreenPubRef.current.track) {
+            localScreenPubRef.current.track.stop();
+          }
+          await localParticipant.unpublishTrack(localScreenPubRef.current.track as any, true);
+        } catch (e) {}
+        localScreenPubRef.current = null;
+      }
+
+      const existingPub = localParticipant.getTrackPublication(Track.Source.ScreenShare);
+      if (existingPub) {
+        try {
+          if (existingPub.track) {
+            existingPub.track.stop();
+          }
+          await localParticipant.unpublishTrack(existingPub.track as any, true);
+        } catch (e) {}
+      }
+
+      await localParticipant.setScreenShareEnabled(false).catch(() => {});
+    } catch (err) {
+      console.error('Failed to stop screen share:', err);
+    }
+  };
+
+  // Enforce single active screen share: automatically stop local screen share if another participant shares
+  useEffect(() => {
+    if (!localParticipant || !isScreenSharing) return;
+
+    const remoteScreenTrack = screenTracks.find(
+      (t) => t.participant?.identity && t.participant.identity !== localParticipant.identity,
+    );
+
+    if (remoteScreenTrack) {
+      console.log('Another participant started sharing screen — stopping local screen share');
+      stopScreenShare();
+      const sharerName = remoteScreenTrack.participant?.name || 'Another participant';
+      showToast(`Screen share stopped — ${sharerName} is now sharing.`, 'warning');
+    }
+  }, [screenTracks, isScreenSharing, localParticipant]);
+
+  const handleStartApprovedScreenShare = async () => {
+    setScreenShareApproved(false);
+    await startScreenShare();
+  };
+
   const toggleScreenShare = async () => {
     if (!localParticipant) return;
 
-    // Case A: User is currently sharing -> stop screen share immediately
-    if (localParticipant.isScreenShareEnabled || isScreenSharing) {
-      await localParticipant.setScreenShareEnabled(false);
-      setIsScreenSharing(false);
+    // Currently sharing -> stop
+    if (isScreenSharing) {
+      await stopScreenShare();
+      setScreenShareApproved(false);
       return;
     }
 
-    // Case B: User is Host -> Host can share directly & takeover!
+    // Already approved by host -> start immediately
+    if (screenShareApproved) {
+      await handleStartApprovedScreenShare();
+      return;
+    }
+
+    // Host can share directly & takeover
     if (isHost) {
       if (screenTracks.length > 0) {
         const currentSharer = screenTracks[0].participant;
         if (currentSharer && currentSharer.identity !== localParticipant.identity) {
           const stopMsg = JSON.stringify({
             type: 'screen-share-stop',
+            targetIdentity: currentSharer.identity,
             reason: 'taken-over',
             newSharerName: localParticipant.name || 'Host',
           });
           const stopData = new TextEncoder().encode(stopMsg);
-          localParticipant.publishData(stopData, {
-            reliable: true,
-            destinationIdentities: [currentSharer.identity],
-          });
+          localParticipant.publishData(stopData, { reliable: true });
         }
       }
-
-      try {
-        await localParticipant.setScreenShareEnabled(true);
-        setIsScreenSharing(true);
-      } catch (err) {
-        console.error('Failed to enable screen share:', err);
-      }
+      await startScreenShare();
       return;
     }
 
-    // Case C: User is a Participant -> Request host approval!
+    // Participant -> request host approval
     if (screenSharePending) {
-      showToast('Your screen share request is already pending host approval.', 'info');
+      showToast('Screen share request already pending.', 'info');
       return;
     }
 
@@ -497,26 +653,14 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
     }
 
     setScreenSharePending(true);
-    showToast('Screen share request sent to host. Waiting for approval…', 'info');
+    showToast('Screen share request sent to host.', 'info');
 
     if (screenShareTimeoutRef.current) clearTimeout(screenShareTimeoutRef.current);
     screenShareTimeoutRef.current = setTimeout(() => {
       setScreenSharePending(false);
-      showToast('Screen share request timed out (no response from host).', 'warning');
+      showToast('Screen share request timed out.', 'warning');
     }, 30000);
   };
-
-  // Ensure only one screen share is active locally if someone else starts sharing
-  useEffect(() => {
-    if (!localParticipant || !isScreenSharing) return;
-
-    const otherScreenTrack = screenTracks.find((t) => t.participant.identity !== localParticipant.identity);
-    if (otherScreenTrack) {
-      localParticipant.setScreenShareEnabled(false).catch(() => {});
-      setIsScreenSharing(false);
-      showToast('Screen share stopped (another screen is now being shared).', 'warning');
-    }
-  }, [screenTracks, localParticipant, isScreenSharing, showToast]);
 
   // 3. Toggle Hand Raise
   const toggleHandRaise = async () => {
@@ -791,68 +935,23 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
         audioLocked={audioLocked}
         videoLocked={videoLocked}
       />
-      {/* Toast Notification Container */}
+      {/* Toast Notification Container (Top Right - Minimal & Decent) */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-50 px-4 py-3 rounded-2xl border text-xs font-semibold shadow-2xl backdrop-blur-xl flex items-center gap-2.5 transition-all ${
+          className={`fixed top-4 right-4 z-50 px-4 py-2.5 rounded-xl border text-xs font-medium shadow-xl backdrop-blur-md flex items-center gap-2 transition-all ${
             toast.type === 'success'
-              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+              ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-300'
               : toast.type === 'warning'
-              ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+              ? 'bg-amber-950/90 border-amber-500/30 text-amber-300'
               : toast.type === 'error'
-              ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
-              : 'bg-white/10 border-white/20 text-white'
+              ? 'bg-rose-950/90 border-rose-500/30 text-rose-300'
+              : 'bg-[#111116]/90 border-white/10 text-white/90'
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">
+          <span className="material-symbols-outlined text-[16px]">
             {toast.type === 'success' ? 'check_circle' : toast.type === 'warning' ? 'warning' : toast.type === 'error' ? 'error' : 'info'}
           </span>
           <span>{toast.message}</span>
-        </div>
-      )}
-
-      {/* Host Floating Screen Share Request Banner */}
-      {isHost && screenShareRequests.length > 0 && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3.5 bg-[#111116]/95 border border-amber-500/40 rounded-2xl flex items-center gap-4 shadow-2xl backdrop-blur-xl animate-bounce">
-          <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-amber-400 text-[22px]">present_to_all</span>
-            <div className="text-xs text-white">
-              <span className="font-bold text-amber-300">{screenShareRequests[0].applicantName}</span> requested to share screen
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleApproveScreenShare(screenShareRequests[0].applicantIdentity)}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md"
-            >
-              Allow & Takeover
-            </button>
-            <button
-              onClick={() => handleDeclineScreenShare(screenShareRequests[0].applicantIdentity)}
-              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white rounded-xl text-xs font-semibold transition-all"
-            >
-              Decline
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Participant Pending Screen Share Request Banner */}
-      {!isHost && screenSharePending && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-indigo-600/30 border border-indigo-500/50 rounded-full flex items-center gap-3 shadow-lg backdrop-blur-md">
-          <span className="w-3.5 h-3.5 border-2 border-indigo-300/40 border-t-indigo-300 rounded-full animate-spin" />
-          <span className="text-xs font-medium text-indigo-200">
-            Screen share request sent to host. Waiting for approval…
-          </span>
-          <button
-            onClick={() => {
-              setScreenSharePending(false);
-              if (screenShareTimeoutRef.current) clearTimeout(screenShareTimeoutRef.current);
-            }}
-            className="text-[10px] text-white/50 hover:text-white underline ml-1"
-          >
-            Cancel
-          </button>
         </div>
       )}
 
@@ -943,10 +1042,10 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
       <div className="flex-1 relative flex overflow-hidden">
         {/* Video Stage */}
         <main className="flex-1 p-4 md:p-6 flex items-center justify-center overflow-hidden">
-          {screenTracks.length > 0 ? (
+          {activeScreenTrack ? (
             <div className="w-full h-full flex flex-col lg:flex-row gap-4">
               <div className="flex-1 bg-black/60 rounded-3xl border border-white/10 overflow-hidden relative flex items-center justify-center">
-                <VideoTrack trackRef={screenTracks[0]} className="w-full h-full object-contain" />
+                <VideoTrack trackRef={activeScreenTrack} className="w-full h-full object-contain" />
               </div>
               <div className="lg:w-72 h-full flex lg:flex-col gap-3 overflow-auto">
                 {participants.map((p) => (
@@ -1293,9 +1392,11 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
               isScreenSharing
                 ? 'bg-indigo-600 text-white border border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.3)]'
+                : screenShareApproved
+                ? 'bg-emerald-500 text-black border-2 border-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.6)] animate-pulse'
                 : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
             }`}
-            title={isScreenSharing ? 'Stop Screen Share' : 'Share Screen'}
+            title={isScreenSharing ? 'Stop Screen Share' : screenShareApproved ? 'Screen Share Approved! Click to Start' : 'Share Screen'}
           >
             <span className="material-symbols-outlined text-[22px]">present_to_all</span>
           </button>
