@@ -23,7 +23,7 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     platform: 'Zoom',
     url: 'https://zoom.us/j/123456789',
     time: '14:30',
-    date: new Date(Date.now() - 2 * 3600000).toISOString().split('T')[0],
+    date: '2026-08-07',
     duration: '2h 15m',
     status: 'translated',
     participants: [
@@ -39,7 +39,7 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     platform: 'Microsoft Teams',
     url: 'https://teams.microsoft.com/l/meetup-join/abc',
     time: '10:00',
-    date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+    date: '2026-08-06',
     duration: '45m',
     status: 'translated',
     participants: [
@@ -54,7 +54,7 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     platform: 'Google Meet',
     url: 'https://meet.google.com/abc-xyz-def',
     time: '16:00',
-    date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
+    date: '2026-08-05',
     duration: '30m',
     status: 'processing',
     participants: [
@@ -69,7 +69,7 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     platform: 'Zoom',
     url: 'https://zoom.us/j/987654321',
     time: '09:00',
-    date: new Date(Date.now() - 86400000 * 3).toISOString().split('T')[0],
+    date: '2026-08-04',
     duration: '15m',
     status: 'translated',
     participants: [
@@ -86,11 +86,13 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     platform: 'Google Meet',
     url: 'https://meet.google.com/xyz-abc-123',
     time: '11:00',
-    date: new Date(Date.now() - 86400000 * 5).toISOString().split('T')[0],
+    date: '2026-08-02',
     duration: '1h',
-    status: 'translated',
+    status: 'ended',
     participants: [
       { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
+      { name: 'David Park', initials: 'DP', color: 'bg-indigo-100 text-indigo-700' },
+      { name: 'Elena Rostova', initials: 'ER', color: 'bg-emerald-100 text-emerald-700' },
     ],
     languages: ['English', 'Japanese'],
   },
@@ -107,15 +109,22 @@ export default function ExternalMeetingPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'zoom' | 'meet' | 'teams'>('all');
 
-  // Load from localStorage lazily
-  const [meetings, setMeetings] = useState<ExternalMeeting[]>(() => {
-    if (typeof window === 'undefined') return MOCK_MEETINGS;
-    const saved = localStorage.getItem('relay-external-meetings');
-    if (saved) {
-      try { return JSON.parse(saved); } catch { /* fall through to defaults */ }
+  const [meetings, setMeetings] = useState<ExternalMeeting[]>(MOCK_MEETINGS);
+
+  // Hydrate from localStorage on client mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('relay-external-meetings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMeetings(parsed);
+        }
+      }
+    } catch {
+      // ignore
     }
-    return MOCK_MEETINGS;
-  });
+  }, []);
 
   useEffect(() => {
     if (meetings.length > 0) {
@@ -160,14 +169,12 @@ export default function ExternalMeetingPage() {
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + 'T00:00:00');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (date.getTime() === today.getTime()) return 'Today';
-    if (date.getTime() === yesterday.getTime()) return 'Yesterday';
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    try {
+      const date = new Date(dateStr + 'T12:00:00Z');
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch {
+      return dateStr;
+    }
   };
 
   const tabs = [

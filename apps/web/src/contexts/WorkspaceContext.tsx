@@ -30,23 +30,11 @@ interface WorkspaceContextType {
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
+const DEFAULT_WORKSPACES: Workspace[] = [{ id: 'personal', type: 'personal', name: 'Personal Profile', role: 'owner' }];
+
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(() => {
-    if (typeof window === 'undefined') {
-      return [{ id: 'personal', type: 'personal', name: 'Personal Profile', role: 'owner' }];
-    }
-    try {
-      const saved = localStorage.getItem('relay-workspaces');
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // fall through to default
-    }
-    return [{ id: 'personal', type: 'personal', name: 'Personal Profile', role: 'owner' }];
-  });
-  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'personal';
-    return localStorage.getItem('current-workspace') || 'personal';
-  });
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(DEFAULT_WORKSPACES);
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string>('personal');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -81,9 +69,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  // Fetch workspaces from backend on mount; the localStorage fallback is
-  // handled by the lazy state initializers above.
+  // Hydrate from localStorage on mount, then fetch fresh workspaces from backend
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem('relay-workspaces');
+      const savedId = localStorage.getItem('current-workspace');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setWorkspaces(parsed);
+          if (savedId && parsed.some(w => w.id === savedId)) {
+            setCurrentWorkspaceId(savedId);
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     let cancelled = false;
     fetchWorkspaces().then((result) => {
       if (cancelled) return;
