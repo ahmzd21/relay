@@ -54,6 +54,9 @@ const SUPPORTED_LANGUAGES = [
 export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, hostKey = '', initialStatus = 'active' }: MeetingRoomProps) {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
+  const isMicMuted = !localParticipant?.isMicrophoneEnabled;
+  const isVideoMuted = !localParticipant?.isCameraEnabled;
+  const isScreenSharing = localParticipant?.isScreenShareEnabled ?? false;
   const allParticipants = useParticipants();
   const { chatMessages, send: sendChatMessage } = useChat();
 
@@ -78,15 +81,12 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
               return false;
             }
           }
-        } catch (e) {}
+        } catch {}
         return true;
       }),
     [allParticipants],
   );
 
-  const [isMicMuted, setIsMicMuted] = useState(false);
-  const [isVideoMuted, setIsVideoMuted] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
@@ -120,14 +120,16 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
     if (!localParticipant?.metadata) return;
     try {
       const meta = JSON.parse(localParticipant.metadata);
-      if (meta.preferences?.spoken) setSpokenLang(meta.preferences.spoken);
-      if (meta.preferences?.subtitle) setSubtitleLang(meta.preferences.subtitle);
-      if (meta.preferences?.audio) setAudioLang(meta.preferences.audio);
-      if (meta.preferences?.chat) setChatLang(meta.preferences.chat);
-      if (typeof meta.isHandRaised === 'boolean') setIsHandRaised(meta.isHandRaised);
-      if (meta.status) setLocalStatus(meta.status);
-      if (typeof meta.audioLocked === 'boolean') setAudioLocked(meta.audioLocked);
-      if (typeof meta.videoLocked === 'boolean') setVideoLocked(meta.videoLocked);
+      Promise.resolve().then(() => {
+        if (meta.preferences?.spoken) setSpokenLang(meta.preferences.spoken);
+        if (meta.preferences?.subtitle) setSubtitleLang(meta.preferences.subtitle);
+        if (meta.preferences?.audio) setAudioLang(meta.preferences.audio);
+        if (meta.preferences?.chat) setChatLang(meta.preferences.chat);
+        if (typeof meta.isHandRaised === 'boolean') setIsHandRaised(meta.isHandRaised);
+        if (meta.status) setLocalStatus(meta.status);
+        if (typeof meta.audioLocked === 'boolean') setAudioLocked(meta.audioLocked);
+        if (typeof meta.videoLocked === 'boolean') setVideoLocked(meta.videoLocked);
+      });
     } catch {}
   }, [localParticipant?.metadata]);
 
@@ -286,33 +288,22 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
     return hrs > 0 ? `${hrs}:${mm}:${ss}` : `${mm}:${ss}`;
   }, [elapsedSeconds]);
 
-  // 2. Track mic and camera states
-  useEffect(() => {
-    if (!localParticipant) return;
-    setIsMicMuted(!localParticipant.isMicrophoneEnabled);
-    setIsVideoMuted(!localParticipant.isCameraEnabled);
-    setIsScreenSharing(localParticipant.isScreenShareEnabled);
-  }, [localParticipant?.isMicrophoneEnabled, localParticipant?.isCameraEnabled, localParticipant?.isScreenShareEnabled]);
-
   const toggleMic = async () => {
     if (!localParticipant || audioLocked) return;
     const newState = !localParticipant.isMicrophoneEnabled;
     await localParticipant.setMicrophoneEnabled(newState);
-    setIsMicMuted(!newState);
   };
 
   const toggleVideo = async () => {
     if (!localParticipant || videoLocked) return;
     const newState = !localParticipant.isCameraEnabled;
     await localParticipant.setCameraEnabled(newState);
-    setIsVideoMuted(!newState);
   };
 
   const toggleScreenShare = async () => {
     if (!localParticipant) return;
     const newState = !localParticipant.isScreenShareEnabled;
     await localParticipant.setScreenShareEnabled(newState);
-    setIsScreenSharing(newState);
   };
 
   // 3. Toggle Hand Raise
@@ -369,7 +360,7 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
   useEffect(() => {
     if (isChatOpen) {
       seenMessageCountRef.current = chatMessages.length;
-      setUnreadCount(0);
+      Promise.resolve().then(() => setUnreadCount(0));
       return;
     }
 
@@ -378,7 +369,7 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
 
     const incoming = fresh.filter((m) => m.from?.identity !== localParticipant?.identity);
     if (incoming.length > 0) {
-      setUnreadCount((c) => c + incoming.length);
+      Promise.resolve().then(() => setUnreadCount((c) => c + incoming.length));
     }
   }, [chatMessages, isChatOpen, localParticipant?.identity]);
 
@@ -415,7 +406,7 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
             return { text: parsed.en, isTranslated: false, original: parsed.en };
           }
         }
-      } catch (e) {
+      } catch {
         // Plain text message (legacy or direct)
       }
       return { text: messageRaw, isTranslated: false, original: messageRaw };
@@ -820,7 +811,7 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
 
             <div className="flex-1 p-4 overflow-y-auto space-y-3">
               {participants.map((p) => {
-                let meta: any = { isHost: false, preferences: { spoken: 'en' }, isHandRaised: false };
+                let meta: { isHost: boolean; preferences: { spoken: string }; isHandRaised: boolean } = { isHost: false, preferences: { spoken: 'en' }, isHandRaised: false };
                 try { if (p.metadata) meta = JSON.parse(p.metadata); } catch {}
                 const isMe = p.identity === localParticipant?.identity;
 

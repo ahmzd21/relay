@@ -741,7 +741,7 @@ export default function Home() {
                       <p className="text-[#8C8880] mb-8 leading-relaxed italic">
                         &quot;The Silent Capture Bot is genius. We use it on all
                         our client Zoom calls now. Our Spanish-speaking partners
-                        don't even know we're using translation software.&quot;
+                        don&apos;t even know we&apos;re using translation software.&quot;
                       </p>
                     </div>
                     <div className="flex items-center gap-4">

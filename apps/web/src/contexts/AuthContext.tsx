@@ -32,25 +32,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUser = useCallback(async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/me', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user);
-      } else {
-        setUser(null);
+        return data.user ?? null;
       }
+      return null;
     } catch {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
+      return null;
     }
   }, []);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    let cancelled = false;
+    fetchUserData().then((u) => {
+      if (cancelled) return;
+      setUser(u);
+      setIsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchUserData]);
+
+  const refetchUser = useCallback(async () => {
+    const u = await fetchUserData();
+    setUser(u);
+    setIsLoading(false);
+  }, [fetchUserData]);
 
   return (
     <AuthContext.Provider
@@ -58,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
-        refetchUser: fetchUser,
+        refetchUser,
       }}
     >
       {children}

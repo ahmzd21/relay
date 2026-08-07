@@ -1,18 +1,31 @@
 "use client";
 
 import dynamic from 'next/dynamic';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useSyncExternalStore } from 'react';
+import type { GlobeMethods } from 'react-globe.gl';
 
 // Dynamic import for client-side rendering only
 const Globe = dynamic(() => import('react-globe.gl'), { ssr: false });
 
+const emptySubscribe = () => () => {};
+
+type GlobeMaterial = {
+  color: { set: (color: string) => void };
+  emissive: { set: (color: string) => void };
+  emissiveIntensity: number;
+  shininess: number;
+};
+
+type GlobeInstance = GlobeMethods & {
+  globeMaterial?: (() => GlobeMaterial) | GlobeMaterial;
+};
+
 export default function PinkGlobe() {
-  const globeEl = useRef<any>(null);
-  const [isClient, setIsClient] = useState(false);
-  const [countries, setCountries] = useState<any[]>([]);
+  const globeEl = useRef<GlobeInstance | undefined>(undefined);
+  const isClient = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const [countries, setCountries] = useState<object[]>([]);
 
   useEffect(() => {
-    setIsClient(true);
     // Fetch GeoJSON for the dot matrix effect
     fetch('https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
       .then(res => res.json())

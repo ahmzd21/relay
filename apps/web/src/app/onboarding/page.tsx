@@ -9,7 +9,6 @@ export default function OnboardingPage() {
   const { switchWorkspace, refetchWorkspaces } = useWorkspace();
   const [currentStep, setCurrentStep] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isCompleting, setIsCompleting] = useState(false);
   const totalSteps = 3;
 
   const [jobRole, setJobRole] = useState('');
@@ -42,7 +41,6 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setIsTransitioning(true);
-    setIsCompleting(true);
 
     try {
       const res = await fetch('/api/workspaces/onboarding', {
@@ -101,7 +99,7 @@ export default function OnboardingPage() {
             <div className="space-y-8">
               <div className="text-center space-y-3">
                 <h1 className="text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900">Welcome to Relay.</h1>
-                <p className="text-slate-500 text-lg">Let's get your personalized AI studio set up.</p>
+                <p className="text-slate-500 text-lg">Let&apos;s get your personalized AI studio set up.</p>
               </div>
 
               <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-8 shadow-warm space-y-8">

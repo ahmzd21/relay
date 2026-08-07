@@ -302,7 +302,7 @@ function OrgUsageMetrics() {
   );
 }
 
-function UsageCard({ icon, color, label, used, limit, unit }: {
+function UsageCard({ icon, label, used, limit }: {
   icon: string;
   color: string;
   label: string;

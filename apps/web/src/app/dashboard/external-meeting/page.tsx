@@ -1,9 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import DashboardHeader from '@/components/DashboardHeader';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 interface ExternalMeeting {
   id: string;
@@ -105,23 +103,19 @@ const PLATFORM_ICONS: Record<string, { icon: string; color: string; bg: string; 
 };
 
 export default function ExternalMeetingPage() {
-  const router = useRouter();
-  const { isOrganization } = useWorkspace();
-
   const [meetingLink, setMeetingLink] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'zoom' | 'meet' | 'teams'>('all');
 
-  // Load from localStorage
-  const [meetings, setMeetings] = useState<ExternalMeeting[]>([]);
-  useEffect(() => {
+  // Load from localStorage lazily
+  const [meetings, setMeetings] = useState<ExternalMeeting[]>(() => {
+    if (typeof window === 'undefined') return MOCK_MEETINGS;
     const saved = localStorage.getItem('relay-external-meetings');
     if (saved) {
-      try { setMeetings(JSON.parse(saved)); } catch { setMeetings(MOCK_MEETINGS); }
-    } else {
-      setMeetings(MOCK_MEETINGS);
+      try { return JSON.parse(saved); } catch { /* fall through to defaults */ }
     }
-  }, []);
+    return MOCK_MEETINGS;
+  });
 
   useEffect(() => {
     if (meetings.length > 0) {
@@ -195,7 +189,7 @@ export default function ExternalMeetingPage() {
             {/* Page Title */}
             <div>
               <h1 className="text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">External Meeting</h1>
-              <p className="text-slate-600 text-lg">Connect Relay's AI translation to Zoom, Teams, or Google Meet.</p>
+              <p className="text-slate-600 text-lg">Connect Relay&apos;s AI translation to Zoom, Teams, or Google Meet.</p>
             </div>
 
             {/* Quick Actions */}

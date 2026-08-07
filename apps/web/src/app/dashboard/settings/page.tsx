@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef } from 'react';
-import Link from 'next/link';
+import Image from 'next/image';
 import DashboardHeader from '@/components/DashboardHeader';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth, getUserJobRole } from '@/contexts/AuthContext';
@@ -163,7 +163,7 @@ export default function SettingsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       {user?.avatar ? (
-                        <img src={user.avatar} alt={user.fullName} className="w-16 h-16 rounded-2xl object-cover shadow-lg" />
+                        <Image src={user.avatar} alt={user.fullName} width={64} height={64} className="w-16 h-16 rounded-2xl object-cover shadow-lg" />
                       ) : (
                         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-[#FF416C]/20">
                           {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
@@ -615,9 +615,9 @@ export default function SettingsPage() {
               className="relative w-20 h-20 rounded-2xl overflow-hidden group cursor-pointer disabled:opacity-50"
             >
               {avatarPreview ? (
-                <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                <Image src={avatarPreview} alt="Preview" fill className="object-cover" />
               ) : user?.avatar ? (
-                <img src={user.avatar} alt={user.fullName} className="w-full h-full object-cover" />
+                <Image src={user.avatar} alt={user.fullName} fill className="object-cover" />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white font-bold text-2xl shadow-lg">
                   {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
@@ -1083,7 +1083,7 @@ export default function SettingsPage() {
                   onClick={async () => {
                     setShow2FASetup(false);
                     setTwoFactorStep('intro');
-                    await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).then(data => {
+                    await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).then(() => {
                       // refetch will happen in AuthContext automatically
                     });
                     window.location.reload();

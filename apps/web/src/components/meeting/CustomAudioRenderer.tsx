@@ -15,7 +15,7 @@ export function CustomAudioRenderer() {
     } catch {
       return 'none';
     }
-  }, [localParticipant?.metadata]);
+  }, [localParticipant]);
 
   // 2. Get all remote audio tracks in the room. Local mic is never rendered —
   //    playing your own microphone back is echo.

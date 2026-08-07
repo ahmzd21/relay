@@ -1,7 +1,10 @@
 import { SignJWT, jwtVerify } from 'jose';
 
 const getJwtSecret = () => {
-  const secret = process.env.JWT_SECRET || 'default_relay_jwt_secret_key_change_me';
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET must be set and at least 32 characters long');
+  }
   return new TextEncoder().encode(secret);
 };
 
