@@ -4,13 +4,6 @@ import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 
-interface AuthGuardProps {
-  children: React.ReactNode;
-  // Called by child components (e.g. Sidebar) when they have finished their
-  // own initialization so we know it's safe to reveal the UI.
-  onSidebarReady?: (notify: () => void) => void;
-}
-
 // We export the callback setter so the layout can pass it to Sidebar.
 export function useAuthGuard() {
   const [sidebarReady, setSidebarReady] = useState(false);

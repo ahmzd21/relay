@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "default_relay_jwt_secret_key_change_me",
-);
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function proxy(request: NextRequest) {
   const sessionCookie = request.cookies.get("relay_session");
@@ -21,8 +19,9 @@ export async function proxy(request: NextRequest) {
     }
 
     try {
-      await jwtVerify(sessionCookie.value, JWT_SECRET);
-    } catch (error) {
+      if (!JWT_SECRET) throw new Error("JWT_SECRET is not configured");
+      await jwtVerify(sessionCookie.value, new TextEncoder().encode(JWT_SECRET));
+    } catch {
       // Invalid or expired token
       return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -34,9 +33,10 @@ export async function proxy(request: NextRequest) {
   
   if (isAuthPath && sessionCookie?.value) {
     try {
-      await jwtVerify(sessionCookie.value, JWT_SECRET);
+      if (!JWT_SECRET) throw new Error("JWT_SECRET is not configured");
+      await jwtVerify(sessionCookie.value, new TextEncoder().encode(JWT_SECRET));
       return NextResponse.redirect(new URL("/dashboard", request.url));
-    } catch (error) {
+    } catch {
       // If token is invalid, let them stay on the auth page
     }
   }

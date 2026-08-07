@@ -13,7 +13,7 @@ export default function DashboardHeader({
   searchPlaceholder,
   rightContent,
 }: DashboardHeaderProps) {
-  const { isOpen, toggle } = useMobileMenu();
+  const { toggle } = useMobileMenu();
   const { unreadCount, showBellDropdown, setShowBellDropdown, notifications, dismissNotification } = useNotifications();
 
   return (
@@ -24,8 +24,6 @@ export default function DashboardHeader({
           className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-black/5 transition-colors"
           aria-label="Toggle menu"
         >
-          <span className="block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300" />
-          <span className="block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300" />
           <span className="block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300" />
         </button>
       </div>

@@ -429,7 +429,7 @@ export default function StatisticsPage() {
   );
 }
 
-function MetricCard({ icon, color, value, label, change }: {
+function MetricCard({ icon, value, label, change }: {
   icon: string;
   color: string;
   value: string;

@@ -30,13 +30,13 @@ export const ReactionsOverlay: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const handleDataReceived = (payload: Uint8Array, participant: any) => {
+    const handleDataReceived = (payload: Uint8Array) => {
       try {
         const msg = JSON.parse(new TextDecoder().decode(payload));
         if (msg.type === 'reaction' && msg.emoji) {
           addReaction(msg.emoji);
         }
-      } catch (e) {
+      } catch {
         // ignore non-json messages
       }
     };
@@ -93,7 +93,6 @@ export const ReactionsOverlay: React.FC = () => {
 };
 
 export const ReactionsControl: React.FC = () => {
-  const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

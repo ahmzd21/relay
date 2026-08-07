@@ -30,7 +30,6 @@ export default function MeetingPage({ params }: MeetingPageProps) {
   const [chatLang, setChatLang] = useState('en');
 
   // Host configuration - stored in localStorage to persist across reloads
-  const [isHostMode, setIsHostMode] = useState(false);
   const [enableWaitingRoom, setEnableWaitingRoom] = useState(false);
   const [hostKey, setHostKey] = useState<string>('');
   const [isCreatingMeeting, setIsCreatingMeeting] = useState(false);
@@ -50,7 +49,6 @@ export default function MeetingPage({ params }: MeetingPageProps) {
           // arrived early — do NOT mint a host key here, since the server has not
           // granted host and a stale key would linger in localStorage forever.
           setIsCreatingMeeting(isStartingMeeting);
-          setIsHostMode(isStartingMeeting);
 
           if (isStartingMeeting) {
             const storageKey = `meeting_host_${meetingId}`;
@@ -64,13 +62,11 @@ export default function MeetingPage({ params }: MeetingPageProps) {
         } else {
           // Meeting exists - joining as participant
           setIsCreatingMeeting(false);
-          setIsHostMode(false);
         }
       } catch (err) {
         console.error('Failed to check meeting status:', err);
         // Default to participant mode on error
         setIsCreatingMeeting(false);
-        setIsHostMode(false);
       }
     };
 
@@ -91,7 +87,7 @@ export default function MeetingPage({ params }: MeetingPageProps) {
   // Sync user's name when auth loads
   useEffect(() => {
     if (user?.fullName && !name) {
-      setName(user.fullName);
+      Promise.resolve().then(() => setName(user.fullName));
     }
   }, [user?.fullName, name]);
 
@@ -152,9 +148,9 @@ export default function MeetingPage({ params }: MeetingPageProps) {
         hostKey: data.hostKey || '',
         status: data.status || 'active',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Connection error:', err);
-      setError(err.message || 'Unable to join meeting. Please ensure the backend server is running.');
+      setError(err instanceof Error ? err.message : 'Unable to join meeting. Please ensure the backend server is running.');
     } finally {
       setIsConnecting(false);
     }

@@ -31,53 +31,73 @@ interface WorkspaceContextType {
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([
-    { id: 'personal', type: 'personal', name: 'Personal Profile', role: 'owner' }
-  ]);
-  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string>('personal');
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(() => {
+    if (typeof window === 'undefined') {
+      return [{ id: 'personal', type: 'personal', name: 'Personal Profile', role: 'owner' }];
+    }
+    try {
+      const saved = localStorage.getItem('relay-workspaces');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fall through to default
+    }
+    return [{ id: 'personal', type: 'personal', name: 'Personal Profile', role: 'owner' }];
+  });
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'personal';
+    return localStorage.getItem('current-workspace') || 'personal';
+  });
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchWorkspaces = useCallback(async () => {
+  const fetchWorkspaces = useCallback(async (): Promise<{ workspaces: Workspace[]; currentId: string } | null> => {
     try {
       const res = await fetch('/api/workspaces');
       if (res.ok) {
         const data = await res.json();
         if (data.workspaces && data.workspaces.length > 0) {
-          setWorkspaces(data.workspaces);
           // Restore last selected workspace or default to first
           const savedId = localStorage.getItem('current-workspace');
           const validId = data.workspaces.find((w: Workspace) => w.id === savedId) ? savedId : data.workspaces[0].id;
-          setCurrentWorkspaceId(validId!);
+          return { workspaces: data.workspaces, currentId: validId };
         }
       }
     } catch (err) {
       // Keep fallback workspaces on network failure
       console.error('Failed to fetch workspaces:', err);
-    } finally {
-      setIsLoading(false);
-      setIsInitialized(true);
     }
+    return null;
   }, []);
 
-  // Fetch workspaces from backend on mount, with localStorage fallback
+  const applyWorkspaceResult = useCallback(
+    (result: { workspaces: Workspace[]; currentId: string } | null) => {
+      if (result) {
+        setWorkspaces(result.workspaces);
+        setCurrentWorkspaceId(result.currentId);
+      }
+      setIsLoading(false);
+      setIsInitialized(true);
+    },
+    [],
+  );
+
+  // Fetch workspaces from backend on mount; the localStorage fallback is
+  // handled by the lazy state initializers above.
   useEffect(() => {
-    const savedWorkspaces = localStorage.getItem('relay-workspaces');
-    const savedWorkspaceId = localStorage.getItem('current-workspace');
+    let cancelled = false;
+    fetchWorkspaces().then((result) => {
+      if (cancelled) return;
+      applyWorkspaceResult(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchWorkspaces, applyWorkspaceResult]);
 
-    // Set initial fallback from localStorage
-    if (savedWorkspaces) {
-      try {
-        setWorkspaces(JSON.parse(savedWorkspaces));
-      } catch {}
-    }
-    if (savedWorkspaceId) {
-      setCurrentWorkspaceId(savedWorkspaceId);
-    }
-
-    // Then fetch fresh data from backend
-    fetchWorkspaces();
-  }, [fetchWorkspaces]);
+  const refetchWorkspaces = useCallback(async () => {
+    const result = await fetchWorkspaces();
+    applyWorkspaceResult(result);
+  }, [fetchWorkspaces, applyWorkspaceResult]);
 
   // Persist to localStorage whenever workspaces or current changes
   useEffect(() => {
@@ -172,7 +192,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         isOrganization,
         hasPermission,
         isUserOrgOwner,
-        refetchWorkspaces: fetchWorkspaces,
+        refetchWorkspaces,
       }}
     >
       {children}

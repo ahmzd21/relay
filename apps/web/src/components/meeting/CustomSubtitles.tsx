@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRoomContext, useLocalParticipant } from '@livekit/components-react';
+import { RemoteParticipant, DataPacket_Kind } from 'livekit-client';
 
 interface SubtitleMessage {
   id: string;
@@ -32,8 +33,8 @@ export function CustomSubtitles() {
 
     const handleData = (
       payload: Uint8Array,
-      participant?: any,
-      _kind?: any,
+      participant?: RemoteParticipant,
+      _kind?: DataPacket_Kind,
       topic?: string
     ) => {
       if (topic === 'subtitle') {

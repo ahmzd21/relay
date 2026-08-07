@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useRoomContext } from '@livekit/components-react';
-import { RoomEvent } from 'livekit-client';
+import { RoomEvent, Participant, DataPacket_Kind } from 'livekit-client';
 
 type Point = { x: number; y: number };
 
@@ -45,6 +45,30 @@ const COLORS = [
   '#22c55e', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'
 ];
 
+interface ActionButtonProps {
+  onClick: () => void;
+  title: string;
+  icon: React.ReactNode;
+  active?: boolean;
+  disabled?: boolean;
+}
+
+function ActionButton({ onClick, title, icon, active, disabled }: ActionButtonProps) {
+  return (
+    <button
+      title={title}
+      disabled={disabled}
+      onClick={onClick}
+      className={`p-2 rounded-md transition-colors flex items-center justify-center
+        ${disabled ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}
+        ${active ? 'bg-indigo-500/20 text-indigo-400' : 'text-gray-300'}
+      `}
+    >
+      {icon}
+    </button>
+  );
+}
+
 export function Whiteboard({ onClose }: { onClose: () => void }) {
   const room = useRoomContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -66,10 +90,14 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
   const redoStackRef = useRef<BoardElement[][]>([]);
 
   const [showShapeMenu, setShowShapeMenu] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   const saveHistory = useCallback(() => {
     undoStackRef.current.push(JSON.parse(JSON.stringify(elementsRef.current)));
     redoStackRef.current = [];
+    setCanUndo(true);
+    setCanRedo(false);
   }, []);
 
   const redraw = useCallback(() => {
@@ -147,7 +175,7 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
     });
   }, []);
 
-  const sendData = useCallback((data: any) => {
+  const sendData = useCallback((data: Record<string, unknown>) => {
     try {
       const payload = new TextEncoder().encode(JSON.stringify(data));
       room.localParticipant.publishData(payload, { reliable: true, topic: 'whiteboard' });
@@ -162,7 +190,7 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
   }, [elements, redraw]);
 
   useEffect(() => {
-    const handleDataReceived = (payload: Uint8Array, participant: any, kind: any, topic?: string) => {
+    const handleDataReceived = (payload: Uint8Array, _participant?: Participant, _kind?: DataPacket_Kind, topic?: string) => {
       if (topic !== 'whiteboard') return;
       try {
         const data = JSON.parse(new TextDecoder().decode(payload));
@@ -198,7 +226,7 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
         } else if (data.type === 'full_state') {
           setElements(data.elements);
         }
-      } catch (e) {}
+      } catch {}
     };
 
     room.on(RoomEvent.DataReceived, handleDataReceived);
@@ -316,7 +344,7 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
       sendData({ type: 'add_element', element: newPath });
     } else {
       const newShape: ShapeElement = {
-        id, type: 'shape', shapeType: tool as any, color,
+        id, type: 'shape', shapeType: tool as ShapeElement['shapeType'], color,
         startX: pt.x, startY: pt.y, endX: pt.x, endY: pt.y,
       };
       currentElementRef.current = newShape;
@@ -390,6 +418,8 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
     const prev = undoStackRef.current.pop()!;
     setElements(prev);
     sendData({ type: 'full_state', elements: prev });
+    setCanUndo(undoStackRef.current.length > 0);
+    setCanRedo(true);
   };
 
   const handleRedo = () => {
@@ -398,6 +428,8 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
     const next = redoStackRef.current.pop()!;
     setElements(next);
     sendData({ type: 'full_state', elements: next });
+    setCanUndo(true);
+    setCanRedo(redoStackRef.current.length > 0);
   };
 
   const exportToPng = () => {
@@ -421,20 +453,6 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
     a.download = `whiteboard-${new Date().toISOString()}.png`;
     a.click();
   };
-
-  const ActionButton = ({ onClick, title, icon, active, disabled }: any) => (
-    <button
-      title={title}
-      disabled={disabled}
-      onClick={onClick}
-      className={`p-2 rounded-md transition-colors flex items-center justify-center
-        ${disabled ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}
-        ${active ? 'bg-indigo-500/20 text-indigo-400' : 'text-gray-300'}
-      `}
-    >
-      {icon}
-    </button>
-  );
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8">
@@ -568,7 +586,7 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
           <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
             <ActionButton
               title="Undo"
-              disabled={undoStackRef.current.length === 0}
+              disabled={!canUndo}
               onClick={handleUndo}
               icon={(
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -579,7 +597,7 @@ export function Whiteboard({ onClose }: { onClose: () => void }) {
             />
             <ActionButton
               title="Redo"
-              disabled={redoStackRef.current.length === 0}
+              disabled={!canRedo}
               onClick={handleRedo}
               icon={(
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

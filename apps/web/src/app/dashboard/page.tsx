@@ -160,16 +160,34 @@ const ACTION_ITEMS = [
   { text: "Review frontend candidates", source: "Interview Session" },
 ];
 
+function getScheduleDateRange(): { today: string; weekEnd: string } {
+  const today = new Date().toISOString().split("T")[0];
+  const weekEnd = new Date(Date.now() + 7 * 86400000)
+    .toISOString()
+    .split("T")[0];
+  return { today, weekEnd };
+}
+
 export default function MainDashboardPage() {
   const router = useRouter();
-  const { isOrganization, currentWorkspace, workspaces, hasPermission } =
-    useWorkspace();
+  const { isOrganization, currentWorkspace, hasPermission } = useWorkspace();
   const { user } = useAuth();
 
   const [externalLink, setExternalLink] = useState("");
 
   // Schedule state
-  const [meetings, setMeetings] = useState<ScheduledMeeting[]>([]);
+  const [meetings, setMeetings] = useState<ScheduledMeeting[]>(() => {
+    if (typeof window === 'undefined') return DEFAULT_MEETINGS;
+    const saved = localStorage.getItem("relay-scheduled-meetings");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return DEFAULT_MEETINGS;
+      }
+    }
+    return DEFAULT_MEETINGS;
+  });
   const [scheduleTab, setScheduleTab] = useState<"today" | "week" | "all">(
     "today",
   );
@@ -181,20 +199,6 @@ export default function MainDashboardPage() {
     duration: "30m",
     platform: "Native" as ScheduledMeeting["platform"],
   });
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("relay-scheduled-meetings");
-    if (saved) {
-      try {
-        setMeetings(JSON.parse(saved));
-      } catch {
-        setMeetings(DEFAULT_MEETINGS);
-      }
-    } else {
-      setMeetings(DEFAULT_MEETINGS);
-    }
-  }, []);
 
   // Persist to localStorage
   useEffect(() => {
@@ -212,8 +216,6 @@ export default function MainDashboardPage() {
     if (hour < 17) return "Good afternoon";
     return "Good evening";
   };
-
-  const isSolo = workspaces.length === 1 && workspaces[0].type === "personal";
 
   const orgFeed = [
     {
@@ -244,10 +246,7 @@ export default function MainDashboardPage() {
 
   // Filter meetings
   const filteredMeetings = useMemo(() => {
-    const today = new Date().toISOString().split("T")[0];
-    const weekEnd = new Date(Date.now() + 7 * 86400000)
-      .toISOString()
-      .split("T")[0];
+    const { today, weekEnd } = getScheduleDateRange();
     return meetings
       .filter((m) => m.status !== "ended")
       .filter((m) => {
