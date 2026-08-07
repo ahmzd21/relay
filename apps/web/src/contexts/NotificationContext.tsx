@@ -34,7 +34,7 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [deviceCount, setDeviceCount] = useState(0);
   const [preferences, setPreferences] = useState<NotificationPreferences>({ email: true, push: true });
@@ -44,25 +44,33 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const unreadCount = notifications.filter((n) => !n.read).length;
   const pushEnabled = !!fcmToken;
 
-  // Fetch preferences on mount
-  const fetchPreferences = useCallback(async () => {
+  // Load notification preferences (returns null when the request fails).
+  const loadPreferences = useCallback(async () => {
     try {
       const res = await fetch('/api/notifications/preferences', { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setPreferences(data.preferences);
-        setDeviceCount(data.deviceCount);
-      }
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data;
     } catch {
-      // silently fail
+      return null;
     }
   }, []);
 
+  // Fetch preferences when the user signs in.
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchPreferences();
-    }
-  }, [isAuthenticated, fetchPreferences]);
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    loadPreferences()
+      .then((data) => {
+        if (cancelled || !data) return;
+        setPreferences(data.preferences);
+        setDeviceCount(data.deviceCount);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, loadPreferences]);
 
   // Subscribe token to backend
   const subscribeToken = useCallback(async (token: string) => {
@@ -78,67 +86,32 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Unsubscribe token from backend
-  const unsubscribeToken = useCallback(async (token: string) => {
-    try {
-      await fetch('/api/notifications/unsubscribe', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ token }),
-      });
-    } catch {
-      // silently fail
-    }
-  }, []);
-
-  // Request push permission and get FCM token
-  const requestPushPermission = useCallback(async () => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        const messaging = await getMessagingInstance();
-        if (!messaging) return;
-        const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-        if (!vapidKey) return;
-        const token = await getToken(messaging, { vapidKey });
-        if (token) {
-          setFcmToken(token);
-          await subscribeToken(token);
-          await fetchPreferences();
-        }
-      }
-    } catch {
-      // silently fail
-    }
-  }, [subscribeToken, fetchPreferences]);
-
-  // Restore existing token on mount
+  // Register the service worker, then restore an existing push token on login.
   useEffect(() => {
     if (!isAuthenticated || typeof window === 'undefined') return;
+    let cancelled = false;
 
     const init = async () => {
       try {
+        const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+        if (!vapidKey) return;
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
         const messaging = await getMessagingInstance();
-        if (!messaging) return;
-        const permission = Notification.permission;
-        if (permission === 'granted') {
-          const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-          if (!vapidKey) return;
-          const token = await getToken(messaging, { vapidKey });
-          if (token) {
-            setFcmToken(token);
-            await subscribeToken(token);
-          }
-        }
+        if (cancelled || !messaging) return;
+        if (Notification.permission !== 'granted') return;
+        const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+        if (cancelled || !token) return;
+        setFcmToken(token);
+        await subscribeToken(token);
       } catch {
         // silently fail
       }
     };
 
     init();
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthenticated, subscribeToken]);
 
   // Listen for foreground messages
@@ -165,6 +138,29 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     return () => unsubscribe?.();
   }, []);
+
+  // Request push permission and get FCM token
+  const requestPushPermission = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const messaging = await getMessagingInstance();
+        if (!messaging) return;
+        const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+        if (!vapidKey) return;
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+        if (token) {
+          setFcmToken(token);
+          await subscribeToken(token);
+        }
+      }
+    } catch {
+      // silently fail
+    }
+  }, [subscribeToken]);
 
   // Update notification preferences
   const updatePreferences = useCallback(async (prefs: Partial<NotificationPreferences>) => {

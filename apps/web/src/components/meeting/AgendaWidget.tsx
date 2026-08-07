@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useLocalParticipant, useRoomContext } from '@livekit/components-react';
 import { RoomEvent } from 'livekit-client';
 
@@ -15,20 +15,16 @@ export function AgendaWidget() {
   const { localParticipant } = useLocalParticipant();
   const [agenda, setAgenda] = useState<AgendaItem[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [isHost, setIsHost] = useState(false);
 
-  useEffect(() => {
-    if (localParticipant?.metadata) {
-       try {
-         const meta = JSON.parse(localParticipant.metadata);
-         if (meta.role === 'host') {
-           setIsHost(true);
-         }
-       } catch (e) {
-         console.error('Failed to parse local participant metadata', e);
-       }
+  const isHost = useMemo(() => {
+    if (!localParticipant?.metadata) return false;
+    try {
+      const meta = JSON.parse(localParticipant.metadata);
+      return meta.role === 'host';
+    } catch {
+      return false;
     }
-  }, [localParticipant?.metadata]);
+  }, [localParticipant]);
 
   useEffect(() => {
     const updateAgendaFromMeta = (metaStr?: string) => {

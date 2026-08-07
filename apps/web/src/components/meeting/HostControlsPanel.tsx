@@ -46,7 +46,7 @@ export default function HostControlsPanel({
     try {
       const meta = JSON.parse(p.metadata || '{}');
       return meta.status === 'waiting' && meta.role !== 'host';
-    } catch(e) {
+    } catch {
       return false;
     }
   });
@@ -55,7 +55,7 @@ export default function HostControlsPanel({
     try {
       const meta = JSON.parse(p.metadata || '{}');
       return meta.status !== 'waiting' && meta.role !== 'host';
-    } catch(e) {
+    } catch {
       return true;
     }
   });
@@ -109,7 +109,7 @@ export default function HostControlsPanel({
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-      const body: any = { roomName: meetingId, action, hostKey };
+      const body: { roomName: string; action: string; hostKey: string; targetParticipantId?: string } = { roomName: meetingId, action, hostKey };
       if (targetIdentity) body.targetParticipantId = targetIdentity;
 
       const res = await fetch(`${baseUrl}/api/meetings/control`, {

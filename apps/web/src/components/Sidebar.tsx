@@ -30,11 +30,12 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
   };
 
   const [isMounted, setIsMounted] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('sidebar-collapsed') === 'true';
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem("sidebar-collapsed") === "true";
-    setIsCollapsed(saved);
     const timer = setTimeout(() => {
       setIsMounted(true);
       onReady?.();

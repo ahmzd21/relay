@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useWorkspace, Workspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -67,7 +68,7 @@ export default function WorkspaceSwitcher() {
           className="flex items-center gap-2.5 pl-3 pr-3 py-2.5 bg-white border border-[#E4E0D6] text-[#1c1b1b] rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all shadow-sm"
         >
           {user?.avatar ? (
-            <img src={user.avatar} alt="" className="w-6 h-6 rounded-lg object-cover" />
+            <Image src={user.avatar} alt="" width={24} height={24} className="w-6 h-6 rounded-lg object-cover" />
           ) : (
             <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white text-[11px] font-bold">
               {user?.fullName?.charAt(0).toUpperCase() || '?'}
@@ -180,7 +181,7 @@ export default function WorkspaceSwitcher() {
         className="flex items-center gap-2.5 pl-3 pr-3 py-2.5 bg-white border border-[#E4E0D6] text-[#1c1b1b] rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all shadow-sm"
       >
         {user?.avatar ? (
-            <img src={user.avatar} alt="" className="w-6 h-6 rounded-lg object-cover" />
+            <Image src={user.avatar} alt="" width={24} height={24} className="w-6 h-6 rounded-lg object-cover" />
           ) : (
             <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white text-[11px] font-bold">
               {user?.fullName?.charAt(0).toUpperCase() || '?'}

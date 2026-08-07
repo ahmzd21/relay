@@ -7,7 +7,7 @@
     "dev": "turbo dev",
     "dev:web": "pnpm --filter web dev",
     "dev:api": "pnpm --filter relay-api dev",
-    "dev:agent": "..\\meet\\agent\\venv\\Scripts\\python.exe apps/translation-agent/main.py dev",
+    "dev:agent": "python apps/translation-agent/main.py dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "db:push": "pnpm --filter shared db:push",

@@ -61,9 +61,9 @@ export default function GuestMeetingPage({ params }: GuestMeetingPageProps) {
         token: data.token,
         status: data.status || 'active',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Guest connection error:', err);
-      setError(err.message || 'Unable to join meeting as guest.');
+      setError(err instanceof Error ? err.message : 'Unable to join meeting as guest.');
     } finally {
       setIsConnecting(false);
     }
