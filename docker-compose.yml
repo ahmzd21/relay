@@ -24,7 +24,20 @@ services:
     image: livekit/livekit-server:latest
     container_name: relay-livekit
     restart: unless-stopped
-    command: ["--dev", "--bind", "0.0.0.0", "--keys", "devkey: secret"]
+    # Without this the server advertises only its Docker-internal IP (172.19.0.x),
+    # which a browser on the host cannot reach, so every ICE candidate pair fails
+    # and calls drop the moment media has to flow.
+    #
+    # LIVEKIT_NODE_IP is intentionally NOT defaulted to a hardcoded address: a
+    # stale value (e.g. after a DHCP lease change) breaks media again and is hard
+    # to spot. Leave it unset to let LiveKit auto-detect the host interfaces, or
+    # set it in relay/.env when you need to pin one:
+    #   LIVEKIT_NODE_IP=192.168.18.58
+    command: >
+      --dev
+      --bind 0.0.0.0
+      --keys "devkey: secret"
+      ${LIVEKIT_NODE_IP:+--node-ip ${LIVEKIT_NODE_IP}}
     ports:
       - "7880:7880"     # WebSocket signaling
       - "7881:7881"     # TCP fallback

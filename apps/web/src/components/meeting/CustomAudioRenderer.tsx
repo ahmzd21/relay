@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useTracks, useLocalParticipant, AudioTrack } from '@livekit/components-react';
-import { Track, RemoteAudioTrack } from 'livekit-client';
+import { Track } from 'livekit-client';
 
 export function CustomAudioRenderer() {
   const { localParticipant } = useLocalParticipant();
@@ -17,37 +17,40 @@ export function CustomAudioRenderer() {
     }
   }, [localParticipant?.metadata]);
 
-  // 2. Get all audio tracks in the room
+  // 2. Get all remote audio tracks in the room. Local mic is never rendered —
+  //    playing your own microphone back is echo.
   const audioTracks = useTracks([Track.Source.Microphone, Track.Source.Unknown], { onlySubscribed: true })
-    .filter(t => t.publication.kind === Track.Kind.Audio);
+    .filter(t => t.publication.kind === Track.Kind.Audio)
+    .filter(t => t.participant.identity !== localParticipant?.identity);
 
   const isDubbingEnabled = audioLang !== 'none';
-
-  // 3. Manually duck original speakers using the LiveKit SDK
-  useEffect(() => {
-    audioTracks.forEach(trackRef => {
-      const trackName = trackRef.publication.trackName;
-      const isTranslation = trackName.startsWith('translation_');
-      
-      if (!isTranslation && trackRef.publication.track instanceof RemoteAudioTrack) {
-        // Apply ducking (15% volume) to original speakers when listening to dubbed voice
-        trackRef.publication.track.setVolume(isDubbingEnabled ? 0.15 : 1.0);
-      }
-    });
-  }, [audioTracks, isDubbingEnabled]);
 
   return (
     <div style={{ display: 'none' }}>
       {audioTracks.map((trackRef) => {
-        const trackName = trackRef.publication.trackName;
+        const trackName = trackRef.publication.trackName || '';
         const isTranslation = trackName.startsWith('translation_');
-        
-        // 4. ONLY render translation tracks, and ONLY if they match our preference
-        if (isTranslation && trackName.startsWith(`translation_${audioLang}_`)) {
-          return <AudioTrack key={trackRef.publication.trackSid} trackRef={trackRef} volume={1.0} />;
+
+        if (isTranslation) {
+          // Dubbed audio: play only the track matching the chosen language, and
+          // only while dubbing is on.
+          if (!isDubbingEnabled) return null;
+          if (!trackName.startsWith(`translation_${audioLang}_`)) return null;
+          return (
+            <AudioTrack key={trackRef.publication.trackSid} trackRef={trackRef} volume={1.0} />
+          );
         }
-        
-        return null;
+
+        // Normal speech. This must always render, otherwise nobody can hear each
+        // other. When dubbing is active it is ducked under the translated voice
+        // rather than silenced, so the room still feels live.
+        return (
+          <AudioTrack
+            key={trackRef.publication.trackSid}
+            trackRef={trackRef}
+            volume={isDubbingEnabled ? 0.15 : 1.0}
+          />
+        );
       })}
     </div>
   );

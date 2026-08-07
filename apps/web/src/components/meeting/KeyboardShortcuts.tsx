@@ -9,6 +9,7 @@ interface KeyboardShortcutsProps {
   onToggleChat: () => void;
   onToggleWhiteboard: () => void;
   onToggleHandRaise: () => void;
+  onClosePanels: () => void;
   audioLocked?: boolean;
   videoLocked?: boolean;
 }
@@ -19,6 +20,7 @@ export function KeyboardShortcuts({
   onToggleChat,
   onToggleWhiteboard,
   onToggleHandRaise,
+  onClosePanels,
   audioLocked,
   videoLocked,
 }: KeyboardShortcutsProps) {
@@ -66,6 +68,13 @@ export function KeyboardShortcuts({
         return;
       }
 
+      // Escape: close any open panel. Works from inside inputs too, so a user
+      // typing in chat can dismiss the panel without reaching for the mouse.
+      if (event.key === 'Escape') {
+        onClosePanels();
+        return;
+      }
+
       if (inInput) return;
 
       // W key: Toggle Whiteboard
@@ -85,8 +94,7 @@ export function KeyboardShortcuts({
       // Escape: Close panels
       if (event.key === 'Escape') {
         event.preventDefault();
-        // Here we just map Escape to onToggleChat as requested for closing panels
-        onToggleChat(); 
+        onClosePanels();
         return;
       }
 
@@ -145,6 +153,7 @@ export function KeyboardShortcuts({
     onToggleChat,
     onToggleWhiteboard,
     onToggleHandRaise,
+    onClosePanels,
     audioLocked,
     videoLocked,
     room,
