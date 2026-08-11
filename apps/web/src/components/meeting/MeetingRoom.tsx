@@ -461,6 +461,9 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
         }
       }
 
+      // Restrict picker to "Entire Screen" only — sharing a specific window
+      // causes Chrome to end the track when that window is minimized, while
+      // full-monitor capture keeps streaming regardless of window state.
       const displayMediaConstraints: DisplayMediaStreamOptions = {
         video: {
           displaySurface: 'monitor',
@@ -475,40 +478,44 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
         surfaceSwitching: 'exclude',
         systemAudio: 'exclude',
         preferCurrentTab: false,
+        // @ts-expect-error monitorTypeSurfaces is supported in Chromium 119+
+        monitorTypeSurfaces: 'include',
       };
 
-      // 2. Initiate getDisplayMedia directly
-      const streamPromise = navigator.mediaDevices.getDisplayMedia(displayMediaConstraints);
-
-      // Attempt before resolution in case engine supports pre-resolve
-      if (captureController && typeof captureController.setFocusBehavior === 'function') {
-        try {
-          captureController.setFocusBehavior('no-focus-change');
-        } catch (e) {}
-      }
-
-      const stream = await streamPromise;
-
-      // 3. Immediately after resolution (W3C standard): enforce no-focus-change so Chrome does not foreground the window
-      if (captureController && typeof captureController.setFocusBehavior === 'function') {
-        try {
-          captureController.setFocusBehavior('no-focus-change');
-        } catch (e) {
-          console.debug('CaptureController setFocusBehavior error after resolve:', e);
-        }
-      }
+      // 2. Chain setFocusBehavior via .then() so it executes in the same
+      //    microtask as promise resolution — the W3C spec requires this for
+      //    the call to take effect and prevent Chrome from foregrounding the
+      //    captured surface.
+      const stream = await navigator.mediaDevices
+        .getDisplayMedia(displayMediaConstraints)
+        .then((s) => {
+          if (captureController && typeof captureController.setFocusBehavior === 'function') {
+            try {
+              captureController.setFocusBehavior('no-focus-change');
+            } catch (e) {
+              console.debug('CaptureController setFocusBehavior error:', e);
+            }
+          }
+          return s;
+        });
 
       const mediaStreamTrack = stream.getVideoTracks()[0];
       if (!mediaStreamTrack) {
         throw new Error('No video track available in captured stream');
       }
 
-      // Handle user stopping share from browser floating toolbar
+      // Handle user stopping share from browser floating toolbar, or
+      // the browser ending the track (e.g. shared window minimized).
       mediaStreamTrack.onended = () => {
+        // Check the captured surface type to show a helpful message
+        const settings = mediaStreamTrack.getSettings() as any;
+        if (settings?.displaySurface === 'window') {
+          showToast('Screen share ended — sharing a window stops when it is minimized. Try sharing your entire screen instead.', 'warning');
+        }
         stopScreenShare();
       };
 
-      // 4. Publish track directly to LiveKit
+      // 3. Publish track directly to LiveKit
       const pub = await localParticipant.publishTrack(mediaStreamTrack, {
         source: Track.Source.ScreenShare,
         name: 'screen_share',
