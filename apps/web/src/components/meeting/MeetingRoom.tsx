@@ -53,6 +53,30 @@ const SUPPORTED_LANGUAGES = [
   { code: 'ur', name: 'Urdu (اردو)' },
 ];
 
+/** A translation fetched after the message arrived, keyed by `${messageId}|${lang}`. */
+type LateTranslation = { status: 'pending' | 'done' | 'failed'; text?: string };
+
+/** Cap on late-translation attempts per message+language, so a provider outage cannot spin. */
+const MAX_TRANSLATION_ATTEMPTS = 2;
+
+const chatMessageKey = (msg: { id?: string; timestamp: number }) => msg.id || String(msg.timestamp);
+
+/** Pull the original text and the translation table out of a message payload, whatever shape it is in. */
+const readChatPayload = (messageRaw: string | any) => {
+  let payload: any = null;
+  try {
+    payload = typeof messageRaw === 'string' ? JSON.parse(messageRaw) : messageRaw;
+  } catch {
+    // Plain-text message (legacy, or sent by another client).
+  }
+  if (!payload || typeof payload !== 'object') return null;
+
+  // v2 keeps translations under `t`; older messages used flat language keys.
+  const table = payload.t && typeof payload.t === 'object' ? payload.t : payload;
+  const original = typeof payload.original === 'string' ? payload.original : '';
+  return { payload, table, original };
+};
+
 export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, hostKey = '', initialStatus = 'active' }: MeetingRoomProps) {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
@@ -123,6 +147,13 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
   const [audioLang, setAudioLang] = useState('none');
   const [chatLang, setChatLang] = useState('en');
   const [isTranslatingChat, setIsTranslatingChat] = useState(false);
+
+  // Translations fetched after a message arrived, for messages that do not carry
+  // this reader's language — either they switched chat language after the message
+  // was sent, or the sender's translation call failed for that language.
+  const [lateTranslations, setLateTranslations] = useState<Record<string, LateTranslation>>({});
+  const translationAttemptsRef = useRef<Map<string, number>>(new Map());
+  const translationsInFlightRef = useRef<Set<string>>(new Set());
 
   // Toast notifications & Screen Share Request states
   const [toast, setToast] = useState<{ id: number; message: string; type: 'info' | 'warning' | 'error' | 'success' } | null>(null);
@@ -674,7 +705,15 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
         isHandRaised: nextHand,
       };
 
-      await localParticipant.setMetadata(JSON.stringify(updatedMeta));
+      await fetch(`/api/meetings/participant-metadata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomName: meetingId,
+          identity: localParticipant.identity,
+          metadata: updatedMeta
+        })
+      });
     } catch (e) {
       console.error('Error updating hand raise state:', e);
     }
@@ -684,7 +723,7 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
   const handleSaveLanguageSettings = async () => {
     if (!localParticipant) return;
     try {
-      let currentMeta = {};
+      let currentMeta: Record<string, any> = {};
       try {
         if (localParticipant.metadata) currentMeta = JSON.parse(localParticipant.metadata);
       } catch {}
@@ -692,17 +731,43 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
       const updatedMeta = {
         ...currentMeta,
         preferences: {
+          ...currentMeta.preferences,
           spoken: spokenLang,
           subtitle: subtitleLang,
           audio: audioLang,
+          // Senders read this off every participant to decide which languages to
+          // translate a chat message into, so it has to be published like the rest.
+          chat: chatLang,
         },
       };
 
-      await localParticipant.setMetadata(JSON.stringify(updatedMeta));
+      await fetch(`/api/meetings/participant-metadata`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomName: meetingId,
+          identity: localParticipant.identity,
+          metadata: updatedMeta
+        })
+      });
       setIsSettingsOpen(false);
     } catch (e) {
       console.error('Error updating language preferences:', e);
     }
+  };
+
+  // The selects are bound straight to state, so Cancel has to put back what was
+  // last published — otherwise a discarded chat-language change would still be
+  // applied to the chat panel.
+  const handleCancelLanguageSettings = () => {
+    try {
+      const meta = localParticipant?.metadata ? JSON.parse(localParticipant.metadata) : null;
+      setSpokenLang(meta?.preferences?.spoken || 'en');
+      setSubtitleLang(meta?.preferences?.subtitle || 'en');
+      setAudioLang(meta?.preferences?.audio || 'none');
+      setChatLang(meta?.preferences?.chat || 'en');
+    } catch {}
+    setIsSettingsOpen(false);
   };
 
   // 5. Chat Unread Count — counts each new remote message exactly once.
@@ -736,34 +801,132 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
     setUnreadCount(0);
   };
 
-  // Helper to parse and extract the translated message text based on the recipient's preferred chat language
-  const getChatMessageText = useCallback(
-    (messageRaw: string) => {
-      try {
-        const parsed = JSON.parse(messageRaw);
-        if (typeof parsed === 'object' && parsed !== null) {
-          const target = chatLang || spokenLang || 'en';
-          if (parsed[target]) {
-            return {
-              text: parsed[target],
-              isTranslated: target !== 'en' && parsed[target] !== parsed.original,
-              original: parsed.original,
-            };
-          }
-          if (parsed.original) {
-            return { text: parsed.original, isTranslated: false, original: parsed.original };
-          }
-          if (parsed.en) {
-            return { text: parsed.en, isTranslated: false, original: parsed.en };
-          }
-        }
-      } catch {
-        // Plain text message (legacy or direct)
+  // Chat messages are translated once, at send time, into every language someone
+  // in the room is actually reading in — not into all 14 supported languages.
+  const chatTargetLangs = useMemo(() => {
+    const langs = new Set<string>([chatLang || 'en']);
+    for (const p of allParticipants) {
+      if (
+        p.kind === ParticipantKind.AGENT ||
+        p.identity.startsWith('agent-') ||
+        p.identity.startsWith('translation')
+      ) {
+        continue;
       }
-      return { text: messageRaw, isTranslated: false, original: messageRaw };
+      try {
+        const meta = p.metadata ? JSON.parse(p.metadata) : null;
+        const pref = meta?.preferences?.chat;
+        if (typeof pref === 'string' && pref) langs.add(pref);
+      } catch {}
+    }
+    return Array.from(langs);
+  }, [allParticipants, chatLang]);
+
+  const getChatMessageText = useCallback(
+    (msg: { id?: string; timestamp: number; message: string }) => {
+      const target = chatLang || 'en';
+      const parsed = readChatPayload(msg.message);
+
+      if (!parsed) {
+        const raw = typeof msg.message === 'string' ? msg.message : JSON.stringify(msg.message);
+        return { text: raw, original: raw, shownLang: null, status: 'original' as const };
+      }
+
+      const { payload, table, original } = parsed;
+      const carried = typeof table[target] === 'string' ? table[target] : undefined;
+      const late = lateTranslations[`${chatMessageKey(msg)}|${target}`];
+      const text = carried || (late?.status === 'done' ? late.text : undefined);
+
+      if (text) {
+        return {
+          text,
+          original,
+          shownLang: target,
+          status: original && text !== original ? ('translated' as const) : ('original' as const),
+        };
+      }
+
+      return {
+        text: original || JSON.stringify(payload),
+        original,
+        shownLang: null,
+        status: late?.status === 'pending' ? ('pending' as const) : ('untranslated' as const),
+      };
     },
-    [chatLang, spokenLang],
+    [chatLang, lateTranslations],
   );
+
+  // Translate messages that did not arrive with this reader's language. Without
+  // this, switching chat language mid-meeting would leave the existing history —
+  // and any message whose send-time translation failed — stuck in the original.
+  useEffect(() => {
+    if (!isChatOpen) return;
+    const target = chatLang || 'en';
+
+    const missing: Array<{ key: string; original: string }> = [];
+    for (const msg of chatMessages) {
+      const key = `${chatMessageKey(msg)}|${target}`;
+      if (translationsInFlightRef.current.has(key)) continue;
+      if ((translationAttemptsRef.current.get(key) ?? 0) >= MAX_TRANSLATION_ATTEMPTS) continue;
+
+      const parsed = readChatPayload(msg.message);
+      if (!parsed) continue;
+      if (typeof parsed.table[target] === 'string') continue;
+      if (!parsed.original.trim()) continue;
+
+      missing.push({ key, original: parsed.original });
+    }
+
+    if (missing.length === 0) return;
+
+    for (const item of missing) {
+      translationsInFlightRef.current.add(item.key);
+      translationAttemptsRef.current.set(item.key, (translationAttemptsRef.current.get(item.key) ?? 0) + 1);
+    }
+    setLateTranslations((prev) => {
+      const next = { ...prev };
+      for (const item of missing) next[item.key] = { status: 'pending' };
+      return next;
+    });
+
+    let cancelled = false;
+    (async () => {
+      for (const item of missing) {
+        let entry: LateTranslation = { status: 'failed' };
+        try {
+          const res = await fetch(`/api/meetings/translate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: item.original, targets: [target] }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const translated = data?.translations?.[target];
+            if (typeof translated === 'string' && translated) entry = { status: 'done', text: translated };
+          }
+        } catch (err) {
+          console.error('Chat translation error:', err);
+        }
+
+        translationsInFlightRef.current.delete(item.key);
+        // Never re-request something we already have; a failure keeps its attempt
+        // count so it gets at most MAX_TRANSLATION_ATTEMPTS tries in total.
+        if (entry.status === 'done') {
+          translationAttemptsRef.current.set(item.key, MAX_TRANSLATION_ATTEMPTS);
+        }
+
+        if (cancelled) {
+          for (const rest of missing) translationsInFlightRef.current.delete(rest.key);
+          return;
+        }
+        setLateTranslations((prev) => ({ ...prev, [item.key]: entry }));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chatMessages, chatLang, isChatOpen]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -774,22 +937,32 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
     setIsTranslatingChat(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-      const res = await fetch(`${baseUrl}/api/meetings/translate`, {
+      const res = await fetch(`/api/meetings/translate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: textToSend }),
+        body: JSON.stringify({ text: textToSend, targets: chatTargetLangs }),
       });
+      if (!res.ok) throw new Error(`Translate API responded ${res.status}`);
 
-      if (res.ok) {
-        const translations = await res.json();
-        await sendChatMessage(JSON.stringify(translations));
-      } else {
-        await sendChatMessage(JSON.stringify({ original: textToSend, en: textToSend }));
+      const data = await res.json();
+      const translations =
+        data?.translations && typeof data.translations === 'object' ? data.translations : {};
+
+      if (Array.isArray(data?.failed) && data.failed.length > 0) {
+        showToast(
+          `Could not translate into ${data.failed.join(', ').toUpperCase()} — sent in the original language.`,
+          'warning',
+        );
       }
+
+      await sendChatMessage(
+        JSON.stringify({ v: 2, original: textToSend, source: data?.detectedSource, t: translations }),
+      );
     } catch (err) {
       console.error('Chat translation API error:', err);
-      await sendChatMessage(JSON.stringify({ original: textToSend, en: textToSend }));
+      showToast('Translation unavailable — message sent untranslated.', 'warning');
+      // Still deliver the message; each reader retries the translation on their side.
+      await sendChatMessage(JSON.stringify({ v: 2, original: textToSend, t: {} }));
     } finally {
       setIsTranslatingChat(false);
     }
@@ -1033,6 +1206,15 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
         </div>
       </header>
 
+      {/* Top Left Debug UI */}
+      <div className="fixed top-4 left-4 z-[9999] bg-black/80 text-green-400 font-mono text-[10px] p-2 rounded pointer-events-none whitespace-pre overflow-hidden max-w-sm max-h-[50vh] overflow-y-auto">
+        RAW META: {localParticipant?.metadata || 'none'}{'\n'}
+        chatLang STATE: {chatLang || 'en'}{'\n'}
+        chatTargetLangs: {JSON.stringify(chatTargetLangs)}{'\n'}
+        Last Msg Raw: {chatMessages.length > 0 ? chatMessages[chatMessages.length - 1].message.slice(0, 100) : 'none'}{'\n'}
+        Last Msg Parsed: {chatMessages.length > 0 ? JSON.stringify(getChatMessageText(chatMessages[chatMessages.length - 1])) : 'none'}
+      </div>
+
       {/* Main Conference Layout */}
       <div className="flex-1 relative flex overflow-hidden">
         {/* Video Stage */}
@@ -1076,18 +1258,6 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
                 <span className="font-bold text-sm">Meeting Chat</span>
               </div>
               <div className="flex items-center gap-2">
-                <select
-                  value={chatLang}
-                  onChange={(e) => setChatLang(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-lg text-[11px] text-white/80 px-2 py-1 focus:outline-none cursor-pointer"
-                  title="Translate Chat To"
-                >
-                  {SUPPORTED_LANGUAGES.map((l) => (
-                    <option key={l.code} value={l.code} className="bg-[#111116] text-white">
-                      Translate: {l.name.split(' ')[0]}
-                    </option>
-                  ))}
-                </select>
                 <button
                   onClick={() => setIsChatOpen(false)}
                   className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-white/50 hover:text-white transition-colors"
@@ -1106,20 +1276,25 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
               ) : (
                 chatMessages.map((msg, i) => {
                   const isMe = msg.from?.identity === localParticipant?.identity;
-                  const { text, isTranslated, original } = getChatMessageText(msg.message);
+                  const { text, original, shownLang, status } = getChatMessageText(msg);
 
                   return (
                     <div
                       key={msg.id || i}
                       className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-bold text-white/40">
-                          {isMe ? 'You' : msg.from?.name || msg.from?.identity}
-                        </span>
-                        <span className="text-[9px] text-white/30">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-[11px] font-bold text-white/70">{msg.from?.name || 'Unknown'}</span>
+                        <span className="text-[9px] text-white/40">
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
+                        {shownLang ? (
+                          <span className="text-[9px] text-rose-400 font-mono">[{shownLang}]</span>
+                        ) : status === 'pending' ? (
+                          <span className="text-[9px] text-white/40 font-mono">translating…</span>
+                        ) : (
+                          <span className="text-[9px] text-amber-400/80 font-mono">original</span>
+                        )}
                       </div>
                       <div
                         className={`px-4 py-2.5 rounded-2xl max-w-[85%] text-sm leading-relaxed ${
@@ -1129,9 +1304,14 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
                         }`}
                       >
                         <div>{text}</div>
-                        {isTranslated && original && original !== text && (
+                        {status === 'translated' && original && original !== text && (
                           <div className="mt-1 pt-1 border-t border-white/20 text-[10px] opacity-70 italic">
                             Original: {original}
+                          </div>
+                        )}
+                        {status === 'untranslated' && (
+                          <div className="mt-1 pt-1 border-t border-white/20 text-[10px] opacity-70 italic">
+                            Not available in {chatLang.toUpperCase()}
                           </div>
                         )}
                       </div>
@@ -1248,11 +1428,11 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white">Live Translation Settings</h3>
-                  <p className="text-xs text-white/40">Configure speech recognition, subtitles & audio dubbing</p>
+                  <p className="text-xs text-white/40">Configure speech recognition, subtitles, chat & audio dubbing</p>
                 </div>
               </div>
               <button
-                onClick={() => setIsSettingsOpen(false)}
+                onClick={handleCancelLanguageSettings}
                 className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-white/50 hover:text-white"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
@@ -1315,11 +1495,32 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
                   ))}
                 </select>
               </div>
+
+              {/* Chat Language */}
+              <div>
+                <label className="block text-xs font-semibold text-white/70 mb-1.5">
+                  Chat Language (Read messages in)
+                </label>
+                <select
+                  value={chatLang}
+                  onChange={(e) => setChatLang(e.target.value)}
+                  className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 transition-colors"
+                >
+                  {SUPPORTED_LANGUAGES.map((l) => (
+                    <option key={l.code} value={l.code} className="bg-[#111116] text-white">
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1.5 text-[10px] text-white/40">
+                  Applies to messages already in the chat as well as new ones.
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-2">
               <button
-                onClick={() => setIsSettingsOpen(false)}
+                onClick={handleCancelLanguageSettings}
                 className="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-white/80 transition-colors"
               >
                 Cancel
@@ -1480,7 +1681,7 @@ function ParticipantTile({ participant, compact = false }: { participant: Partic
     <div
       className={`relative w-full h-full bg-[#111116] border rounded-3xl overflow-hidden flex items-center justify-center transition-all duration-300 ${
         isHandRaised
-          ? 'border-amber-400 ring-4 ring-amber-400/30 shadow-[0_0_30px_rgba(245,158,11,0.3)]'
+          ? 'border-amber-500/50 ring-1 ring-amber-500/50'
           : isSpeaking
           ? 'border-emerald-500 ring-2 ring-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.25)]'
           : 'border-white/10'
@@ -1504,19 +1705,16 @@ function ParticipantTile({ participant, compact = false }: { participant: Partic
         </div>
       )}
 
-      {/* Hand Raised Floating Badge */}
-      {isHandRaised && (
-        <div className="absolute top-4 right-4 px-3 py-1.5 bg-amber-500 text-black font-bold text-xs rounded-full shadow-lg flex items-center gap-1.5 animate-bounce z-20">
-          <span>✋</span>
-          <span>Hand Raised</span>
-        </div>
-      )}
-
       {/* Participant Name & Status Overlay */}
       <div className="absolute bottom-3 left-3 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2 z-20">
         <span className="text-xs font-medium text-white/90">
           {participant.name || participant.identity}
         </span>
+        {isHandRaised && (
+          <span className="material-symbols-outlined text-[14px] text-amber-400" title="Hand Raised">
+            front_hand
+          </span>
+        )}
         <span className={`material-symbols-outlined text-[14px] ${participant.isMicrophoneEnabled ? 'text-emerald-400' : 'text-rose-400'}`}>
           {participant.isMicrophoneEnabled ? 'mic' : 'mic_off'}
         </span>
