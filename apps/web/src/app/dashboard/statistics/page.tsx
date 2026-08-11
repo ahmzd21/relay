@@ -98,25 +98,25 @@ export default function StatisticsPage() {
   ];
 
   const orgMembers = [
-    { name: 'Sarah Chen', meetings: 68, hours: 54, languages: 5, initials: 'SC', color: 'bg-rose-100 text-rose-700' },
-    { name: 'Yousef Al-Rashid', meetings: 52, hours: 41, languages: 4, initials: 'YA', color: 'bg-amber-100 text-amber-700' },
-    { name: 'Marcus Klein', meetings: 48, hours: 38, languages: 6, initials: 'MK', color: 'bg-purple-100 text-purple-700' },
-    { name: 'Elias Thompson', meetings: 45, hours: 36, languages: 3, initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
-    { name: 'Sofia Martinez', meetings: 38, hours: 29, languages: 4, initials: 'SM', color: 'bg-emerald-100 text-emerald-700' },
-    { name: 'Wei Zhang', meetings: 35, hours: 27, languages: 3, initials: 'WZ', color: 'bg-blue-100 text-blue-700' },
+    { name: 'Sarah Chen', meetings: 68, hours: 54, languages: 5, initials: 'SC', color: 'bg-border text-ink' },
+    { name: 'Yousef Al-Rashid', meetings: 52, hours: 41, languages: 4, initials: 'YA', color: 'bg-border text-ink' },
+    { name: 'Marcus Klein', meetings: 48, hours: 38, languages: 6, initials: 'MK', color: 'bg-border text-ink' },
+    { name: 'Elias Thompson', meetings: 45, hours: 36, languages: 3, initials: 'ET', color: 'bg-border text-ink' },
+    { name: 'Sofia Martinez', meetings: 38, hours: 29, languages: 4, initials: 'SM', color: 'bg-border text-ink' },
+    { name: 'Wei Zhang', meetings: 35, hours: 27, languages: 3, initials: 'WZ', color: 'bg-border text-ink' },
   ];
 
   const orgPlatformUsage = [
-    { name: 'Native Relay', percentage: 52, color: 'bg-indigo-500' },
+    { name: 'Native Relay', percentage: 52, color: 'bg-info' },
     { name: 'Zoom', percentage: 28, color: 'bg-blue-500' },
-    { name: 'Google Meet', percentage: 12, color: 'bg-emerald-500' },
+    { name: 'Google Meet', percentage: 12, color: 'bg-success/100' },
     { name: 'Microsoft Teams', percentage: 8, color: 'bg-purple-500' },
   ];
 
   const personalPlatformUsage = [
-    { name: 'Native Relay', percentage: 62, color: 'bg-indigo-500' },
+    { name: 'Native Relay', percentage: 62, color: 'bg-info' },
     { name: 'Zoom', percentage: 22, color: 'bg-blue-500' },
-    { name: 'Google Meet', percentage: 16, color: 'bg-emerald-500' },
+    { name: 'Google Meet', percentage: 16, color: 'bg-success/100' },
   ];
 
   const isOrg = isOrganization();
@@ -140,30 +140,30 @@ export default function StatisticsPage() {
             {/* Page Title */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-ink mb-2">
                   {isOrg ? `${currentWorkspace.name} Statistics` : 'Your Statistics'}
                 </h1>
-                <p className="text-slate-600 text-lg">
+                <p className="text-muted text-lg">
                   {isOrg ? 'Team-wide usage analytics and insights.' : 'Your personal meeting activity and translation usage.'}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="flex gap-1 bg-[#FFFDF8] border border-[#E4E0D6]/30 p-1 rounded-xl overflow-x-auto no-scrollbar">
+                <div className="flex gap-1 bg-surface border border-border/30 p-1 rounded-xl overflow-x-auto no-scrollbar">
                   {TIME_PERIODS.map((p) => (
                     <button
                       key={p}
                       onClick={() => setPeriod(p)}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase font-helvetica transition-all ${
+                      className={`px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase transition-all ${
                         period === p
-                          ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm'
-                          : 'text-slate-500 hover:text-slate-900'
+                          ? 'bg-accent text-white shadow-sm'
+                          : 'text-muted hover:text-ink'
                       }`}
                     >
                       {p === '7d' ? '7 Days' : p === '30d' ? '30 Days' : '90 Days'}
                     </button>
                   ))}
                 </div>
-                <button className="flex items-center gap-2 bg-white border border-[#E4E0D6]/30 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold hover:border-[#FF416C]/30 hover:text-[#FF416C] transition-all">
+                <button className="flex items-center gap-2 bg-surface border border-border/30 text-ink/80 px-4 py-2.5 rounded-xl text-xs font-bold hover:border-accent/30 hover:text-accent transition-all">
                   <span className="material-symbols-outlined text-[16px]">download</span>
                   Export
                 </button>
@@ -174,17 +174,17 @@ export default function StatisticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {isOrg ? (
                 <>
-                  <MetricCard icon="videocam" color="text-indigo-600 bg-indigo-50" value={orgStats.totalMeetings.toLocaleString()} label="Total Meetings" change={orgStats.meetingsChange} />
-                  <MetricCard icon="schedule" color="text-emerald-600 bg-emerald-50" value={`${orgStats.translationHours}h`} label="Translation Hours" change={orgStats.hoursChange} />
-                  <MetricCard icon="group" color="text-amber-600 bg-amber-50" value={`${orgStats.teamMembers}`} label="Team Members" change={orgStats.membersChange} />
-                  <MetricCard icon="cell_tower" color="text-rose-600 bg-rose-50" value={`${orgStats.activeNow}`} label="Active Now" change="Real-time" />
+                  <MetricCard icon="videocam" color="text-info bg-info/10" value={orgStats.totalMeetings.toLocaleString()} label="Total Meetings" change={orgStats.meetingsChange} />
+                  <MetricCard icon="schedule" color="text-success bg-success/10" value={`${orgStats.translationHours}h`} label="Translation Hours" change={orgStats.hoursChange} />
+                  <MetricCard icon="group" color="text-warning bg-warning/10" value={`${orgStats.teamMembers}`} label="Team Members" change={orgStats.membersChange} />
+                  <MetricCard icon="cell_tower" color="text-danger bg-danger/10" value={`${orgStats.activeNow}`} label="Active Now" change="Real-time" />
                 </>
               ) : (
                 <>
-                  <MetricCard icon="videocam" color="text-indigo-600 bg-indigo-50" value={`${personalStats.totalMeetings}`} label="Your Meetings" change={personalStats.meetingsChange} />
-                  <MetricCard icon="schedule" color="text-emerald-600 bg-emerald-50" value={`${personalStats.translationHours}h`} label="Translation Time" change={personalStats.hoursChange} />
-                  <MetricCard icon="translate" color="text-amber-600 bg-amber-50" value={`${personalStats.languagesUsed}`} label="Languages Used" change={personalStats.languagesChange} />
-                  <MetricCard icon="timer" color="text-rose-600 bg-rose-50" value={`${personalStats.meetingHours}h`} label="Meeting Time" change={personalStats.hoursChange2} />
+                  <MetricCard icon="videocam" color="text-info bg-info/10" value={`${personalStats.totalMeetings}`} label="Your Meetings" change={personalStats.meetingsChange} />
+                  <MetricCard icon="schedule" color="text-success bg-success/10" value={`${personalStats.translationHours}h`} label="Translation Time" change={personalStats.hoursChange} />
+                  <MetricCard icon="translate" color="text-warning bg-warning/10" value={`${personalStats.languagesUsed}`} label="Languages Used" change={personalStats.languagesChange} />
+                  <MetricCard icon="timer" color="text-danger bg-danger/10" value={`${personalStats.meetingHours}h`} label="Meeting Time" change={personalStats.hoursChange2} />
                 </>
               )}
             </div>
@@ -192,52 +192,52 @@ export default function StatisticsPage() {
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Meeting Activity */}
-              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">
+                  <h2 className="text-lg font-bold tracking-tight text-ink">
                     {isOrg ? 'Team Meeting Activity' : 'Your Meeting Activity'}
                   </h2>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{period === '7d' ? 'This Week' : period === '30d' ? 'This Month' : 'This Quarter'}</span>
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{period === '7d' ? 'This Week' : period === '30d' ? 'This Month' : 'This Quarter'}</span>
                 </div>
                 <div className="h-48 flex items-end gap-2">
                   {activityData.map((item, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <span className="text-[10px] font-bold text-slate-500">{item.value}</span>
+                      <span className="text-[10px] font-bold text-muted">{item.value}</span>
                       <div
                         className="w-full rounded-t-lg transition-all hover:opacity-80 cursor-default"
                         style={{
                           height: `${(item.value / maxActivity) * 100}%`,
-                          background: 'linear-gradient(to top, #FF416C, #FF4B2B)',
+                          background: 'var(--color-accent)',
                         }}
                         title={`${item.day}: ${item.value} meetings`}
                       />
-                      <span className="text-[11px] text-slate-500 font-medium">{item.day}</span>
+                      <span className="text-[11px] text-muted font-medium">{item.day}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Translation Volume */}
-              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">
+                  <h2 className="text-lg font-bold tracking-tight text-ink">
                     {isOrg ? 'Team Translation Volume' : 'Your Translation Volume'}
                   </h2>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hours translated</span>
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Hours translated</span>
                 </div>
                 <div className="h-48 flex items-end gap-2">
                   {volumeData.map((item, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <span className="text-[10px] font-bold text-slate-500">{item.value}h</span>
+                      <span className="text-[10px] font-bold text-muted">{item.value}h</span>
                       <div
                         className="w-full rounded-t-lg transition-all hover:opacity-80 cursor-default"
                         style={{
                           height: `${(item.value / maxVolume) * 100}%`,
-                          background: 'linear-gradient(to top, #FF416C, #FF4B2B)',
+                          background: 'var(--color-accent)',
                         }}
                         title={`${item.day}: ${item.value} hours`}
                       />
-                      <span className="text-[11px] text-slate-500 font-medium">{item.day}</span>
+                      <span className="text-[11px] text-muted font-medium">{item.day}</span>
                     </div>
                   ))}
                 </div>
@@ -247,24 +247,24 @@ export default function StatisticsPage() {
             {/* Language Breakdown + Platform Usage */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Language Breakdown */}
-              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">Language Breakdown</h2>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{languages.length} languages</span>
+                  <h2 className="text-lg font-bold tracking-tight text-ink">Language Breakdown</h2>
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{languages.length} languages</span>
                 </div>
                 <div className="space-y-4">
                   {languages.map((lang, i) => (
                     <div key={i} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-slate-900">{lang.name}</span>
-                        <span className="text-xs text-slate-500">{lang.percentage}% · {lang.meetings} meetings</span>
+                        <span className="text-sm font-bold text-ink">{lang.name}</span>
+                        <span className="text-xs text-muted">{lang.percentage}% · {lang.meetings} meetings</span>
                       </div>
-                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-canvas rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
                             width: `${lang.percentage}%`,
-                            background: 'linear-gradient(to right, #FF416C, #FF4B2B)',
+                            background: 'var(--color-accent)',
                           }}
                         />
                       </div>
@@ -274,24 +274,24 @@ export default function StatisticsPage() {
               </div>
 
               {/* Platform Usage */}
-              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">Platform Usage</h2>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">By meeting type</span>
+                  <h2 className="text-lg font-bold tracking-tight text-ink">Platform Usage</h2>
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-widest">By meeting type</span>
                 </div>
                 <div className="space-y-4">
                   {platformUsage.map((platform, i) => (
                     <div key={i} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-slate-900">{platform.name}</span>
-                        <span className="text-xs text-slate-500">{platform.percentage}%</span>
+                        <span className="text-sm font-bold text-ink">{platform.name}</span>
+                        <span className="text-xs text-muted">{platform.percentage}%</span>
                       </div>
-                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-canvas rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
                             width: `${platform.percentage}%`,
-                            background: 'linear-gradient(to right, #FF416C, #FF4B2B)',
+                            background: 'var(--color-accent)',
                           }}
                         />
                       </div>
@@ -303,36 +303,36 @@ export default function StatisticsPage() {
 
             {/* Top Members (Org only) */}
             {isOrg && (
-              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">Top Contributors</h2>
+                  <h2 className="text-lg font-bold tracking-tight text-ink">Top Contributors</h2>
                   {hasPermission('owner') && (
-                    <Link href="/dashboard/settings" className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors">
+                    <Link href="/dashboard/settings" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors">
                       Manage Members →
                     </Link>
                   )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {orgMembers.map((member, i) => (
-                    <div key={i} className="flex items-center gap-4 p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl hover:border-[#FF416C]/30 hover:shadow-md transition-all duration-300 group">
+                    <div key={i} className="flex items-center gap-4 p-4 bg-canvas border border-border/20 rounded-xl hover:border-accent/30 hover:shadow-card transition-all duration-300 group">
                       <div className="relative">
                         <div className={`w-10 h-10 rounded-xl ${member.color} flex items-center justify-center text-[11px] font-bold group-hover:scale-110 transition-transform`}>
                           {member.initials}
                         </div>
                         {i < 3 && (
                           <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white shadow-sm ${
-                            i === 0 ? 'bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] shadow-[#FF416C]/30' : 'bg-slate-400'
+                            i === 0 ? 'bg-accent' : 'bg-border-strong'
                           }`}>
                             {i + 1}
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-900 truncate group-hover:text-[#FF416C] transition-colors">{member.name}</p>
+                        <p className="text-sm font-bold text-ink truncate group-hover:text-accent transition-colors">{member.name}</p>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[10px] text-slate-500">{member.meetings} meetings</span>
-                          <span className="text-[10px] text-slate-500">{member.hours}h</span>
-                          <span className="text-[10px] text-slate-500">{member.languages} langs</span>
+                          <span className="text-[10px] text-muted">{member.meetings} meetings</span>
+                          <span className="text-[10px] text-muted">{member.hours}h</span>
+                          <span className="text-[10px] text-muted">{member.languages} langs</span>
                         </div>
                       </div>
                     </div>
@@ -344,8 +344,8 @@ export default function StatisticsPage() {
             {/* Recent Activity */}
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900">Recent Activity</h2>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Last {period === '7d' ? '7 days' : period === '30d' ? '30 days' : '90 days'}</span>
+                <h2 className="text-lg font-bold tracking-tight text-ink">Recent Activity</h2>
+                <span className="text-[10px] font-bold text-muted uppercase tracking-widest">Last {period === '7d' ? '7 days' : period === '30d' ? '30 days' : '90 days'}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[
@@ -357,35 +357,35 @@ export default function StatisticsPage() {
                   ].map((meeting, i) => (
                     <div
                       key={i}
-                      className="bg-[#FFFDF8] border border-[#E4E0D6] p-5 rounded-2xl shadow-warm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+                      className="bg-surface border border-border p-5 rounded-xl shadow-card hover:shadow-pop hover:border-accent/30 hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
                           meeting.platform === 'Native'
-                            ? 'bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white border-[#FF416C]/30'
-                            : 'bg-[#FAF9F5] text-[#8C8880] border-[#E4E0D6]/20'
+                            ? 'bg-accent text-white border-accent/30'
+                            : 'bg-canvas text-muted border-border/20'
                         }`}>
                           <span className="material-symbols-outlined text-[20px]">
                             {meeting.platform === 'Native' ? 'videocam' : meeting.platform === 'Zoom' ? 'videocam' : meeting.platform === 'Meet' ? 'groups' : 'meeting_room'}
                           </span>
                         </div>
                         <div className="flex gap-1.5">
-                          <span className="bg-[#FAF9F5] border border-[#E4E0D6]/20 text-[#8C8880] px-2 py-0.5 rounded text-[9px] font-bold font-helvetica">
+                          <span className="bg-canvas border border-border/20 text-muted px-2 py-0.5 rounded text-[9px] font-bold">
                             {meeting.languages.join(' + ')}
                           </span>
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider font-helvetica ${
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
                             meeting.platform === 'Native'
-                              ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20'
-                              : 'bg-[#FAF9F5] text-[#8C8880] border border-[#E4E0D6]/20'
+                              ? 'bg-accent text-white shadow-sm '
+                              : 'bg-canvas text-muted border border-border/20'
                           }`}>
                             {meeting.platform}
                           </span>
                         </div>
                       </div>
-                      <h3 className="font-bold text-[#1c1b1b] mb-1 group-hover:text-[#FF416C] transition-colors font-helvetica">
+                      <h3 className="font-bold text-ink mb-1 group-hover:text-accent transition-colors">
                         {meeting.title}
                       </h3>
-                      <p className="text-[#8C8880] text-xs">
+                      <p className="text-muted text-xs">
                         {meeting.date} · {meeting.duration} · {meeting.participants} participants
                       </p>
                     </div>
@@ -395,29 +395,29 @@ export default function StatisticsPage() {
 
             {/* Usage Summary (Owner only) */}
             {isOrg && hasPermission('owner') && (
-              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-card relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent pointer-events-none" />
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-lg shadow-[#FF416C]/20">
+                    <div className="w-12 h-12 rounded-xl bg-chrome flex items-center justify-center">
                       <span className="material-symbols-outlined text-white text-[24px]">payments</span>
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-[#1c1b1b]">Workspace Usage</h3>
-                      <p className="text-xs text-[#8C8880]">142h of 200h monthly limit used · Renews in 12 days</p>
+                      <h3 className="text-sm font-bold text-ink">Workspace Usage</h3>
+                      <p className="text-xs text-muted">142h of 200h monthly limit used · Renews in 12 days</p>
                     </div>
                   </div>
-                  <Link href="/dashboard/billing" className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-lg shadow-[#FF416C]/20 flex items-center gap-2">
+                  <Link href="/dashboard/billing" className="bg-accent text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-lg  flex items-center gap-2">
                     <span className="material-symbols-outlined text-[16px]">open_in_new</span>
                     Manage Billing
                   </Link>
                 </div>
-                <div className="mt-4 w-full h-2 bg-[#E4E0D6]/30 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: '71%', background: 'linear-gradient(to right, #FF416C, #FF4B2B)' }} />
+                <div className="mt-4 w-full h-2 bg-border/30 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: '71%', background: 'var(--color-accent)' }} />
                 </div>
                 <div className="flex justify-between mt-2">
-                  <span className="text-[10px] text-[#8C8880]">0h</span>
-                  <span className="text-[10px] text-[#8C8880]">200h</span>
+                  <span className="text-[10px] text-muted">0h</span>
+                  <span className="text-[10px] text-muted">200h</span>
                 </div>
               </div>
             )}
@@ -429,7 +429,7 @@ export default function StatisticsPage() {
   );
 }
 
-function MetricCard({ icon, value, label, change }: {
+function MetricCard({ icon, color, value, label, change }: {
   icon: string;
   color: string;
   value: string;
@@ -437,18 +437,18 @@ function MetricCard({ icon, value, label, change }: {
   change: string;
 }) {
   return (
-    <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all duration-300 group">
+    <div className="bg-surface border border-border rounded-xl p-6 shadow-card hover:shadow-pop hover:border-accent/30 hover:-translate-y-0.5 transition-all duration-300 group">
       <div className="flex items-center justify-between mb-4">
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 group-hover:scale-110 transition-transform">
-          <span className="material-symbols-outlined text-white text-[20px]">{icon}</span>
+        <div className={`w-11 h-11 rounded-xl ${color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+          <span className="material-symbols-outlined text-[20px]">{icon}</span>
         </div>
-        <span className="flex items-center gap-1 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] bg-clip-text text-transparent text-[10px] font-bold uppercase tracking-wider">
-          <span className="material-symbols-outlined text-[#FF416C] text-[12px]">trending_up</span>
+        <span className="flex items-center gap-1 text-accent text-[10px] font-bold uppercase tracking-wider">
+          <span className="material-symbols-outlined text-accent text-[12px]">trending_up</span>
           {change}
         </span>
       </div>
-      <p className="text-3xl font-bold font-helvetica text-slate-900 leading-none mb-1">{value}</p>
-      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</p>
+      <p className="text-3xl font-bold text-ink leading-none mb-1">{value}</p>
+      <p className="text-[10px] font-bold text-muted uppercase tracking-widest">{label}</p>
     </div>
   );
 }

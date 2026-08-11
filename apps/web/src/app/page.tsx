@@ -6,14 +6,14 @@ import PinkGlobe from "@/components/PinkGlobe";
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
-    <div className="overflow-x-hidden bg-[#FAF9F5] text-[#1B1B1B]">
+    <div className="overflow-x-hidden bg-canvas text-ink">
       {/* MainHeader */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 py-2 max-w-[1200px] w-[95%] mx-auto rounded-full mt-4 bg-white/80 backdrop-blur-xl border border-[#E4E0D6] shadow-warm-md">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 py-2 max-w-[1200px] w-[95%] mx-auto rounded-full mt-4 bg-surface/80 backdrop-blur-xl border border-border shadow-pop">
         <div className="flex items-center gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 100 100"
-            className="h-8 w-8 text-[#1c1b1b]"
+            className="h-8 w-8 text-ink"
           >
             <path d="M30 20 L70 50 L30 80 L50 50 Z" fill="currentColor" />
             <circle
@@ -27,7 +27,7 @@ export default function Home() {
           </svg>
           <Link
             href="/"
-            className="text-lg font-helvetica font-bold tracking-tighter text-[#1c1b1b]"
+            className="text-lg font-bold tracking-tighter text-ink"
           >
             Relay
           </Link>
@@ -36,25 +36,25 @@ export default function Home() {
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
           <Link
-            className="text-[#8C8880] text-sm hover:text-[#1c1b1b] transition-colors duration-300"
+            className="text-muted text-sm hover:text-ink transition-colors duration-300"
             href="#about"
           >
             About
           </Link>
           <Link
-            className="text-[#8C8880] text-sm hover:text-[#1c1b1b] transition-colors duration-300"
+            className="text-muted text-sm hover:text-ink transition-colors duration-300"
             href="#how-it-works"
           >
             How it Works
           </Link>
           <Link
-            className="text-[#8C8880] text-sm hover:text-[#1c1b1b] transition-colors duration-300"
+            className="text-muted text-sm hover:text-ink transition-colors duration-300"
             href="#features"
           >
             Features
           </Link>
           <Link
-            className="text-[#8C8880] text-sm hover:text-[#1c1b1b] transition-colors duration-300"
+            className="text-muted text-sm hover:text-ink transition-colors duration-300"
             href="#pricing"
           >
             Pricing
@@ -64,24 +64,24 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <Link
             href="/signup"
-            className="bg-black text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-all scale-95 active:scale-90 duration-300"
+            className="bg-accent text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:brightness-105 transition-all scale-95 active:scale-90 duration-300"
           >
             Get Started
           </Link>
           {/* Hamburger */}
           <button
-            className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-[#E4E0D6]/50 transition-colors"
+            className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-border/50 transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
             <span
-              className={`block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-2" : ""}`}
+              className={`block w-5 h-0.5 bg-ink transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-2" : ""}`}
             ></span>
             <span
-              className={`block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`}
+              className={`block w-5 h-0.5 bg-ink transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`}
             ></span>
             <span
-              className={`block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300 ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`}
+              className={`block w-5 h-0.5 bg-ink transition-all duration-300 ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`}
             ></span>
           </button>
         </div>
@@ -89,40 +89,40 @@ export default function Home() {
 
       {/* Mobile Menu Drawer */}
       <div
-        className={`fixed inset-0 z-40 bg-black/95 backdrop-blur-xl flex flex-col px-6 pt-28 pb-10 gap-6 transition-all duration-300 md:hidden ${menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 z-40 bg-chrome backdrop-blur-xl flex flex-col px-6 pt-28 pb-10 gap-6 transition-all duration-300 md:hidden ${menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       >
         <Link
           href="#about"
           onClick={() => setMenuOpen(false)}
-          className="text-white text-xl font-bold font-helvetica border-b border-white/10 pb-4"
+          className="text-white text-xl font-bold border-b border-white/10 pb-4"
         >
           About
         </Link>
         <Link
           href="#features"
           onClick={() => setMenuOpen(false)}
-          className="text-white text-xl font-bold font-helvetica border-b border-white/10 pb-4"
+          className="text-white text-xl font-bold border-b border-white/10 pb-4"
         >
           Features
         </Link>
         <Link
           href="#how-it-works"
           onClick={() => setMenuOpen(false)}
-          className="text-white text-xl font-bold font-helvetica border-b border-white/10 pb-4"
+          className="text-white text-xl font-bold border-b border-white/10 pb-4"
         >
           How it Works
         </Link>
         <Link
           href="#pricing"
           onClick={() => setMenuOpen(false)}
-          className="text-white text-xl font-bold font-helvetica border-b border-white/10 pb-4"
+          className="text-white text-xl font-bold border-b border-white/10 pb-4"
         >
           Pricing
         </Link>
         <Link
           href="/signup"
           onClick={() => setMenuOpen(false)}
-          className="mt-4 bg-white text-black px-6 py-4 rounded-full font-bold text-center text-base"
+          className="mt-4 bg-surface text-ink px-6 py-4 rounded-full font-bold text-center text-base"
         >
           Get Started
         </Link>
@@ -134,31 +134,30 @@ export default function Home() {
           className="relative pt-32 md:pt-[280px] pb-12 md:pb-24 px-6 text-center overflow-hidden"
           style={{
             background:
-              "radial-gradient(circle at 50% -20%, #FFFDF8 0%, #FAF9F5 100%)",
+              "radial-gradient(circle at 50% -20%, var(--color-surface) 0%, var(--color-canvas) 100%)",
           }}
         >
-          <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#FF416C]/10 blur-[120px] rounded-full pointer-events-none" />
-          <div className="absolute top-20 -left-48 w-80 h-80 bg-[#FF4B2B]/5 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute top-20 -left-48 w-80 h-80 bg-accent-deep/5 blur-[100px] rounded-full pointer-events-none" />
           <div className="max-w-5xl mx-auto">
-            <h1 className="text-4xl sm:text-6xl md:text-[68px] mb-6 tracking-tighter leading-none font-helvetica font-bold text-slate-900">
+            <h1 className="text-4xl sm:text-6xl md:text-[68px] mb-6 tracking-tighter leading-none font-bold text-ink">
               Break the{" "}
-              <span className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-accent to-accent-deep bg-clip-text text-transparent">
                 Language Barrier
               </span>
               <br className="hidden sm:inline" />
               in Every Meeting
             </h1>
-            <p className="text-base md:text-xl text-slate-600 max-w-2xl mx-auto mb-10 md:mb-16 leading-relaxed">
+            <p className="text-base md:text-xl text-muted max-w-2xl mx-auto mb-10 md:mb-16 leading-relaxed">
               Experience crystal-clear, real-time voice-to-voice translation.
               Connect natively or bridge to your existing workflows with
               millisecond latency.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 max-w-sm sm:max-w-prose mx-auto sm:max-w-none justify-center gap-3 sm:gap-4">
-              <button className="w-full bg-black text-white px-5 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg">
+              <button className="w-full bg-gradient-to-r from-accent to-accent-deep text-white px-5 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-pop">
                 <span className="material-symbols-outlined">video_call</span>
                 Start Native Meeting
               </button>
-              <button className="w-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:scale-105 transition-all shadow-lg shadow-[#FF416C]/20">
+              <button className="w-full bg-surface text-ink border border-border px-5 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:border-border-strong hover:scale-105 transition-all shadow-card">
                 <span className="material-symbols-outlined">link</span>
                 Connect Third-Party Link
               </button>
@@ -170,20 +169,20 @@ export default function Home() {
         <section id="" className="py-12 md:py-28 px-6 scroll-mt-20">
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
-              <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest mb-4 block">
+              <span className="text-sm font-bold text-accent uppercase tracking-widest mb-4 block">
                 AI-Driven Orchestration
               </span>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-helvetica tracking-tight mb-8">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-8">
                 Speak your language. Let Relay handle the rest.
               </h2>
-              <p className="text-lg text-slate-600 leading-relaxed mb-10">
+              <p className="text-lg text-muted leading-relaxed mb-10">
                 Every participant controls their own speaking, hearing, and
                 subtitle language preferences. Our system ensures you hear your
                 colleagues in your native language, simultaneously and without
                 disruption.
               </p>
               <ul className="space-y-4">
-                <li className="flex items-center gap-3 text-slate-800 font-medium">
+                <li className="flex items-center gap-3 text-ink font-medium">
                   <svg
                     className="w-5 h-5 text-green-500"
                     fill="currentColor"
@@ -197,7 +196,7 @@ export default function Home() {
                   </svg>
                   Independent, personalized subtitle streams per user
                 </li>
-                <li className="flex items-center gap-3 text-slate-800 font-medium">
+                <li className="flex items-center gap-3 text-ink font-medium">
                   <svg
                     className="w-5 h-5 text-green-500"
                     fill="currentColor"
@@ -211,7 +210,7 @@ export default function Home() {
                   </svg>
                   AI-driven summaries and transcript querying via Chat Studio
                 </li>
-                <li className="flex items-center gap-3 text-slate-800 font-medium">
+                <li className="flex items-center gap-3 text-ink font-medium">
                   <svg
                     className="w-5 h-5 text-green-500"
                     fill="currentColor"
@@ -238,18 +237,18 @@ export default function Home() {
                     className="rounded-2xl overflow-hidden relative"
                     style={{
                       background:
-                        "linear-gradient(135deg, #2d3748 0%, #4a5568 100%)",
+                        "linear-gradient(135deg, var(--color-canvas) 0%, var(--color-border) 100%)",
                     }}
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-                        <span className="text-xl font-bold text-white font-helvetica">
+                      <div className="w-14 h-14 rounded-full bg-surface/10 flex items-center justify-center border border-white/20">
+                        <span className="text-xl font-bold text-white">
                           E
                         </span>
                       </div>
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <span className="absolute bottom-3 left-3 bg-black/60 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm font-bold tracking-wider">
+                    <span className="absolute bottom-3 left-3 bg-chrome/60 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm font-bold tracking-wider">
                       Elias (English)
                     </span>
                   </div>
@@ -262,8 +261,8 @@ export default function Home() {
                     }}
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-                        <span className="text-xl font-bold text-white font-helvetica">
+                      <div className="w-14 h-14 rounded-full bg-surface/10 flex items-center justify-center border border-white/20">
+                        <span className="text-xl font-bold text-white">
                           S
                         </span>
                       </div>
@@ -272,7 +271,7 @@ export default function Home() {
                       <span className="animate-pulse-glow h-2 w-2 rounded-full bg-green-500 block"></span>
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <span className="absolute bottom-3 left-3 bg-black/60 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm font-bold tracking-wider">
+                    <span className="absolute bottom-3 left-3 bg-chrome/60 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm font-bold tracking-wider">
                       Sofia (Spanish)
                     </span>
                   </div>
@@ -285,14 +284,14 @@ export default function Home() {
                     }}
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-                        <span className="text-xl font-bold text-white font-helvetica">
+                      <div className="w-14 h-14 rounded-full bg-surface/10 flex items-center justify-center border border-white/20">
+                        <span className="text-xl font-bold text-white">
                           W
                         </span>
                       </div>
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <span className="absolute bottom-3 left-3 bg-black/60 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm font-bold tracking-wider">
+                    <span className="absolute bottom-3 left-3 bg-chrome/60 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm font-bold tracking-wider">
                       Wei (Chinese)
                     </span>
                   </div>
@@ -305,45 +304,45 @@ export default function Home() {
                     }}
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-                        <span className="text-xl font-bold text-white font-helvetica">
+                      <div className="w-14 h-14 rounded-full bg-surface/10 flex items-center justify-center border border-white/20">
+                        <span className="text-xl font-bold text-white">
                           Y
                         </span>
                       </div>
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <span className="absolute bottom-3 left-3 bg-black/60 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm font-bold tracking-wider">
+                    <span className="absolute bottom-3 left-3 bg-chrome/60 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm font-bold tracking-wider">
                       Yousef (Arabic)
                     </span>
                   </div>
                 </div>
 
                 {/* Subtitle Overlay */}
-                <div className="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 w-[95%] sm:w-[75%] bg-black rounded-2xl p-3 sm:p-2 border border-white/10 text-center shadow-2xl">
+                <div className="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 w-[95%] sm:w-[75%] bg-chrome rounded-2xl p-3 sm:p-2 border border-white/10 text-center shadow-2xl">
                   <p className="text-white font-medium text-xs sm:text-xs md:text-base italic">
                     &quot;El diseño de la nueva interfaz se ve muy bien&quot;
                   </p>
-                  <p className="text-slate-400 text-[8px] sm:text-[10px] mt-1 uppercase tracking-widest font-bold">
+                  <p className="text-faint text-[8px] sm:text-[10px] mt-1 uppercase tracking-widest font-bold">
                     Sofia is speaking Spanish
                   </p>
                 </div>
               </div>
 
               {/* Restyled UI Element */}
-              <div className="absolute -top-24 -right-8 p-4 rounded-2xl w-48 xl:w-56 border border-white/10 bg-black shadow-2xl hidden lg:block">
+              <div className="absolute -top-24 -right-8 p-4 rounded-2xl w-48 xl:w-56 border border-white/10 bg-chrome shadow-2xl hidden lg:block">
                 <div className="text-[10px] uppercase tracking-widest mb-3 font-medium flex items-center gap-2">
                   <div className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF4B2B] opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF416C]"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-deep opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
                   </div>
-                  <span className="bg-[#FF416C] bg-clip-text text-transparent">
+                  <span className="bg-accent bg-clip-text text-transparent">
                     Meeting Insights
                   </span>
                 </div>
                 <div className="text-sm text-white font-bold mb-2">
                   Key Action Items
                 </div>
-                <ul className="text-[12px] font-medium text-slate-400 space-y-2">
+                <ul className="text-[12px] font-medium text-faint space-y-2">
                   <li className="flex gap-2">
                     <span className="material-symbols-outlined">
                       arrow_right_alt
@@ -365,58 +364,58 @@ export default function Home() {
         {/* Core Features Cards */}
         <section className="py-12 md:py-28 px-6 max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest block mb-4">
+            <span className="text-sm font-bold text-accent uppercase tracking-widest block mb-4">
               Core Technology
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold font-helvetica mb-6 text-slate-900">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-ink">
               A Complete Intelligence Ecosystem
             </h2>
-            <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+            <p className="text-muted text-lg max-w-2xl mx-auto">
               Beyond just translation, Relay provides a suite of intelligent
               tools designed to bridge language gaps effortlessly.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
             <div className="space-y-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-lg shadow-[#FF416C]/20">
-                <span className="material-symbols-outlined text-white">
+              <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center text-accent">
+                <span className="material-symbols-outlined text-accent">
                   record_voice_over
                 </span>
               </div>
-              <h3 className="text-2xl font-bold font-helvetica text-slate-900">
+              <h3 className="text-2xl font-bold text-ink">
                 Simultaneous Delivery
               </h3>
-              <p className="text-slate-600 text-base leading-relaxed">
+              <p className="text-muted text-base leading-relaxed">
                 Seamlessly toggle between voice-to-voice neural synthesis and
                 live captioning. Relay preserves emotional tone and vocal
                 characteristics across 40+ languages.
               </p>
             </div>
             <div className="space-y-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-lg shadow-[#FF416C]/20">
-                <span className="material-symbols-outlined text-white">
+              <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center text-accent">
+                <span className="material-symbols-outlined text-accent">
                   hub
                 </span>
               </div>
-              <h3 className="text-2xl font-bold font-helvetica text-slate-900">
+              <h3 className="text-2xl font-bold text-ink">
                 Platform Bridge
               </h3>
-              <p className="text-slate-600 text-base leading-relaxed">
+              <p className="text-muted text-base leading-relaxed">
                 No need to switch. Our native integrations for Zoom, Microsoft
                 Teams, and Google Meet inject translation layers directly into
                 your preferred workflow.
               </p>
             </div>
             <div className="space-y-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-lg shadow-[#FF416C]/20">
-                <span className="material-symbols-outlined text-white">
+              <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center text-accent">
+                <span className="material-symbols-outlined text-accent">
                   analytics
                 </span>
               </div>
-              <h3 className="text-2xl font-bold font-helvetica text-slate-900">
+              <h3 className="text-2xl font-bold text-ink">
                 AI Query Studio
               </h3>
-              <p className="text-slate-600 text-base leading-relaxed">
+              <p className="text-muted text-base leading-relaxed">
                 Go beyond transcripts. Ask natural language questions about your
                 meeting history, generate semantic summaries, and track
                 cross-cultural sentiment trends.
@@ -428,27 +427,27 @@ export default function Home() {
         {/* About */}
         <section
           id="about"
-          className="py-16 md:py-28 px-4 md:px-6 overflow-hidden"
+          className="py-16 md:py-28 px-4 md:px-6 overflow-hidden bg-chrome"
         >
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-20">
-              <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest block mb-4">
+              <span className="text-sm font-bold text-accent uppercase tracking-widest block mb-4">
                 Our Mission
               </span>
-              <h2 className="text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900">
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
                 About Relay
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
               {/* Left — Mission */}
               <div>
-                <h3 className="text-3xl md:text-4xl font-bold font-helvetica tracking-tight leading-tight mb-8 text-slate-900">
+                <h3 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight mb-8 text-white">
                   Language should never be the reason a great idea gets{" "}
-                  <span className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-accent to-accent-deep bg-clip-text text-transparent">
                     lost in translation
                   </span>
                 </h3>
-                <div className="space-y-5 text-[#8C8880] text-lg leading-relaxed">
+                <div className="space-y-5 text-white/60 text-lg leading-relaxed">
                   <p>
                     Relay was built on a simple belief: every voice deserves to
                     be understood, no matter what language it speaks. We saw
@@ -467,6 +466,7 @@ export default function Home() {
 
               {/* Right — Visual */}
               <div className="relative flex items-center justify-center w-full min-h-[400px]">
+                <div className="absolute inset-0 bg-accent/15 blur-[120px] rounded-full pointer-events-none" />
                 <PinkGlobe />
               </div>
             </div>
@@ -480,53 +480,53 @@ export default function Home() {
         >
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-24">
-              <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest block mb-4">
+              <span className="text-sm font-bold text-accent uppercase tracking-widest block mb-4">
                 Simple by Design
               </span>
-              <h2 className="text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900">
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-ink">
                 How Relay Works
               </h2>
-              <p className="text-[#8C8880] text-lg mt-6 max-w-xl mx-auto">
+              <p className="text-muted text-lg mt-6 max-w-xl mx-auto">
                 Three steps. Any platform. Every language.
               </p>
             </div>
 
             <div className="space-y-8">
               {/* Step 1 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-3xl border border-[#E4E0D6] bg-[#FFFDF8] p-5 sm:p-10 hover:border-[#FF416C]/30 transition-all shadow-warm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-xl border border-border bg-surface p-5 sm:p-10 hover:border-accent/30 transition-all shadow-card">
                 <div>
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white font-black text-base shadow-lg shadow-[#FF416C]/30">
+                    <div className="w-10 h-10 rounded-full bg-chrome flex items-center justify-center text-white font-black text-base">
                       1
                     </div>
-                    <h3 className="text-2xl font-bold font-helvetica text-slate-900">
+                    <h3 className="text-2xl font-bold text-ink">
                       Start or Join
                     </h3>
                   </div>
-                  <p className="text-[#8C8880] leading-relaxed">
+                  <p className="text-muted leading-relaxed">
                     Launch a native Relay meeting, or paste a Zoom, Teams, or
                     Google Meet link. Relay silently bridges in as your personal
                     translation layer — no installs required for others.
                   </p>
                 </div>
-                <div className="rounded-2xl bg-[#FAF9F5] border border-[#E4E0D6] p-6 space-y-3">
-                  <div className="flex justify-between items-center text-[10px] text-[#8C8880] uppercase tracking-wider">
+                <div className="rounded-xl bg-canvas border border-border p-6 space-y-3">
+                  <div className="flex justify-between items-center text-[10px] text-muted uppercase tracking-wider">
                     <span>Mode</span>
                     <div className="flex gap-1">
-                      <span className="px-2 py-1 rounded bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white font-bold">
+                      <span className="px-2 py-1 rounded bg-accent text-white font-bold">
                         Native
                       </span>
-                      <span className="px-2 py-1 rounded bg-[#FFFDF8] border border-[#E4E0D6] text-[#8C8880]">
+                      <span className="px-2 py-1 rounded bg-surface border border-border text-muted">
                         External
                       </span>
                     </div>
                   </div>
-                  <div className="h-px bg-[#E4E0D6]"></div>
+                  <div className="h-px bg-border"></div>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-8 bg-[#FAF9F5] border border-[#E4E0D6] rounded-lg text-[10px] text-[#8C8880] flex items-center px-3">
+                    <div className="flex-1 h-8 bg-canvas border border-border rounded-lg text-[10px] text-muted flex items-center px-3">
                       meet.google.com/abc-xyz-def
                     </div>
-                    <div className="h-8 px-4 rounded-lg bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white text-[10px] font-bold flex items-center">
+                    <div className="h-8 px-4 rounded-lg bg-accent text-white text-[10px] font-bold flex items-center">
                       Join
                     </div>
                   </div>
@@ -534,43 +534,43 @@ export default function Home() {
               </div>
 
               {/* Step 2 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-3xl border border-[#E4E0D6] bg-[#FFFDF8] p-5 sm:p-10 hover:border-[#FF416C]/30 transition-all shadow-warm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-xl border border-border bg-surface p-5 sm:p-10 hover:border-accent/30 transition-all shadow-card">
                 <div className="md:order-2">
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white font-black text-base shadow-lg shadow-[#FF416C]/30">
+                    <div className="w-10 h-10 rounded-full bg-chrome flex items-center justify-center text-white font-black text-base">
                       2
                     </div>
-                    <h3 className="text-2xl font-bold font-helvetica text-slate-900">
+                    <h3 className="text-2xl font-bold text-ink">
                       Set Your Languages
                     </h3>
                   </div>
-                  <p className="text-[#8C8880] leading-relaxed">
+                  <p className="text-muted leading-relaxed">
                     Each participant picks the language they speak and the
                     language they want to hear — voice output or live subtitles.
                     Completely independent per user, no coordination needed.
                   </p>
                 </div>
-                <div className="md:order-1 rounded-2xl bg-[#FAF9F5] border border-[#E4E0D6] p-6 space-y-3">
-                  <div className="flex justify-between items-center text-[10px] text-[#8C8880] uppercase tracking-wider">
+                <div className="md:order-1 rounded-xl bg-canvas border border-border p-6 space-y-3">
+                  <div className="flex justify-between items-center text-[10px] text-muted uppercase tracking-wider">
                     <span>Language to Speak</span>
-                    <span className="text-slate-900 font-bold normal-case">
+                    <span className="text-ink font-bold normal-case">
                       English 🇬🇧
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] text-[#8C8880] uppercase tracking-wider">
+                  <div className="flex justify-between items-center text-[10px] text-muted uppercase tracking-wider">
                     <span>Language to Hear</span>
-                    <span className="text-slate-900 font-bold normal-case">
+                    <span className="text-ink font-bold normal-case">
                       Spanish 🇪🇸
                     </span>
                   </div>
-                  <div className="h-px bg-[#E4E0D6]"></div>
-                  <div className="flex justify-between items-center text-[10px] text-[#8C8880] uppercase tracking-wider">
+                  <div className="h-px bg-border"></div>
+                  <div className="flex justify-between items-center text-[10px] text-muted uppercase tracking-wider">
                     <span>Output mode</span>
                     <div className="flex gap-1">
-                      <span className="px-2 py-1 rounded bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white font-bold">
+                      <span className="px-2 py-1 rounded bg-accent text-white font-bold">
                         Voice
                       </span>
-                      <span className="px-2 py-1 rounded bg-[#FFFDF8] border border-[#E4E0D6] text-[#8C8880]">
+                      <span className="px-2 py-1 rounded bg-surface border border-border text-muted">
                         Subtitles
                       </span>
                     </div>
@@ -579,37 +579,37 @@ export default function Home() {
               </div>
 
               {/* Step 3 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-3xl border border-[#E4E0D6] bg-[#FFFDF8] p-5 sm:p-10 hover:border-[#FF416C]/30 transition-all shadow-warm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-xl border border-border bg-surface p-5 sm:p-10 hover:border-accent/30 transition-all shadow-card">
                 <div>
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] flex items-center justify-center text-white font-black text-base shadow-lg shadow-[#FF416C]/30">
+                    <div className="w-10 h-10 rounded-full bg-chrome flex items-center justify-center text-white font-black text-base">
                       3
                     </div>
-                    <h3 className="text-2xl font-bold font-helvetica text-slate-900">
+                    <h3 className="text-2xl font-bold text-ink">
                       Relay Does the Rest
                     </h3>
                   </div>
-                  <p className="text-[#8C8880] leading-relaxed">
+                  <p className="text-muted leading-relaxed">
                     Speak naturally. Relay translates in real-time at 40ms
                     latency, delivers audio privately per participant, and
                     generates a full multilingual summary when the call ends.
                   </p>
                 </div>
-                <div className="rounded-2xl bg-[#FAF9F5] border border-[#E4E0D6] p-6 space-y-3">
+                <div className="rounded-xl bg-canvas border border-border p-6 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="relative flex h-2 w-2 flex-shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF416C] opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF416C]"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
                     </div>
-                    <span className="text-[11px] text-[#8C8880]">
+                    <span className="text-[11px] text-muted">
                       Live translation active — 40ms latency
                     </span>
                   </div>
-                  <div className="h-px bg-[#E4E0D6]"></div>
-                  <p className="text-[11px] text-[#8C8880]/70 italic leading-relaxed">
+                  <div className="h-px bg-border"></div>
+                  <p className="text-[11px] text-muted/70 italic leading-relaxed">
                     &quot;El nuevo diseño se ve increíble...&quot;
                   </p>
-                  <p className="text-[10px] text-[#FF416C] font-bold uppercase tracking-wider">
+                  <p className="text-[10px] text-accent font-bold uppercase tracking-wider">
                     → Heard in English
                   </p>
                 </div>
@@ -622,13 +622,13 @@ export default function Home() {
         <section className="py-12 md:py-28 overflow-hidden relative">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-              <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest block mb-4">
+              <span className="text-sm font-bold text-accent uppercase tracking-widest block mb-4">
                 Trusted Worldwide
               </span>
-              <h2 className="text-4xl md:text-5xl font-bold font-helvetica text-slate-900">
+              <h2 className="text-4xl md:text-5xl font-bold text-ink">
                 What Global Teams Say
               </h2>
-              <p className="text-slate-600 text-lg mt-6 max-w-2xl mx-auto">
+              <p className="text-muted text-lg mt-6 max-w-2xl mx-auto">
                 Trusted by distributed teams across 40+ countries to break down
                 language barriers in every meeting.
               </p>
@@ -638,8 +638,8 @@ export default function Home() {
           {/* Marquee Container */}
           <div className="relative w-full flex overflow-hidden">
             {/* Gradient Fades for Marquee edges */}
-            <div className="absolute top-0 bottom-0 left-0 w-12 sm:w-32 bg-gradient-to-r from-[#FAF9F5] to-transparent z-10 pointer-events-none"></div>
-            <div className="absolute top-0 bottom-0 right-0 w-12 sm:w-32 bg-gradient-to-l from-[#FAF9F5] to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute top-0 bottom-0 left-0 w-12 sm:w-32 bg-gradient-to-r from-canvas to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute top-0 bottom-0 right-0 w-12 sm:w-32 bg-gradient-to-l from-canvas to-transparent z-10 pointer-events-none"></div>
 
             {/* Animated Track */}
             <div className="flex w-max animate-marquee gap-8 px-4">
@@ -647,7 +647,7 @@ export default function Home() {
               {[...Array(2)].map((_, i) => (
                 <React.Fragment key={i}>
                   {/* Testimonial 1 */}
-                  <div className="bg-[#FFFDF8] p-6 sm:p-10 rounded-2xl shadow-warm border border-[#E4E0D6] flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-warm-md hover:border-[#FF416C]/30 transition-all">
+                  <div className="bg-surface p-6 sm:p-10 rounded-xl shadow-card border border-border flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-pop hover:border-accent/30 transition-all">
                     <div>
                       <div className="flex text-amber-400 mb-6 gap-1">
                         <span
@@ -681,7 +681,7 @@ export default function Home() {
                           star
                         </span>
                       </div>
-                      <p className="text-[#8C8880] mb-8 leading-relaxed italic">
+                      <p className="text-muted mb-8 leading-relaxed italic">
                         &quot;Relay has completely transformed how our
                         engineering teams across Berlin, Beijing, and New York
                         collaborate. The latency is practically
@@ -689,14 +689,14 @@ export default function Home() {
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center font-bold text-white">
+                      <div className="w-12 h-12 rounded-full bg-canvas border border-border flex items-center justify-center font-bold text-ink">
                         MK
                       </div>
                       <div>
-                        <h5 className="font-bold text-slate-900 font-helvetica">
+                        <h5 className="font-bold text-ink">
                           Marcus K.
                         </h5>
-                        <p className="text-xs text-[#8C8880] uppercase tracking-wider">
+                        <p className="text-xs text-muted uppercase tracking-wider">
                           VP of Engineering
                         </p>
                       </div>
@@ -704,7 +704,7 @@ export default function Home() {
                   </div>
 
                   {/* Testimonial 2 */}
-                  <div className="bg-[#FFFDF8] p-6 sm:p-10 rounded-2xl shadow-warm border border-[#E4E0D6] flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-warm-md hover:border-[#FF416C]/30 transition-all">
+                  <div className="bg-surface p-6 sm:p-10 rounded-xl shadow-card border border-border flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-pop hover:border-accent/30 transition-all">
                     <div>
                       <div className="flex text-amber-400 mb-6 gap-1">
                         <span
@@ -738,21 +738,21 @@ export default function Home() {
                           star
                         </span>
                       </div>
-                      <p className="text-[#8C8880] mb-8 leading-relaxed italic">
+                      <p className="text-muted mb-8 leading-relaxed italic">
                         &quot;The Silent Capture Bot is genius. We use it on all
                         our client Zoom calls now. Our Spanish-speaking partners
                         don&apos;t even know we&apos;re using translation software.&quot;
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center font-bold text-white">
+                      <div className="w-12 h-12 rounded-full bg-canvas border border-border flex items-center justify-center font-bold text-ink">
                         SL
                       </div>
                       <div>
-                        <h5 className="font-bold text-slate-900 font-helvetica">
+                        <h5 className="font-bold text-ink">
                           Sarah L.
                         </h5>
-                        <p className="text-xs text-[#8C8880] uppercase tracking-wider">
+                        <p className="text-xs text-muted uppercase tracking-wider">
                           Agency Director
                         </p>
                       </div>
@@ -760,7 +760,7 @@ export default function Home() {
                   </div>
 
                   {/* Testimonial 3 */}
-                  <div className="bg-[#FFFDF8] p-6 sm:p-10 rounded-2xl shadow-warm border border-[#E4E0D6] flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-warm-md hover:border-[#FF416C]/30 transition-all">
+                  <div className="bg-surface p-6 sm:p-10 rounded-xl shadow-card border border-border flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-pop hover:border-accent/30 transition-all">
                     <div>
                       <div className="flex text-amber-400 mb-6 gap-1">
                         <span
@@ -794,21 +794,21 @@ export default function Home() {
                           star_half
                         </span>
                       </div>
-                      <p className="text-[#8C8880] mb-8 leading-relaxed italic">
+                      <p className="text-muted mb-8 leading-relaxed italic">
                         &quot;Having the semantic whiteboard auto-translate
                         technical architecture diagrams into Chinese in
                         real-time has saved us hours of miscommunication.&quot;
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center font-bold text-white">
+                      <div className="w-12 h-12 rounded-full bg-canvas border border-border flex items-center justify-center font-bold text-ink">
                         WC
                       </div>
                       <div>
-                        <h5 className="font-bold text-slate-900 font-helvetica">
+                        <h5 className="font-bold text-ink">
                           Wei C.
                         </h5>
-                        <p className="text-xs text-[#8C8880] uppercase tracking-wider">
+                        <p className="text-xs text-muted uppercase tracking-wider">
                           Product Architect
                         </p>
                       </div>
@@ -816,7 +816,7 @@ export default function Home() {
                   </div>
 
                   {/* Testimonial 4 */}
-                  <div className="bg-[#FFFDF8] p-6 sm:p-10 rounded-2xl shadow-warm border border-[#E4E0D6] flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-warm-md hover:border-[#FF416C]/30 transition-all">
+                  <div className="bg-surface p-6 sm:p-10 rounded-xl shadow-card border border-border flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-pop hover:border-accent/30 transition-all">
                     <div>
                       <div className="flex text-amber-400 mb-6 gap-1">
                         <span
@@ -850,21 +850,21 @@ export default function Home() {
                           star
                         </span>
                       </div>
-                      <p className="text-[#8C8880] mb-8 leading-relaxed italic">
+                      <p className="text-muted mb-8 leading-relaxed italic">
                         &quot;Finally, a tool that respects accents and regional
                         dialects. Relay handles complex conversations flawlessly
                         during our board meetings.&quot;
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center font-bold text-white">
+                      <div className="w-12 h-12 rounded-full bg-canvas border border-border flex items-center justify-center font-bold text-ink">
                         AJ
                       </div>
                       <div>
-                        <h5 className="font-bold text-slate-900 font-helvetica">
+                        <h5 className="font-bold text-ink">
                           Aisha J.
                         </h5>
-                        <p className="text-xs text-[#8C8880] uppercase tracking-wider">
+                        <p className="text-xs text-muted uppercase tracking-wider">
                           Chief Operations Officer
                         </p>
                       </div>
@@ -872,7 +872,7 @@ export default function Home() {
                   </div>
 
                   {/* Testimonial 5 */}
-                  <div className="bg-[#FFFDF8] p-6 sm:p-10 rounded-2xl shadow-warm border border-[#E4E0D6] flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-warm-md hover:border-[#FF416C]/30 transition-all">
+                  <div className="bg-surface p-6 sm:p-10 rounded-xl shadow-card border border-border flex flex-col justify-between w-[280px] sm:w-[400px] flex-shrink-0 cursor-default hover:shadow-pop hover:border-accent/30 transition-all">
                     <div>
                       <div className="flex text-amber-400 mb-6 gap-1">
                         <span
@@ -906,21 +906,21 @@ export default function Home() {
                           star_half
                         </span>
                       </div>
-                      <p className="text-[#8C8880] mb-8 leading-relaxed italic">
+                      <p className="text-muted mb-8 leading-relaxed italic">
                         &quot;The AI Query Studio is a game-changer. I no longer
                         have to scrub through hours of recordings to find
                         specific decisions made in our global syncs.&quot;
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center font-bold text-white">
+                      <div className="w-12 h-12 rounded-full bg-canvas border border-border flex items-center justify-center font-bold text-ink">
                         TP
                       </div>
                       <div>
-                        <h5 className="font-bold text-slate-900 font-helvetica">
+                        <h5 className="font-bold text-ink">
                           Tom P.
                         </h5>
-                        <p className="text-xs text-[#8C8880] uppercase tracking-wider">
+                        <p className="text-xs text-muted uppercase tracking-wider">
                           Product Manager
                         </p>
                       </div>
@@ -938,13 +938,13 @@ export default function Home() {
           className="py-16 md:py-28 px-4 md:px-6 max-w-7xl mx-auto overflow-hidden"
         >
           <div className="text-center mb-24">
-            <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest block mb-4">
+            <span className="text-sm font-bold text-accent uppercase tracking-widest block mb-4">
               Features
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold font-helvetica mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Everything You Need
             </h2>
-            <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+            <p className="text-muted text-lg max-w-2xl mx-auto">
               Beyond translation. A full suite of intelligent tools built for
               multilingual teams.
             </p>
@@ -984,17 +984,17 @@ export default function Home() {
             ].map((feature) => (
               <div
                 key={feature.icon}
-                className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-8 shadow-warm hover:shadow-warm-md hover:-translate-y-1 transition-all duration-300 group"
+                className="bg-surface border border-border rounded-xl p-8 shadow-card hover:shadow-pop hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#FF416C]/20">
-                  <span className="material-symbols-outlined text-white text-[28px]">
+                <div className="w-14 h-14 rounded-xl bg-canvas border border-border text-accent flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-accent text-[28px]">
                     {feature.icon}
                   </span>
                 </div>
-                <h3 className="text-xl font-bold font-helvetica text-slate-900 mb-3">
+                <h3 className="text-xl font-bold text-ink mb-3">
                   {feature.label}
                 </h3>
-                <p className="text-slate-500 text-sm leading-relaxed">
+                <p className="text-muted text-sm leading-relaxed">
                   {feature.desc}
                 </p>
               </div>
@@ -1009,49 +1009,49 @@ export default function Home() {
         >
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-24">
-              <span className="text-sm font-bold text-[#FF416C] uppercase tracking-widest block mb-4">
+              <span className="text-sm font-bold text-accent uppercase tracking-widest block mb-4">
                 Pricing
               </span>
-              <h2 className="text-4xl md:text-5xl font-bold font-helvetica text-slate-900">
+              <h2 className="text-4xl md:text-5xl font-bold text-ink">
                 Flexible Plans
               </h2>
-              <p className="text-slate-600 text-lg mt-6 max-w-2xl mx-auto">
+              <p className="text-muted text-lg mt-6 max-w-2xl mx-auto">
                 Start free. Scale as your team grows. No hidden fees, no
                 surprises.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
               {/* Guest */}
-              <div className="bg-[#FFFDF8] rounded-2xl p-5 sm:p-10 border border-[#E4E0D6] flex flex-col h-full shadow-warm hover:shadow-warm-md transition-shadow">
+              <div className="bg-surface rounded-xl p-5 sm:p-10 border border-border flex flex-col h-full shadow-card hover:shadow-pop transition-shadow">
                 <div className="flex-grow">
-                  <h4 className="text-2xl font-bold font-helvetica mb-4 text-slate-900">
+                  <h4 className="text-2xl font-bold mb-4 text-ink">
                     Guest
                   </h4>
-                  <div className="text-5xl font-bold text-slate-900 mb-8">
+                  <div className="text-5xl font-bold text-ink mb-8">
                     $0{" "}
-                    <span className="text-base font-normal text-slate-500">
+                    <span className="text-base font-normal text-muted">
                       / meeting
                     </span>
                   </div>
-                  <p className="text-slate-600 text-sm mb-8 leading-relaxed">
+                  <p className="text-muted text-sm mb-8 leading-relaxed">
                     Perfect for one-time sessions where speed and privacy are
                     paramount.
                   </p>
                   <ul className="space-y-4 mb-8">
-                    <li className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <span className="material-symbols-outlined text-black text-lg">
+                    <li className="flex items-center gap-3 text-sm font-medium text-ink">
+                      <span className="material-symbols-outlined text-ink text-lg">
                         check
                       </span>{" "}
                       Ephemeral sessions
                     </li>
-                    <li className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <span className="material-symbols-outlined text-black text-lg">
+                    <li className="flex items-center gap-3 text-sm font-medium text-ink">
+                      <span className="material-symbols-outlined text-ink text-lg">
                         check
                       </span>{" "}
                       3 languages / call
                     </li>
-                    <li className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <span className="material-symbols-outlined text-black text-lg">
+                    <li className="flex items-center gap-3 text-sm font-medium text-ink">
+                      <span className="material-symbols-outlined text-ink text-lg">
                         check
                       </span>{" "}
                       Standard Voice
@@ -1060,46 +1060,46 @@ export default function Home() {
                 </div>
                 <Link
                   href="/signup"
-                  className="block text-center w-full border border-slate-900 py-3 rounded-full font-bold text-slate-900 hover:bg-slate-900 hover:text-white transition-colors"
+                  className="block text-center w-full border border-ink py-3 rounded-full font-bold text-ink hover:bg-accent/5 hover:border-accent/50 transition-colors"
                 >
                   Start Free
                 </Link>
               </div>
 
               {/* Registered */}
-              <div className="bg-white rounded-2xl p-5 sm:p-10 border-2 border-black flex flex-col h-full relative shadow-2xl md:scale-105 z-10">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-[#FF416C]/20">
+              <div className="bg-surface rounded-xl p-5 sm:p-10 border-2 border-ink flex flex-col h-full relative shadow-2xl md:scale-105 z-10">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-accent text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
                   Most Popular
                 </div>
                 <div className="flex-grow">
-                  <h4 className="text-2xl font-bold font-helvetica mb-4 text-slate-900">
+                  <h4 className="text-2xl font-bold mb-4 text-ink">
                     Registered
                   </h4>
-                  <div className="text-5xl font-bold text-slate-900 mb-8">
+                  <div className="text-5xl font-bold text-ink mb-8">
                     $29{" "}
-                    <span className="text-base font-normal text-slate-500">
+                    <span className="text-base font-normal text-muted">
                       / month
                     </span>
                   </div>
-                  <p className="text-slate-600 text-sm mb-8 leading-relaxed">
+                  <p className="text-muted text-sm mb-8 leading-relaxed">
                     The professional standard for individual creators and global
                     consultants.
                   </p>
                   <ul className="space-y-4 mb-8">
-                    <li className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <span className="material-symbols-outlined text-black text-lg">
+                    <li className="flex items-center gap-3 text-sm font-medium text-ink">
+                      <span className="material-symbols-outlined text-ink text-lg">
                         check
                       </span>{" "}
                       Full Transcripts & Summaries
                     </li>
-                    <li className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <span className="material-symbols-outlined text-black text-lg">
+                    <li className="flex items-center gap-3 text-sm font-medium text-ink">
+                      <span className="material-symbols-outlined text-ink text-lg">
                         check
                       </span>{" "}
                       40+ Language Library
                     </li>
-                    <li className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <span className="material-symbols-outlined text-black text-lg">
+                    <li className="flex items-center gap-3 text-sm font-medium text-ink">
+                      <span className="material-symbols-outlined text-ink text-lg">
                         check
                       </span>{" "}
                       AI Query Studio Access
@@ -1108,40 +1108,40 @@ export default function Home() {
                 </div>
                 <Link
                   href="/signup"
-                  className="block text-center w-full bg-black text-white py-3 rounded-full font-bold hover:bg-slate-800 transition-colors"
+                  className="block text-center w-full bg-accent text-white py-3 rounded-full font-bold hover:brightness-105 transition-colors"
                 >
                   Go Pro
                 </Link>
               </div>
 
               {/* Organization */}
-              <div className="bg-white rounded-2xl p-5 sm:p-10 border-2 border-slate-200 flex flex-col h-full shadow-sm hover:shadow-xl transition-shadow">
+              <div className="bg-surface rounded-xl p-5 sm:p-10 border-2 border-border flex flex-col h-full shadow-sm hover:shadow-xl transition-shadow">
                 <div className="flex-grow">
-                  <h4 className="text-2xl font-bold font-helvetica mb-4 text-slate-900">
+                  <h4 className="text-2xl font-bold mb-4 text-ink">
                     Organization
                   </h4>
-                  <div className="text-5xl font-bold text-slate-900 mb-8">
+                  <div className="text-5xl font-bold text-ink mb-8">
                     Custom
                   </div>
-                  <p className="text-slate-600 text-sm mb-8 leading-relaxed">
+                  <p className="text-muted text-sm mb-8 leading-relaxed">
                     Global scale solutions with advanced security and
                     management.
                   </p>
                   <ul className="space-y-4 mb-8">
-                    <li className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <span className="material-symbols-outlined text-black text-lg">
+                    <li className="flex items-center gap-3 text-sm font-medium text-ink">
+                      <span className="material-symbols-outlined text-ink text-lg">
                         check
                       </span>{" "}
                       Admin Control Panel
                     </li>
-                    <li className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <span className="material-symbols-outlined text-black text-lg">
+                    <li className="flex items-center gap-3 text-sm font-medium text-ink">
+                      <span className="material-symbols-outlined text-ink text-lg">
                         check
                       </span>{" "}
                       Custom Voice Training
                     </li>
-                    <li className="flex items-center gap-3 text-sm font-medium text-slate-800">
-                      <span className="material-symbols-outlined text-black text-lg">
+                    <li className="flex items-center gap-3 text-sm font-medium text-ink">
+                      <span className="material-symbols-outlined text-ink text-lg">
                         check
                       </span>{" "}
                       SSO & Audit Logs
@@ -1150,7 +1150,7 @@ export default function Home() {
                 </div>
                 <Link
                   href="/signup"
-                  className="block text-center w-full border border-slate-900 py-3 rounded-full font-bold text-slate-900 hover:bg-slate-900 hover:text-white transition-colors"
+                  className="block text-center w-full border border-ink py-3 rounded-full font-bold text-ink hover:bg-accent/5 hover:border-accent/50 transition-colors"
                 >
                   Contact Sales
                 </Link>
@@ -1161,7 +1161,7 @@ export default function Home() {
       </main>
 
       {/* DarkFooter */}
-      <footer className="w-full bg-black py-16 md:py-20 px-6 flex flex-col md:flex-row justify-between items-start gap-10 border-t border-white/10 mt-0">
+      <footer className="w-full bg-chrome py-16 md:py-20 px-6 flex flex-col md:flex-row justify-between items-start gap-10 border-t border-white/10 mt-0">
         <div className="mb-8 md:mb-0">
           <div className="flex items-center gap-2 mb-4">
             <svg
@@ -1179,7 +1179,7 @@ export default function Home() {
                 strokeWidth="2"
               />
             </svg>
-            <h2 className="font-helvetica font-bold text-2xl text-white">
+            <h2 className="font-bold text-2xl text-white">
               Relay
             </h2>
           </div>

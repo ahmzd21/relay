@@ -23,20 +23,14 @@ interface BadgeProps {
 
 const variantStyles: Record<BadgeVariant, string> = {
   gradient:
-    "bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20",
-  dark: "bg-[#FFFDF8] text-[#1c1b1b] border border-[#E4E0D6]",
-  outline:
-    "bg-white border border-[#E4E0D6]/30 text-slate-600",
-  success:
-    "bg-emerald-500/10 border border-emerald-500/30 text-emerald-600",
-  warning:
-    "bg-amber-50 text-amber-600 border border-amber-200",
-  danger:
-    "bg-rose-500/10 border border-rose-500/30 text-rose-500",
-  info:
-    "bg-indigo-50 text-indigo-600 border border-indigo-200",
-  muted:
-    "bg-slate-100 text-slate-600 border border-slate-200",
+    "bg-gradient-to-r from-accent to-accent-deep text-white shadow-card",
+  dark: "bg-chrome text-white",
+  outline: "bg-surface border border-border text-muted",
+  success: "bg-success/10 border border-success/25 text-success",
+  warning: "bg-warning/10 border border-warning/25 text-warning",
+  danger: "bg-danger/10 border border-danger/25 text-danger",
+  info: "bg-info/10 border border-info/25 text-info",
+  muted: "bg-canvas text-muted border border-border",
 };
 
 const sizeStyles: Record<BadgeSize, string> = {
@@ -55,7 +49,7 @@ export default function Badge({
 }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider ${variantStyles[variant]} ${sizeStyles[size]} ${pill ? "rounded-full" : "rounded"} ${className}`}
+      className={`inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider ${variantStyles[variant]} ${sizeStyles[size]} ${pill ? "rounded-full" : "rounded"} ${className}`}
     >
       {dot && (
         <span className="relative flex h-1.5 w-1.5">

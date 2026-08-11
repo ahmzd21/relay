@@ -23,20 +23,21 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   gradient:
-    "bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-lg shadow-[#FF416C]/20 hover:shadow-xl hover:shadow-[#FF416C]/30",
-  black: "bg-black text-white hover:bg-slate-800",
-  white: "bg-white text-black border border-[#E4E0D6]/80 hover:bg-[#FF416C]/5 shadow-sm",
+    "bg-gradient-to-r from-accent to-accent-deep text-white shadow-card hover:shadow-pop hover:brightness-105",
+  black: "bg-chrome text-white hover:bg-chrome-raised",
+  white:
+    "bg-surface text-ink border border-border hover:border-border-strong hover:bg-canvas",
   outline:
-    "bg-white border border-[#E4E0D6] text-slate-700 hover:border-[#FF416C]/30 hover:text-[#FF416C]",
-  ghost: "bg-transparent text-slate-500 hover:text-slate-900",
-  danger: "bg-rose-600 text-white hover:bg-rose-700",
-  link: "bg-transparent text-[#FF416C] hover:text-[#FF4B2B] underline",
+    "bg-surface border border-border text-ink hover:border-ink hover:text-ink",
+  ghost: "bg-transparent text-muted hover:text-ink hover:bg-canvas",
+  danger: "bg-danger text-white hover:brightness-105",
+  link: "bg-transparent text-accent hover:text-accent-deep",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-4 py-2 text-xs rounded-xl",
-  md: "px-5 py-2.5 text-sm rounded-xl",
-  lg: "px-8 py-4 text-[15px] rounded-full",
+  sm: "px-4 py-2 text-xs rounded-lg",
+  md: "px-5 py-2.5 text-sm rounded-lg",
+  lg: "px-7 py-3.5 text-[15px] rounded-xl",
 };
 
 export default function Button({
@@ -52,17 +53,17 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const base =
-    "font-bold inline-flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100";
+    "font-semibold inline-flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-1";
 
   const hoverScale =
-    variant === "gradient" || variant === "black"
-      ? "hover:scale-105"
+    variant === "gradient" || variant === "black" || variant === "danger"
+      ? "hover:scale-[1.02] active:scale-[0.99]"
       : "";
 
   if (variant === "link") {
     return (
       <button
-        className={`${base} text-[10px] font-bold uppercase tracking-widest hover:text-[#FF4B2B] transition-colors ${className}`}
+        className={`${base} text-[11px] font-bold uppercase tracking-widest ${className}`}
         disabled={disabled || isLoading}
         {...props}
       >

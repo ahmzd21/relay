@@ -14,29 +14,35 @@ export default function DashboardHeader({
   rightContent,
 }: DashboardHeaderProps) {
   const { toggle } = useMobileMenu();
-  const { unreadCount, showBellDropdown, setShowBellDropdown, notifications, dismissNotification } = useNotifications();
+  const {
+    unreadCount,
+    showBellDropdown,
+    setShowBellDropdown,
+    notifications,
+    dismissNotification,
+  } = useNotifications();
 
   return (
     <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-10 bg-transparent z-20 sticky top-0">
       <div className="flex items-center gap-2 md:gap-4">
         <button
           onClick={toggle}
-          className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-black/5 transition-colors"
+          className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-chrome/5 transition-colors"
           aria-label="Toggle menu"
         >
-          <span className="block w-5 h-0.5 bg-[#1c1b1b] transition-all duration-300" />
+          <span className="block w-5 h-0.5 bg-ink transition-all duration-300" />
         </button>
       </div>
 
       {searchPlaceholder ? (
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-full max-w-md items-center">
-          <span className="material-symbols-outlined absolute left-4 text-[#8C8880] text-[20px]">
+          <span className="material-symbols-outlined absolute left-4 text-faint text-[20px]">
             search
           </span>
           <input
             type="text"
             placeholder={searchPlaceholder}
-            className="w-full bg-white border border-[#E4E0D6]/30 rounded-full py-2.5 pl-12 pr-4 text-[15px] text-[#1c1b1b] placeholder:text-[#8C8880] focus:outline-none focus:border-[#FF416C]/50 focus:ring-1 focus:ring-[#FF416C]/20 transition-all"
+            className="w-full bg-surface border border-border rounded-full py-2.5 pl-12 pr-4 text-[15px] text-ink placeholder:text-faint shadow-card focus:outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/15 transition-all"
           />
         </div>
       ) : (
@@ -51,13 +57,15 @@ export default function DashboardHeader({
         <div className="relative">
           <button
             onClick={() => setShowBellDropdown(!showBellDropdown)}
-            className="relative h-9 w-9 md:h-10 md:w-10 rounded-xl bg-[#FFFDF8] border border-[#E4E0D6] flex items-center justify-center shadow-warm hover:border-[#FF416C]/30 hover:shadow-warm-md transition-all"
+            className="relative h-9 w-9 md:h-10 md:w-10 rounded-lg bg-surface border border-border flex items-center justify-center shadow-card hover:border-border-strong hover:shadow-pop transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             aria-label="Notifications"
           >
-            <span className="material-symbols-outlined text-[#1c1b1b] text-[20px]">notifications</span>
+            <span className="material-symbols-outlined text-ink text-[20px]">
+              notifications
+            </span>
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 min-w-[16px] flex items-center justify-center px-1 rounded-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white text-[9px] font-bold shadow-sm shadow-[#FF416C]/20">
-                {unreadCount > 9 ? '9+' : unreadCount}
+              <span className="absolute -top-1 -right-1 h-4 min-w-[16px] flex items-center justify-center px-1 rounded-full bg-gradient-to-r from-accent to-accent-deep text-white text-[9px] font-bold shadow-card">
+                {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
           </button>
@@ -65,27 +73,36 @@ export default function DashboardHeader({
           {/* Dropdown */}
           {showBellDropdown && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowBellDropdown(false)} />
-              <div className="absolute right-0 mt-2 z-50 w-80 bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl shadow-warm-md overflow-hidden">
-                <div className="p-4 border-b border-[#E4E0D6]/50">
-                  <p className="text-sm font-bold font-helvetica text-slate-900">Notifications</p>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowBellDropdown(false)}
+              />
+              <div className="absolute right-0 mt-2 z-50 w-80 bg-surface border border-border rounded-xl shadow-pop overflow-hidden">
+                <div className="p-4 border-b border-border/50">
+                  <p className="text-sm font-bold text-ink">
+                    Notifications
+                  </p>
                 </div>
                 <div className="max-h-80 overflow-y-auto">
                   {notifications.length === 0 ? (
                     <div className="p-6 text-center">
-                      <span className="material-symbols-outlined text-[#c4c7c7] text-[32px] mb-2">notifications_off</span>
-                      <p className="text-xs text-slate-500">No notifications yet</p>
+                      <span className="material-symbols-outlined text-faint text-[32px] mb-2">
+                        notifications_off
+                      </span>
+                      <p className="text-xs text-muted">
+                        No notifications yet
+                      </p>
                     </div>
                   ) : (
                     notifications.map((n) => (
                       <div
                         key={n.id}
-                        className={`p-4 border-b border-[#E4E0D6]/30 hover:bg-[#F0EDE6]/50 cursor-pointer transition-colors ${!n.read ? 'bg-[#FF416C]/5' : ''}`}
+                        className={`p-4 border-b border-border/30 hover:bg-canvas cursor-pointer transition-colors ${!n.read ? "bg-accent/5" : ""}`}
                         onClick={() => dismissNotification(n.id)}
                       >
-                        <p className="text-sm font-bold text-slate-900">{n.title}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{n.body}</p>
-                        <p className="text-[10px] text-slate-400 mt-1">{n.time}</p>
+                        <p className="text-sm font-bold text-ink">{n.title}</p>
+                        <p className="text-xs text-muted mt-0.5">{n.body}</p>
+                        <p className="text-[10px] text-faint mt-1">{n.time}</p>
                       </div>
                     ))
                   )}
@@ -94,8 +111,6 @@ export default function DashboardHeader({
             </>
           )}
         </div>
-
-
       </div>
     </header>
   );

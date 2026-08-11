@@ -34,7 +34,7 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
 
   useEffect(() => {
     try {
-      if (localStorage.getItem('sidebar-collapsed') === 'true') {
+      if (localStorage.getItem("sidebar-collapsed") === "true") {
         setIsCollapsed(true);
       }
     } catch {
@@ -90,28 +90,37 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
-    return pathname === href || pathname?.startsWith(href + "/");
+    return Boolean(pathname === href || pathname?.startsWith(href + "/"));
   };
+
+  const navLinkClass = (active: boolean, collapsed: boolean) =>
+    `flex items-center rounded-lg font-medium text-sm transition-all relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+      collapsed ? "justify-center h-11 w-11 mx-auto p-0" : "gap-3 px-4 py-3"
+    } ${
+      active
+        ? "bg-gradient-to-r from-accent to-accent-deep text-white shadow-card"
+        : "text-white/50 hover:text-white hover:bg-surface/5"
+    }`;
 
   const sidebarContent = (
     <>
       <div>
         {/* Logo Header */}
         <div
-          className={`h-20 flex items-center border-b border-[#E4E0D6] ${
+          className={`h-20 flex items-center border-b border-white/10 ${
             isMounted ? "transition-all duration-300" : ""
-          } ${isCollapsed ? "justify-center px-0" : "justify-between px-6"}`}
+          } ${isCollapsed ? "justify-center px-0" : "justify-between px-5"}`}
         >
           <div className="flex items-center gap-3 overflow-hidden">
             <button
               onClick={toggleSidebar}
-              className="p-2 hover:bg-[#FF416C]/10 rounded-full transition-colors flex-shrink-0 hidden md:flex"
+              className="p-2 hover:bg-surface/10 rounded-full transition-colors flex-shrink-0 hidden md:flex"
               title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 100 100"
-                className={`h-6 w-6 text-slate-900 ${isMounted ? "transition-transform duration-500 ease-in-out" : ""}`}
+                className={`h-6 w-6 text-white ${isMounted ? "transition-transform duration-500 ease-in-out" : ""}`}
                 style={{
                   transform: isCollapsed ? "rotate(0deg)" : "rotate(180deg)",
                 }}
@@ -129,7 +138,7 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
             </button>
 
             <span
-              className={`text-xl font-bold tracking-tighter text-slate-900 origin-left ${
+              className={`text-xl font-bold tracking-tighter text-white origin-left ${
                 isMounted ? "transition-all duration-300" : ""
               } ${
                 isCollapsed
@@ -144,14 +153,14 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
           {/* Mobile close button */}
           <button
             onClick={closeMobile}
-            className="md:hidden p-2 hover:bg-[#FF416C]/10 rounded-full transition-colors text-[#8C8880] hover:text-slate-900"
+            className="md:hidden p-2 hover:bg-surface/10 rounded-full transition-colors text-white/60 hover:text-white"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
         {/* Nav Links */}
-        <nav className="p-4 space-y-2 mt-4">
+        <nav className="p-3 space-y-1 mt-4">
           {navItems.map((item) => {
             const active = isActive(item.href);
             return (
@@ -160,13 +169,11 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
                 href={item.href}
                 title={isCollapsed ? item.label : undefined}
                 onClick={closeMobile}
-                className={`flex items-center rounded-xl font-medium text-sm transition-all relative ${isCollapsed ? "justify-center h-11 w-11 mx-auto p-0" : "gap-3 px-4 py-3"} ${
-                  active
-                    ? "bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-lg shadow-[#FF416C]/20"
-                    : "text-[#8C8880] hover:text-slate-900 hover:bg-[#FF416C]/5"
-                }`}
+                className={navLinkClass(active, isCollapsed)}
               >
-                <span className="material-symbols-outlined text-[20px] flex-shrink-0">
+                <span
+                  className={`material-symbols-outlined text-[20px] flex-shrink-0 ${active ? "" : "opacity-80"}`}
+                >
                   {item.icon}
                 </span>
                 {!isCollapsed && (
@@ -181,18 +188,16 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
       </div>
 
       {/* Settings & Sign Out */}
-      <div className="p-4 space-y-2 mb-4 border-t border-[#E4E0D6] pt-6">
+      <div className="p-3 space-y-1 mb-4 border-t border-white/10 pt-4">
         <Link
           href="/dashboard/settings"
           title={isCollapsed ? "Settings" : undefined}
           onClick={closeMobile}
-          className={`flex items-center rounded-xl font-medium text-sm transition-all relative ${isCollapsed ? "justify-center h-11 w-11 mx-auto p-0" : "gap-3 px-4 py-3"} ${
-            isActive("/dashboard/settings")
-              ? "bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-lg shadow-[#FF416C]/20"
-              : "text-[#8C8880] hover:text-slate-900 hover:bg-[#FF416C]/5"
-          }`}
+          className={navLinkClass(isActive("/dashboard/settings"), isCollapsed)}
         >
-          <span className="material-symbols-outlined text-[20px] flex-shrink-0">
+          <span
+            className={`material-symbols-outlined text-[20px] flex-shrink-0 ${isActive("/dashboard/settings") ? "" : "opacity-80"}`}
+          >
             settings
           </span>
           {!isCollapsed && <span>Settings</span>}
@@ -201,9 +206,9 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
         <button
           onClick={handleSignOut}
           disabled={isSigningOut}
-          className={`flex items-center text-left text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 rounded-xl font-medium text-sm transition-all hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${isCollapsed ? "justify-center h-11 w-11 mx-auto p-0" : "w-full gap-3 px-4 py-3"}`}
+          className={`flex items-center text-left text-white/50 hover:text-white hover:bg-surface/5 rounded-lg font-medium text-sm transition-all hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${isCollapsed ? "justify-center h-11 w-11 mx-auto p-0" : "w-full gap-3 px-4 py-3"}`}
         >
-          <span className="material-symbols-outlined text-[20px] flex-shrink-0">
+          <span className="material-symbols-outlined text-[20px] flex-shrink-0 opacity-80">
             logout
           </span>
           {!isCollapsed && <span>Sign Out</span>}
@@ -216,27 +221,26 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
     <>
       {/* Desktop sidebar */}
       <aside
-        className={`border-r border-[#E4E0D6] hidden md:flex flex-col justify-between bg-[#F0EDE6] h-screen sticky top-0 ${
+        className={`border-r border-white/5 hidden md:flex flex-col justify-between bg-chrome h-screen sticky top-0 ${
           isMounted ? "transition-all duration-300 ease-in-out" : ""
         } ${isCollapsed ? "w-20" : "w-64"}`}
       >
         {sidebarContent}
       </aside>
 
-      {/* Mobile overlay — full-screen like landing page */}
+      {/* Mobile overlay */}
       <div
-        className={`fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col px-4 md:px-10 pb-10 transition-all duration-300 md:hidden overflow-y-auto ${isMobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 z-50 bg-chrome backdrop-blur-xl flex flex-col px-4 md:px-10 pb-10 transition-all duration-300 md:hidden overflow-y-auto ${isMobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       >
-        {/* Top header matching DashboardHeader position */}
         <div className="h-16 flex items-center justify-between flex-shrink-0">
           <button
             onClick={closeMobile}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors flex flex-col gap-1.5"
+            className="p-2 rounded-lg hover:bg-surface/10 transition-colors flex flex-col gap-1.5"
             aria-label="Close menu"
           >
-            <span className="block w-5 h-0.5 bg-white rotate-45 translate-y-2 transition-all duration-300" />
-            <span className="block w-5 h-0.5 bg-white opacity-0 transition-all duration-300" />
-            <span className="block w-5 h-0.5 bg-white -rotate-45 -translate-y-2 transition-all duration-300" />
+            <span className="block w-5 h-0.5 bg-surface rotate-45 translate-y-2 transition-all duration-300" />
+            <span className="block w-5 h-0.5 bg-surface opacity-0 transition-all duration-300" />
+            <span className="block w-5 h-0.5 bg-surface -rotate-45 -translate-y-2 transition-all duration-300" />
           </button>
         </div>
 
@@ -248,7 +252,7 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 onClick={closeMobile}
-                className={`text-xl font-bold font-helvetica border-b border-white/10 pb-4 transition-colors ${active ? "text-[#FF416C]" : "text-white"}`}
+                className={`text-xl font-bold border-b border-white/10 pb-4 transition-colors ${active ? "text-accent" : "text-white"}`}
               >
                 {item.label}
               </Link>
@@ -257,13 +261,16 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
           <Link
             href="/dashboard/settings"
             onClick={closeMobile}
-            className={`text-xl font-bold font-helvetica border-b border-white/10 pb-4 transition-colors ${isActive("/dashboard/settings") ? "text-[#FF416C]" : "text-white"}`}
+            className={`text-xl font-bold border-b border-white/10 pb-4 transition-colors ${isActive("/dashboard/settings") ? "text-accent" : "text-white"}`}
           >
             Settings
           </Link>
           <button
-            onClick={() => { closeMobile(); handleSignOut(); }}
-            className="mt-4 bg-white text-black px-6 py-4 rounded-full font-bold text-center text-base hover:bg-gray-200 transition-colors"
+            onClick={() => {
+              closeMobile();
+              handleSignOut();
+            }}
+            className="mt-4 bg-surface text-chrome px-6 py-4 rounded-full font-bold text-center text-base hover:bg-surface/80 transition-colors"
           >
             Sign Out
           </button>
@@ -271,12 +278,30 @@ export default function Sidebar({ currentPath, onReady }: SidebarProps) {
       </div>
 
       {isSigningOut && (
-        <div className="fixed inset-0 z-[999] bg-[#FAF9F5] flex flex-col items-center justify-center gap-4">
-          <svg className="animate-spin h-8 w-8 text-[#FF416C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        <div className="fixed inset-0 z-[999] bg-chrome flex flex-col items-center justify-center gap-4">
+          <svg
+            className="animate-spin h-8 w-8 text-accent"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
-          <p className="text-slate-600 font-bold font-helvetica text-sm tracking-wide">Signing out...</p>
+          <p className="text-white/60 font-bold text-sm tracking-wide">
+            Signing out...
+          </p>
         </div>
       )}
     </>
