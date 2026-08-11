@@ -27,9 +27,9 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     duration: '2h 15m',
     status: 'translated',
     participants: [
-      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
-      { name: 'Sarah Chen', initials: 'SC', color: 'bg-rose-100 text-rose-700' },
-      { name: 'Marcus Klein', initials: 'MK', color: 'bg-purple-100 text-purple-700' },
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-border text-ink' },
+      { name: 'Sarah Chen', initials: 'SC', color: 'bg-border text-ink' },
+      { name: 'Marcus Klein', initials: 'MK', color: 'bg-border text-ink' },
     ],
     languages: ['English', 'Spanish'],
   },
@@ -43,8 +43,8 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     duration: '45m',
     status: 'translated',
     participants: [
-      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
-      { name: 'Yousef Al-Rashid', initials: 'YA', color: 'bg-amber-100 text-amber-700' },
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-border text-ink' },
+      { name: 'Yousef Al-Rashid', initials: 'YA', color: 'bg-border text-ink' },
     ],
     languages: ['English', 'Arabic'],
   },
@@ -58,8 +58,8 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     duration: '30m',
     status: 'processing',
     participants: [
-      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
-      { name: 'Sofia Martinez', initials: 'SM', color: 'bg-emerald-100 text-emerald-700' },
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-border text-ink' },
+      { name: 'Sofia Martinez', initials: 'SM', color: 'bg-border text-ink' },
     ],
     languages: ['English', 'French'],
   },
@@ -73,10 +73,10 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     duration: '15m',
     status: 'translated',
     participants: [
-      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
-      { name: 'Wei Zhang', initials: 'WZ', color: 'bg-blue-100 text-blue-700' },
-      { name: 'Priya Sharma', initials: 'PS', color: 'bg-pink-100 text-pink-700' },
-      { name: 'Marcus Klein', initials: 'MK', color: 'bg-purple-100 text-purple-700' },
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-border text-ink' },
+      { name: 'Wei Zhang', initials: 'WZ', color: 'bg-border text-ink' },
+      { name: 'Priya Sharma', initials: 'PS', color: 'bg-border text-ink' },
+      { name: 'Marcus Klein', initials: 'MK', color: 'bg-border text-ink' },
     ],
     languages: ['English'],
   },
@@ -90,9 +90,9 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
     duration: '1h',
     status: 'ended',
     participants: [
-      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700' },
-      { name: 'David Park', initials: 'DP', color: 'bg-indigo-100 text-indigo-700' },
-      { name: 'Elena Rostova', initials: 'ER', color: 'bg-emerald-100 text-emerald-700' },
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-border text-ink' },
+      { name: 'David Park', initials: 'DP', color: 'bg-border text-ink' },
+      { name: 'Elena Rostova', initials: 'ER', color: 'bg-border text-ink' },
     ],
     languages: ['English', 'Japanese'],
   },
@@ -100,8 +100,8 @@ const MOCK_MEETINGS: ExternalMeeting[] = [
 
 const PLATFORM_ICONS: Record<string, { icon: string; color: string; bg: string; name: string }> = {
   Zoom: { icon: 'videocam', color: 'text-blue-600', bg: 'bg-blue-50', name: 'Zoom' },
-  'Google Meet': { icon: 'groups', color: 'text-emerald-600', bg: 'bg-emerald-50', name: 'Google Meet' },
-  'Microsoft Teams': { icon: 'meeting_room', color: 'text-indigo-600', bg: 'bg-indigo-50', name: 'Microsoft Teams' },
+  'Google Meet': { icon: 'groups', color: 'text-success', bg: 'bg-success/10', name: 'Google Meet' },
+  'Microsoft Teams': { icon: 'meeting_room', color: 'text-info', bg: 'bg-info/10', name: 'Microsoft Teams' },
 };
 
 export default function ExternalMeetingPage() {
@@ -153,7 +153,7 @@ export default function ExternalMeetingPage() {
         date: new Date().toISOString().split('T')[0],
         duration: '0m',
         status: 'translated',
-        participants: [{ name: 'You', initials: 'Y', color: 'bg-indigo-100 text-indigo-700' }],
+        participants: [{ name: 'You', initials: 'Y', color: 'bg-border text-ink' }],
         languages: ['English'],
       };
       setMeetings(prev => [newMeeting, ...prev]);
@@ -195,29 +195,27 @@ export default function ExternalMeetingPage() {
 
             {/* Page Title */}
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">External Meeting</h1>
-              <p className="text-slate-600 text-lg">Connect Relay&apos;s AI translation to Zoom, Teams, or Google Meet.</p>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-ink mb-2">External Meeting</h1>
+              <p className="text-muted text-lg">Connect Relay&apos;s AI translation to Zoom, Teams, or Google Meet.</p>
             </div>
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
               {/* Connect Platform — Dark Card */}
-              <div className="lg:col-span-1 bg-[#FFFDF8] text-[#1c1b1b] rounded-2xl p-8 shadow-warm-md relative overflow-hidden group flex flex-col justify-between min-h-[220px] border border-[#E4E0D6]">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
-                <div className="relative z-10 flex-1 flex flex-col justify-between">
+              <div className="lg:col-span-1 bg-surface text-ink rounded-xl p-8 shadow-pop relative overflow-hidden group flex flex-col justify-between min-h-[220px] border border-border">                <div className="relative z-10 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF416C]/20 mb-5 group-hover:scale-110 transition-transform">
+                    <div className="w-12 h-12 bg-chrome rounded-xl flex items-center justify-center shadow-lg  mb-5 group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-white text-[24px]">hub</span>
                     </div>
-                    <h2 className="text-2xl font-bold font-helvetica tracking-tight text-[#1c1b1b] mb-2">
+                    <h2 className="text-2xl font-bold tracking-tight text-ink mb-2">
                       Connect a Platform
                     </h2>
-                    <p className="text-[#8C8880] text-sm leading-relaxed max-w-xs">
+                    <p className="text-muted text-sm leading-relaxed max-w-xs">
                       Link your Zoom, Google Meet, or Teams account for seamless translation.
                     </p>
                   </div>
-                  <button className="mt-6 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-8 py-3.5 rounded-full font-bold text-sm hover:scale-105 transition-all duration-200 shadow-lg shadow-[#FF416C]/20 flex items-center justify-center gap-2 group/btn w-fit">
+                  <button className="mt-6 bg-accent text-white px-8 py-3.5 rounded-full font-bold text-sm hover:scale-105 transition-all duration-200 shadow-lg  flex items-center justify-center gap-2 group/btn w-fit">
                     Connect Account
                     <span className="material-symbols-outlined text-[18px] group-hover/btn:translate-x-0.5 transition-transform">arrow_forward</span>
                   </button>
@@ -225,16 +223,14 @@ export default function ExternalMeetingPage() {
               </div>
 
               {/* Quick Join — Light Card */}
-              <div className="lg:col-span-2 bg-[#FFFDF8] rounded-2xl p-8 border border-[#E4E0D6]/30 shadow-warm relative overflow-hidden group hover:shadow-lg hover:-translate-y-1 hover:border-[#FF416C]/30 transition-all duration-300">
-                <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#FF416C]/10 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
+              <div className="lg:col-span-2 bg-surface rounded-xl p-8 border border-border/30 shadow-card relative overflow-hidden group hover:shadow-pop hover:-translate-y-1 hover:border-accent/30 transition-all duration-300">
                 <div className="relative z-10 h-full flex flex-col justify-between">
                   <div>
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#FF416C]/20">
+                    <div className="w-12 h-12 rounded-xl bg-chrome flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg ">
                       <span className="material-symbols-outlined text-white text-[24px]">link</span>
                     </div>
-                    <h2 className="text-2xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">Join External Meeting</h2>
-                    <p className="text-slate-500 text-sm mb-6 leading-relaxed">Paste a Zoom, Google Meet, or Teams link to join with live translation overlay.</p>
+                    <h2 className="text-2xl font-bold tracking-tight text-ink mb-2">Join External Meeting</h2>
+                    <p className="text-muted text-sm mb-6 leading-relaxed">Paste a Zoom, Google Meet, or Teams link to join with live translation overlay.</p>
                   </div>
 
                    <form className="flex flex-col sm:flex-row gap-3 mt-auto" onSubmit={handleJoin}>
@@ -243,13 +239,13 @@ export default function ExternalMeetingPage() {
                       value={meetingLink}
                       onChange={(e) => setMeetingLink(e.target.value)}
                       placeholder="Paste meeting link..."
-                      className="flex-1 bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-full py-3 px-5 text-[15px] text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                      className="flex-1 bg-canvas border border-border/30 rounded-full py-3 px-5 text-[15px] text-ink placeholder:text-muted/60 focus:outline-none focus:border-ink focus:ring-1 focus:ring-black/5 transition-all"
                       disabled={isConnecting}
                     />
                     <button
                       type="submit"
                       disabled={!meetingLink.trim() || isConnecting}
-                      className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 shadow-lg shadow-[#FF416C]/20"
+                      className="bg-accent text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 shadow-lg "
                     >
                       {isConnecting ? (
                         <>
@@ -270,7 +266,7 @@ export default function ExternalMeetingPage() {
 
             {/* Supported Platforms */}
             <div>
-              <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 mb-5">
+              <h2 className="text-xl font-bold tracking-tight text-ink mb-5">
                 Supported Platforms
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -281,22 +277,22 @@ export default function ExternalMeetingPage() {
                 ].map((platform) => (
                   <div
                     key={platform.name}
-                    className="group bg-[#FFFDF8] border border-[#E4E0D6]/30 rounded-2xl p-5 hover:border-[#FF416C]/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                    className="group bg-surface border border-border/30 rounded-xl p-5 hover:border-accent/30 hover:shadow-card hover:-translate-y-0.5 transition-all duration-300"
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 group-hover:scale-110 transition-transform">
+                      <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md  group-hover:scale-110 transition-transform">
                         <span className="material-symbols-outlined text-white text-[20px]">
                           {platform.icon}
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold text-[#8C8880] bg-[#FAF9F5] border border-[#E4E0D6]/30 px-2 py-1 rounded-lg">
+                      <span className="text-[10px] font-bold text-muted bg-canvas border border-border/30 px-2 py-1 rounded-lg">
                         {platform.users} users
                       </span>
                     </div>
-                    <h3 className="font-bold font-helvetica text-slate-900 mb-1 group-hover:text-[#FF416C] transition-colors">
+                    <h3 className="font-bold text-ink mb-1 group-hover:text-accent transition-colors">
                       {platform.name}
                     </h3>
-                    <p className="text-slate-500 text-xs leading-relaxed">
+                    <p className="text-muted text-xs leading-relaxed">
                       {platform.desc}
                     </p>
                   </div>
@@ -307,19 +303,19 @@ export default function ExternalMeetingPage() {
             {/* Recent External Meetings */}
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h2 className="text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#8C8880] text-[20px]">history</span>
+                <h2 className="text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+                  <span className="material-symbols-outlined text-muted text-[20px]">history</span>
                   Recent External Meetings
                 </h2>
-                <div className="flex gap-1 bg-[#FFFDF8] border border-[#E4E0D6]/30 p-1 rounded-xl self-start sm:self-auto">
+                <div className="flex gap-1 bg-surface border border-border/30 p-1 rounded-xl self-start sm:self-auto">
                   {tabs.map((tab) => (
                     <button
                       key={tab.key}
                       onClick={() => setActiveTab(tab.key)}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase font-helvetica transition-all ${
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase transition-all ${
                         activeTab === tab.key
-                          ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm'
-                          : 'text-slate-500 hover:text-slate-900'
+                          ? 'bg-accent text-white shadow-sm'
+                          : 'text-muted hover:text-ink'
                       }`}
                     >
                       {tab.label}
@@ -329,12 +325,12 @@ export default function ExternalMeetingPage() {
               </div>
 
               {filteredMeetings.length === 0 ? (
-                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-12 text-center shadow-warm">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#FF416C]/20">
+                <div className="bg-surface border border-border rounded-xl p-12 text-center shadow-card">
+                  <div className="w-16 h-16 bg-chrome rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg ">
                     <span className="material-symbols-outlined text-white text-[32px]">link_off</span>
                   </div>
-                  <h3 className="text-lg font-bold font-helvetica text-slate-900 mb-2">No external meetings found</h3>
-                  <p className="text-slate-500 text-sm">
+                  <h3 className="text-lg font-bold text-ink mb-2">No external meetings found</h3>
+                  <p className="text-muted text-sm">
                     {activeTab === 'all' ? 'Paste a meeting link above to get started.' : `No ${activeTab === 'meet' ? 'Google Meet' : activeTab === 'teams' ? 'Teams' : 'Zoom'} meetings yet.`}
                   </p>
                 </div>
@@ -346,38 +342,38 @@ export default function ExternalMeetingPage() {
                     <Link
                       key={meeting.id}
                       href={`/dashboard/external-meeting/${meeting.id}`}
-                      className="bg-[#FFFDF8] border border-[#E4E0D6] p-5 rounded-2xl shadow-warm hover:shadow-lg hover:border-[#FF416C]/30 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]"
+                      className="bg-surface border border-border p-5 rounded-xl shadow-card hover:shadow-pop hover:border-accent/30 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]"
                     >
                       <div>
                         <div className="flex justify-between items-start mb-4">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
                             meeting.status === 'translated'
-                              ? 'bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white border-[#FF416C]/30'
+                              ? 'bg-chrome text-white border-accent/30'
                               : meeting.status === 'processing'
-                                ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                : 'bg-[#FAF9F5] text-[#8C8880] border-[#E4E0D6]/20'
+                                ? 'bg-warning/10 text-warning border-warning/30'
+                                : 'bg-canvas text-muted border-border/20'
                           }`}>
                             <span className="material-symbols-outlined text-[20px]">{platform.icon}</span>
                           </div>
                           <div className="flex gap-1.5">
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider font-helvetica ${
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
                               meeting.status === 'translated'
-                                ? 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-sm shadow-[#FF416C]/20'
+                                ? 'bg-accent text-white shadow-sm '
                                 : meeting.status === 'processing'
-                                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                  : 'bg-[#FAF9F5] text-[#8C8880] border border-[#E4E0D6]/20'
+                                  ? 'bg-warning/10 text-warning border border-warning/30'
+                                  : 'bg-canvas text-muted border border-border/20'
                             }`}>
                               {meeting.status}
                             </span>
-                            <span className="bg-[#FAF9F5] border border-[#E4E0D6]/20 text-[#8C8880] px-2 py-0.5 rounded text-[9px] font-bold font-helvetica">
+                            <span className="bg-canvas border border-border/20 text-muted px-2 py-0.5 rounded text-[9px] font-bold">
                               {meeting.languages.slice(0, 2).join(' → ')}
                             </span>
                           </div>
                         </div>
-                        <h3 className="font-bold text-[#1c1b1b] mb-1 group-hover:text-[#FF416C] transition-colors font-helvetica">
+                        <h3 className="font-bold text-ink mb-1 group-hover:text-accent transition-colors">
                           {meeting.title}
                         </h3>
-                        <p className="text-[#8C8880] text-xs mb-4">
+                        <p className="text-muted text-xs mb-4">
                           {platform.name} · {formatDate(meeting.date)} at {formatTime(meeting.time)} · {meeting.duration}
                         </p>
                       </div>
@@ -386,19 +382,19 @@ export default function ExternalMeetingPage() {
                           {meeting.participants.slice(0, 4).map((p, i) => (
                             <div
                               key={i}
-                              className={`w-6 h-6 rounded-full border-2 border-[#FFFDF8] ${p.color} flex items-center justify-center text-[8px] font-bold`}
+                              className={`w-6 h-6 rounded-full border-2 border-surface ${p.color} flex items-center justify-center text-[8px] font-bold`}
                               title={p.name}
                             >
                               {p.initials}
                             </div>
                           ))}
                           {meeting.participants.length > 4 && (
-                            <div className="w-6 h-6 rounded-full border-2 border-[#FFFDF8] bg-[#FAF9F5] text-[#8C8880] flex items-center justify-center text-[8px] font-bold">
+                            <div className="w-6 h-6 rounded-full border-2 border-surface bg-canvas text-muted flex items-center justify-center text-[8px] font-bold">
                               +{meeting.participants.length - 4}
                             </div>
                           )}
                         </div>
-                        <span className="material-symbols-outlined text-[#c4c7c7] text-[18px] group-hover:text-[#FF416C] transition-colors">arrow_forward</span>
+                        <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors">arrow_forward</span>
                       </div>
                     </Link>
                     );

@@ -1,5 +1,43 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
+
+@theme {
+    /* Typography — Geist, bundled via next/font */
+    --font-sans:
+        var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+        "Segoe UI", sans-serif;
+    --font-mono:
+        var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Core surfaces */
+    --color-canvas: #fafaf9;
+    --color-surface: #ffffff;
+    --color-chrome: #070709;
+    --color-chrome-raised: #141417;
+
+    /* Text */
+    --color-ink: #111113;
+    --color-muted: #6e6e73;
+    --color-faint: #a1a1aa;
+
+    /* Lines */
+    --color-border: #e7e7e6;
+    --color-border-strong: #d4d4d8;
+
+    /* Brand */
+    --color-accent: #ff416c;
+    --color-accent-deep: #ff4b2b;
+
+    /* Semantic status */
+    --color-success: #16a34a;
+    --color-warning: #d97706;
+    --color-danger: #e11d48;
+    --color-info: #4f46e5;
+
+    /* Shadows */
+    --shadow-card: 0 1px 2px rgb(17 17 19 / 0.04), 0 1px 3px rgb(17 17 19 / 0.06);
+    --shadow-pop: 0 4px 16px rgb(17 17 19 / 0.08), 0 1px 2px rgb(17 17 19 / 0.04);
+    --shadow-float: 0 12px 32px rgb(17 17 19 / 0.14);
+}
 
 html {
     scroll-behavior: smooth;
@@ -8,69 +46,37 @@ html {
 }
 
 body {
-    font-family:
-        "Inter",
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Helvetica,
-        Arial,
-        sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #faf9f5;
-    color: #1c1b1b;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
     overflow-x: hidden;
 }
 
-/* Warm design system tokens */
-:root {
-    --warm-bg: #faf9f5;
-    --warm-surface: #fffdf8;
-    --warm-sidebar: #f0ede6;
-    --warm-border: #e4e0d6;
-    --warm-text-muted: #8c8880;
-}
-
-.bg-warm-surface {
-    background-color: #fffdf8;
-}
-.bg-warm-sidebar {
-    background-color: #f0ede6;
-}
-.border-warm {
-    border-color: #e4e0d6;
-}
-.text-warm-muted {
-    color: #8c8880;
-}
-.shadow-warm {
-    box-shadow: 0 1px 3px rgba(255, 65, 108, 0.04);
-}
-.shadow-warm-md {
-    box-shadow: 0 4px 12px rgba(255, 65, 108, 0.06);
-}
-
-.font-helvetica {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    letter-spacing: -0.02em;
+/* Gradient accent — reserved for the primary CTA and hero highlights */
+@utility text-gradient {
+    background-image: linear-gradient(90deg, var(--color-accent), var(--color-accent-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 @keyframes pulse-glow {
     0% {
         transform: scale(0.95);
         opacity: 0.5;
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
     }
     70% {
         transform: scale(1);
         opacity: 1;
-        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+        box-shadow: 0 0 0 6px rgba(22, 163, 74, 0);
     }
     100% {
         transform: scale(0.95);
         opacity: 0.5;
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
     }
 }
 .animate-pulse-glow {
@@ -102,47 +108,6 @@ body {
     animation-delay: 0.4s;
 }
 
-.glass-card {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-.glass-overlay {
-    background: radial-gradient(
-        circle at 20% 20%,
-        rgba(255, 255, 255, 0.08) 0%,
-        transparent 50%
-    );
-}
-.premium-gradient-bg {
-    background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
-}
-.hero-vibrant-gradient {
-    background: linear-gradient(135deg, #2c3e50 0%, #fd746c 50%, #ff9068 100%);
-}
-
-.ai-pulse {
-    background: linear-gradient(90deg, #ff416c, #ff4b2b);
-    animation: pulse-ai 2s infinite;
-}
-
-@keyframes pulse-ai {
-    0% {
-        opacity: 0.6;
-        transform: scale(0.98);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    100% {
-        opacity: 0.6;
-        transform: scale(0.98);
-    }
-}
-
 @keyframes marquee {
     0% {
         transform: translateX(0);
@@ -159,16 +124,17 @@ body {
 }
 
 @font-face {
-    font-family: 'Material Symbols Outlined';
+    font-family: "Material Symbols Outlined";
     font-style: normal;
     font-weight: 100 700;
     font-display: block;
-    src: url('/fonts/material-symbols-outlined.woff2') format('woff2'),
-         url('https://fonts.gstatic.com/s/materialsymbolsoutlined/v364/kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsI.woff2') format('woff2');
+    src: url("/fonts/material-symbols-outlined.woff2") format("woff2"),
+        url("https://fonts.gstatic.com/s/materialsymbolsoutlined/v364/kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsI.woff2")
+            format("woff2");
 }
 
 .material-symbols-outlined {
-    font-family: 'Material Symbols Outlined';
+    font-family: "Material Symbols Outlined";
     font-weight: normal;
     font-style: normal;
     font-size: 24px;
@@ -179,8 +145,8 @@ body {
     white-space: nowrap;
     word-wrap: normal;
     direction: ltr;
-    font-feature-settings: 'liga' 1;
-    -webkit-font-feature-settings: 'liga' 1;
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;

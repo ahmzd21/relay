@@ -14,10 +14,9 @@ interface CardProps {
 }
 
 const variantStyles: Record<CardVariant, string> = {
-  white: "bg-[#FFFDF8] border border-[#E4E0D6] shadow-warm",
-  dark: "bg-[#FFFDF8] border border-[#E4E0D6] text-[#1c1b1b]",
-  gradient:
-    "bg-[#FFFDF8] text-[#1c1b1b] border border-[#E4E0D6]",
+  white: "bg-surface border border-border shadow-card",
+  dark: "bg-chrome border border-border text-ink",
+  gradient: "bg-surface text-ink border border-border shadow-card",
   ghost: "bg-transparent",
 };
 
@@ -37,14 +36,14 @@ export default function Card({
   onClick,
 }: CardProps) {
   const hoverClass = hover
-    ? "hover:shadow-lg hover:-translate-y-0.5 hover:border-[#FF416C]/30 transition-all duration-300"
+    ? "hover:shadow-pop hover:-translate-y-0.5 hover:border-border-strong transition-all duration-300"
     : "";
 
   const Component = onClick ? "button" : "div";
 
   return (
     <Component
-      className={`rounded-2xl ${variantStyles[variant]} ${paddingStyles[padding]} ${hoverClass} text-left w-full ${className}`}
+      className={`rounded-xl ${variantStyles[variant]} ${paddingStyles[padding]} ${hoverClass} text-left w-full ${className}`}
       onClick={onClick}
     >
       {children}

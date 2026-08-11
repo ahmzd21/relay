@@ -5,3 +5,6 @@ export { default as Badge } from "./Badge";
 export { default as Tabs } from "./Tabs";
 export { default as Toggle } from "./Toggle";
 export { default as Modal } from "./Modal";
+export { default as SegmentedControl } from "./SegmentedControl";
+export { default as AvatarStack } from "./AvatarStack";
+export { default as StatCard } from "./StatCard";

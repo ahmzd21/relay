@@ -66,28 +66,28 @@ export default function ConfirmDialog({
 
   const confirmButtonClass =
     variant === 'destructive'
-      ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20'
-      : 'bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-lg shadow-[#FF416C]/20';
+      ? 'bg-danger/100 hover:bg-danger text-white shadow-lg shadow-rose-500/20'
+      : 'bg-gradient-to-r from-accent to-accent-deep text-white shadow-lg ';
 
   return createPortal(
     <div className="fixed inset-0 z-[999] flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-chrome/60 backdrop-blur-sm"
         onClick={() => !loading && onOpenChange(false)}
       />
 
       {/* Dialog */}
       <div
         ref={dialogRef}
-        className="relative w-full max-w-[380px] mx-4 bg-white rounded-2xl shadow-2xl p-6 space-y-5"
+        className="relative w-full max-w-[380px] mx-4 bg-surface rounded-2xl shadow-2xl p-6 space-y-5"
       >
         {/* Icon */}
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-          variant === 'destructive' ? 'bg-rose-50' : 'bg-slate-100'
+          variant === 'destructive' ? 'bg-danger/10' : 'bg-canvas'
         }`}>
           <span className={`material-symbols-outlined text-[24px] ${
-            variant === 'destructive' ? 'text-rose-500' : 'text-slate-500'
+            variant === 'destructive' ? 'text-danger' : 'text-muted'
           }`}>
             {icon}
           </span>
@@ -95,8 +95,8 @@ export default function ConfirmDialog({
 
         {/* Content */}
         <div className="space-y-1">
-          <h3 className="text-[17px] font-semibold text-slate-900 tracking-tight">{title}</h3>
-          <p className="text-[14px] text-slate-500 leading-relaxed">{description}</p>
+          <h3 className="text-[17px] font-semibold text-ink tracking-tight">{title}</h3>
+          <p className="text-[14px] text-muted leading-relaxed">{description}</p>
         </div>
 
         {/* Actions */}
@@ -105,7 +105,7 @@ export default function ConfirmDialog({
             ref={cancelButtonRef}
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="px-4 py-2.5 rounded-xl text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl text-[13px] font-medium text-muted hover:text-ink hover:bg-canvas transition-all disabled:opacity-50"
           >
             {cancelLabel}
           </button>

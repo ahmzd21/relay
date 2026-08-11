@@ -21,26 +21,26 @@ const MOCK_PARTICIPANTS = [
   {
     name: "Elias Thompson",
     initials: "ET",
-    color: "bg-indigo-100 text-indigo-700",
+    color: "bg-border text-ink",
   },
-  { name: "Sarah Chen", initials: "SC", color: "bg-rose-100 text-rose-700" },
+  { name: "Sarah Chen", initials: "SC", color: "bg-border text-ink" },
   {
     name: "Yousef Al-Rashid",
     initials: "YA",
-    color: "bg-amber-100 text-amber-700",
+    color: "bg-border text-ink",
   },
   {
     name: "Sofia Martinez",
     initials: "SM",
-    color: "bg-emerald-100 text-emerald-700",
+    color: "bg-border text-ink",
   },
-  { name: "Wei Zhang", initials: "WZ", color: "bg-blue-100 text-blue-700" },
+  { name: "Wei Zhang", initials: "WZ", color: "bg-border text-ink" },
   {
     name: "Marcus Klein",
     initials: "MK",
-    color: "bg-purple-100 text-purple-700",
+    color: "bg-border text-ink",
   },
-  { name: "Priya Sharma", initials: "PS", color: "bg-pink-100 text-pink-700" },
+  { name: "Priya Sharma", initials: "PS", color: "bg-border text-ink" },
 ];
 
 const DEFAULT_MEETINGS: ScheduledMeeting[] = [
@@ -349,7 +349,7 @@ export default function MainDashboardPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold font-helvetica tracking-tight text-slate-900">
+                  <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-ink">
                     {isOrganization()
                       ? currentWorkspace.name
                       : `${getGreeting()}, ${user?.fullName?.split(" ")[0] || "there"}`}
@@ -361,7 +361,7 @@ export default function MainDashboardPage() {
                     const jobRole = getUserJobRole(user);
                     if (role) {
                       return (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white text-[10px] font-bold uppercase tracking-widest shadow-md shadow-[#FF416C]/20">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent text-white text-[10px] font-bold uppercase tracking-widest shadow-md ">
                           <span className="material-symbols-outlined text-[13px]">
                             {role === "owner"
                               ? "shield"
@@ -375,7 +375,7 @@ export default function MainDashboardPage() {
                     }
                     if (jobRole) {
                       return (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#FFFDF8] text-[#1c1b1b] text-[13px] font-bold tracking-wide shadow-warm border border-[#E4E0D6]">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-surface text-ink text-[13px] font-bold tracking-wide shadow-card border border-border">
                           {jobRole}
                         </span>
                       );
@@ -383,7 +383,7 @@ export default function MainDashboardPage() {
                     return null;
                   })()}
                 </div>
-                <p className="text-slate-600 text-base sm:text-lg">
+                <p className="text-muted text-base sm:text-lg">
                   {isOrganization()
                     ? `${orgFeed.length} recent activities across your team`
                     : "Your cross-border meetings and AI translation studio."}
@@ -395,20 +395,18 @@ export default function MainDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div
                 onClick={handleStartNativeMeeting}
-                className="group bg-[#FFFDF8] text-[#1c1b1b] p-5 sm:p-8 rounded-2xl flex flex-col justify-between min-h-[200px] sm:min-h-[220px] hover:shadow-warm-md hover:shadow-[#FF416C]/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden border border-[#E4E0D6] hover:border-[#FF416C]/30 cursor-pointer"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
-                <div className="relative z-10 flex-1 flex flex-col justify-between">
+                className="group bg-surface text-ink p-5 sm:p-8 rounded-xl flex flex-col justify-between min-h-[200px] sm:min-h-[220px] hover:shadow-pop hover: hover:-translate-y-1 transition-all duration-300 relative overflow-hidden border border-border hover:border-accent/30 cursor-pointer"
+              >                <div className="relative z-10 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF416C]/20 mb-4 sm:mb-5 group-hover:scale-110 transition-transform">
+                    <div className="w-12 h-12 bg-chrome rounded-xl flex items-center justify-center shadow-lg  mb-4 sm:mb-5 group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-white text-[24px]">
                         video_call
                       </span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-bold font-helvetica tracking-tight text-[#1c1b1b] mb-2">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-ink mb-2">
                       Native Meeting
                     </h2>
-                    <p className="text-[#8C8880] text-sm leading-relaxed max-w-xs">
+                    <p className="text-muted text-sm leading-relaxed max-w-xs">
                       Start a meeting with real-time AI translation and live
                       captions built in.
                     </p>
@@ -419,7 +417,7 @@ export default function MainDashboardPage() {
                       e.stopPropagation();
                       handleStartNativeMeeting();
                     }}
-                    className="mt-6 bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-sm shadow-lg shadow-[#FF416C]/20 flex items-center justify-center gap-2 group/btn w-fit hover:scale-105 transition-all"
+                    className="mt-6 bg-accent text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold text-sm shadow-lg  flex items-center justify-center gap-2 group/btn w-fit hover:scale-105 transition-all"
                   >
                     Start Meeting
                     <span className="material-symbols-outlined text-[18px] group-hover/btn:translate-x-0.5 transition-transform">
@@ -429,18 +427,16 @@ export default function MainDashboardPage() {
                 </div>
               </div>
 
-              <div className="group bg-[#FFFDF8] border border-[#E4E0D6]/30 p-5 sm:p-8 rounded-2xl flex flex-col justify-between min-h-[200px] sm:min-h-[220px] hover:shadow-lg hover:-translate-y-1 hover:border-[#FF416C]/30 transition-all duration-300 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/[0.02] to-transparent pointer-events-none" />
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#FF416C]/20">
+              <div className="group bg-surface border border-border/30 p-5 sm:p-8 rounded-xl flex flex-col justify-between min-h-[200px] sm:min-h-[220px] hover:shadow-pop hover:-translate-y-1 hover:border-accent/30 transition-all duration-300 relative overflow-hidden">                <div className="relative">
+                  <div className="w-12 h-12 rounded-xl bg-chrome flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-transform shadow-lg ">
                     <span className="material-symbols-outlined text-white text-[24px]">
                       link
                     </span>
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-bold font-helvetica tracking-tight text-slate-900 mb-2">
+                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-ink mb-2">
                     External Meeting
                   </h2>
-                  <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
+                  <p className="text-muted text-sm leading-relaxed max-w-xs">
                     Paste a Zoom, Google Meet, or Teams link to join with live
                     translation overlay.
                   </p>
@@ -461,12 +457,12 @@ export default function MainDashboardPage() {
                     placeholder="Paste meeting link..."
                     value={externalLink}
                     onChange={(e) => setExternalLink(e.target.value)}
-                    className="flex-1 bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-full py-3 px-5 text-[15px] text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                    className="flex-1 bg-canvas border border-border/30 rounded-full py-3 px-5 text-[15px] text-ink placeholder:text-muted/60 focus:outline-none focus:border-ink focus:ring-1 focus:ring-black/5 transition-all"
                   />
                   <button
                     type="submit"
                     disabled={!externalLink.trim()}
-                    className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 shadow-lg shadow-[#FF416C]/20"
+                    className="bg-accent text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 shadow-lg "
                   >
                     Join
                     <span className="material-symbols-outlined text-[16px]">
@@ -487,26 +483,26 @@ export default function MainDashboardPage() {
                       value: "12",
                       icon: "group",
                       color:
-                        "bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white shadow-lg shadow-[#FF416C]/20",
+                        "bg-chrome text-white shadow-lg ",
                     },
                     {
                       label: "Live Now",
                       value: "3",
                       icon: "cell_tower",
                       color:
-                        "bg-[#FFFDF8] text-[#1c1b1b] shadow-warm-md border border-[#E4E0D6]",
+                        "bg-surface text-ink shadow-pop border border-border",
                     },
                     {
                       label: "Channels",
                       value: "5",
                       icon: "tag",
                       color:
-                        "bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white shadow-lg shadow-[#FF416C]/20",
+                        "bg-chrome text-white shadow-lg ",
                     },
                   ].map((stat) => (
                     <div
                       key={stat.label}
-                      className="group bg-[#FFFDF8] border border-[#E4E0D6]/30 rounded-2xl p-4 sm:p-6 flex items-center gap-3 sm:gap-4 shadow-warm hover:shadow-md hover:-translate-y-0.5 hover:border-[#FF416C]/30 transition-all duration-300 cursor-default first:col-span-2 sm:first:col-span-1"
+                      className="group bg-surface border border-border/30 rounded-xl p-4 sm:p-6 flex items-center gap-3 sm:gap-4 shadow-card hover:shadow-card hover:-translate-y-0.5 hover:border-accent/30 transition-all duration-300 cursor-default first:col-span-2 sm:first:col-span-1"
                     >
                       <div
                         className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${stat.color}`}
@@ -516,10 +512,10 @@ export default function MainDashboardPage() {
                         </span>
                       </div>
                       <div>
-                        <p className="text-2xl sm:text-3xl font-bold font-helvetica text-slate-900 leading-none">
+                        <p className="text-2xl sm:text-3xl font-bold text-ink leading-none">
                           {stat.value}
                         </p>
-                        <p className="text-[10px] font-bold text-[#8C8880] uppercase tracking-widest mt-1">
+                        <p className="text-[10px] font-bold text-muted uppercase tracking-widest mt-1">
                           {stat.label}
                         </p>
                       </div>
@@ -529,18 +525,16 @@ export default function MainDashboardPage() {
 
                 {/* Live Now Card */}
                 {meetings.some((m) => m.status === "live") && (
-                  <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF416C]/5 to-transparent pointer-events-none" />
-                    <div className="flex items-center gap-4 relative min-w-0">
+                  <div className="bg-surface border border-border rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">                    <div className="flex items-center gap-4 relative min-w-0">
                       <div className="relative flex h-3 w-3 flex-shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF416C] opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF416C]" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-accent" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[#1c1b1b] font-bold text-sm font-helvetica">
+                        <p className="text-ink font-bold text-sm">
                           Meeting in Progress
                         </p>
-                        <p className="text-[#8C8880] text-xs mt-0.5 truncate">
+                        <p className="text-muted text-xs mt-0.5 truncate">
                           {meetings.find((m) => m.status === "live")?.title} —{" "}
                           {
                             meetings.find((m) => m.status === "live")
@@ -550,7 +544,7 @@ export default function MainDashboardPage() {
                         </p>
                       </div>
                     </div>
-                    <button className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 py-2.5 rounded-full text-xs font-bold hover:scale-105 transition-all duration-200 shadow-lg shadow-[#FF416C]/20 relative flex items-center justify-center gap-2 self-start sm:self-auto">
+                    <button className="bg-accent text-white px-5 py-2.5 rounded-full text-xs font-bold hover:scale-105 transition-all duration-200 shadow-lg  relative flex items-center justify-center gap-2 self-start sm:self-auto">
                       <span className="material-symbols-outlined text-[16px]">
                         videocam
                       </span>
@@ -560,15 +554,15 @@ export default function MainDashboardPage() {
                 )}
 
                 {/* Recent Meetings */}
-                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-6 shadow-warm">
+                <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 shadow-card">
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#8C8880] text-[20px]">
+                    <h2 className="text-lg sm:text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+                      <span className="material-symbols-outlined text-muted text-[20px]">
                         history
                       </span>
                       Recent Meetings
                     </h2>
-                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors flex-shrink-0">
+                    <button className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors flex-shrink-0">
                       View All
                     </button>
                   </div>
@@ -576,11 +570,11 @@ export default function MainDashboardPage() {
                     {RECENT_MEETINGS.map((meeting) => (
                       <div
                         key={meeting.id}
-                        className="flex items-center justify-between p-3 sm:p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl hover:border-[#FF416C]/30 transition-all cursor-pointer group gap-2"
+                        className="flex items-center justify-between p-3 sm:p-4 bg-canvas border border-border/20 rounded-xl hover:border-accent/30 transition-all cursor-pointer group gap-2"
                       >
                         <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#E4E0D6]/30 flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-[#8C8880] text-[18px] sm:text-[20px]">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface border border-border/30 flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-muted text-[18px] sm:text-[20px]">
                               {meeting.platform === "Native"
                                 ? "videocam"
                                 : "link"}
@@ -588,14 +582,14 @@ export default function MainDashboardPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-bold text-slate-900 text-sm group-hover:text-[#FF416C] transition-colors truncate">
+                              <p className="font-bold text-ink text-sm group-hover:text-accent transition-colors truncate">
                                 {meeting.title}
                               </p>
                               <span
                                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 hidden sm:inline-block ${
                                   meeting.platform === "Native"
-                                    ? "bg-[#FF416C]/10 text-[#FF416C] border border-[#FF416C]/20"
-                                    : "bg-slate-100 text-slate-600 border border-slate-200"
+                                    ? "bg-accent/10 text-accent border border-accent/20"
+                                    : "bg-canvas text-muted border border-border"
                                 }`}
                               >
                                 {meeting.platform}
@@ -615,18 +609,18 @@ export default function MainDashboardPage() {
                                     </div>
                                   ))}
                                 {meeting.participants.length > 3 && (
-                                  <div className="w-5 h-5 rounded-full border-2 border-white bg-slate-200 text-slate-600 flex items-center justify-center text-[7px] font-bold">
+                                  <div className="w-5 h-5 rounded-full border-2 border-white bg-border text-muted flex items-center justify-center text-[7px] font-bold">
                                     +{meeting.participants.length - 3}
                                   </div>
                                 )}
                               </div>
-                              <span className="text-[#8C8880] text-xs">
+                              <span className="text-muted text-xs">
                                 {meeting.timeAgo}
                               </span>
                             </div>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-[#c4c7c7] text-[18px] group-hover:text-[#FF416C] transition-colors flex-shrink-0">
+                        <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors flex-shrink-0">
                           chevron_right
                         </span>
                       </div>
@@ -637,19 +631,17 @@ export default function MainDashboardPage() {
                 {/* Action Items + Quick AI Query & Weekly Streak */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   {/* Action Items */}
-                  <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-6 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
-                    <div className="relative">
+                  <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 relative overflow-hidden">                    <div className="relative">
                       <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#FF416C] text-[18px]">
+                          <span className="material-symbols-outlined text-accent text-[18px]">
                             check_circle
                           </span>
-                          <span className="text-sm font-bold font-helvetica text-[#1c1b1b]">
+                          <span className="text-sm font-bold text-ink">
                             Action Items
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold text-[#8C8880] uppercase tracking-widest">
+                        <span className="text-[10px] font-bold text-muted uppercase tracking-widest">
                           This Week
                         </span>
                       </div>
@@ -657,22 +649,22 @@ export default function MainDashboardPage() {
                         {ACTION_ITEMS.map((item, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-3 p-3 rounded-xl bg-[#FAF9F5] border border-[#E4E0D6]/20 hover:border-[#FF416C]/20 transition-all cursor-pointer group"
+                            className="flex items-center gap-3 p-3 rounded-xl bg-canvas border border-border/20 hover:border-accent/20 transition-all cursor-pointer group"
                           >
-                            <div className="w-6 h-6 rounded-lg bg-[#FF416C]/10 border border-[#FF416C]/20 flex items-center justify-center flex-shrink-0">
-                              <span className="text-[10px] font-bold text-[#FF416C]">
+                            <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                              <span className="text-[10px] font-bold text-accent">
                                 {i + 1}
                               </span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[#1c1b1b]/90 text-sm font-medium group-hover:text-[#1c1b1b] transition-colors truncate">
+                              <p className="text-ink/90 text-sm font-medium group-hover:text-ink transition-colors truncate">
                                 {item.text}
                               </p>
-                              <p className="text-[#8C8880] text-xs mt-0.5">
+                              <p className="text-muted text-xs mt-0.5">
                                 from {item.source}
                               </p>
                             </div>
-                            <span className="material-symbols-outlined text-[#c4c7c7] text-[16px] group-hover:text-[#FF416C] transition-colors flex-shrink-0">
+                            <span className="material-symbols-outlined text-faint text-[16px] group-hover:text-accent transition-colors flex-shrink-0">
                               check
                             </span>
                           </div>
@@ -684,18 +676,18 @@ export default function MainDashboardPage() {
                   {/* Right Column: Quick AI Query + Weekly Streak */}
                   <div className="space-y-6">
                     {/* Quick AI Query */}
-                    <div className="bg-[#FFFDF8] border border-[#FF416C]/20 rounded-2xl p-4 sm:p-5 shadow-warm">
+                    <div className="bg-surface border border-accent/20 rounded-xl p-4 sm:p-5 shadow-card">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 flex-shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-chrome flex items-center justify-center shadow-md  flex-shrink-0">
                           <span className="material-symbols-outlined text-white text-[18px]">
                             smart_toy
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-slate-900">
+                          <p className="text-sm font-bold text-ink">
                             Ask About Your Meetings
                           </p>
-                          <p className="text-[10px] text-[#8C8880]">
+                          <p className="text-[10px] text-muted">
                             Powered by AI Query Studio
                           </p>
                         </div>
@@ -704,22 +696,22 @@ export default function MainDashboardPage() {
                         <input
                           type="text"
                           placeholder="e.g. What were the key decisions last week?"
-                          className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 pr-12 text-sm text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-[#FF416C]/40 focus:ring-1 focus:ring-[#FF416C]/10 transition-all"
+                          className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 pr-12 text-sm text-ink placeholder:text-muted/60 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/10 transition-all"
                           readOnly
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#FF416C] text-[18px]">
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-accent text-[18px]">
                           auto_awesome
                         </span>
                       </div>
                     </div>
 
                     {/* Weekly Streak */}
-                    <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-5 shadow-warm">
+                    <div className="bg-surface border border-border rounded-xl p-4 sm:p-5 shadow-card">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold font-helvetica text-slate-900">
+                        <h3 className="text-sm font-bold text-ink">
                           This Week
                         </h3>
-                        <span className="text-xs font-bold text-[#FF416C]">
+                        <span className="text-xs font-bold text-accent">
                           9 meetings
                         </span>
                       </div>
@@ -733,9 +725,9 @@ export default function MainDashboardPage() {
                               className="w-full relative"
                               style={{ height: `${bar.height}%` }}
                             >
-                              <div className="absolute inset-0 bg-gradient-to-t from-[#FF416C] to-[#FF4B2B] rounded-lg" />
+                              <div className="absolute inset-0 bg-accent rounded-lg" />
                             </div>
-                            <span className="text-[9px] font-bold text-[#8C8880] uppercase">
+                            <span className="text-[9px] font-bold text-muted uppercase">
                               {bar.day}
                             </span>
                           </div>
@@ -745,12 +737,12 @@ export default function MainDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-6 shadow-warm hover:shadow-md transition-all duration-300">
+                <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 shadow-card hover:shadow-card transition-all duration-300">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900">
+                    <h2 className="text-lg sm:text-xl font-bold tracking-tight text-ink">
                       Recent Activity
                     </h2>
-                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors flex-shrink-0">
+                    <button className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors flex-shrink-0">
                       View All
                     </button>
                   </div>
@@ -758,10 +750,10 @@ export default function MainDashboardPage() {
                     {orgFeed.map((feed) => (
                       <div
                         key={feed.id}
-                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl hover:border-[#FF416C]/30 transition-all cursor-pointer group"
+                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-canvas border border-border/20 rounded-xl hover:border-accent/30 transition-all cursor-pointer group"
                       >
                         <div
-                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${feed.live ? "bg-[#FF416C] text-white" : "bg-white text-[#FF416C] border border-[#FF416C]/20"}`}
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${feed.live ? "bg-accent text-white" : "bg-surface text-accent border border-accent/20"}`}
                         >
                           <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
                             {feed.type === "channel" ? "tag" : "lightbulb"}
@@ -769,24 +761,24 @@ export default function MainDashboardPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-slate-900 text-sm">
+                            <span className="font-bold text-ink text-sm">
                               {feed.name}
                             </span>
-                            <span className="text-[#8C8880] text-xs">
+                            <span className="text-muted text-xs">
                               · {feed.time}
                             </span>
                           </div>
-                          <p className="text-sm text-slate-600 mt-0.5 truncate">
+                          <p className="text-sm text-muted mt-0.5 truncate">
                             {feed.activity}
                           </p>
                         </div>
                         {feed.live ? (
-                          <span className="bg-[#FF416C] text-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0">
-                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                          <span className="bg-accent text-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0">
+                            <span className="w-1.5 h-1.5 bg-surface rounded-full animate-pulse" />
                             Live
                           </span>
                         ) : (
-                          <span className="material-symbols-outlined text-[#c4c7c7] text-[18px] group-hover:text-[#FF416C] transition-colors flex-shrink-0">
+                          <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors flex-shrink-0">
                             chevron_right
                           </span>
                         )}
@@ -796,8 +788,8 @@ export default function MainDashboardPage() {
                 </div>
 
                 {hasPermission("owner") && (
-                  <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-6 shadow-warm">
-                    <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900 mb-5">
+                  <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 shadow-card">
+                    <h2 className="text-lg sm:text-xl font-bold tracking-tight text-ink mb-5">
                       Quick Management
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -808,7 +800,7 @@ export default function MainDashboardPage() {
                           label: "Manage Members",
                           sub: "Invite & roles",
                           iconBg:
-                            "bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white shadow-md shadow-[#FF416C]/20 group-hover:shadow-lg",
+                            "bg-chrome text-white shadow-md  group-hover:shadow-pop",
                         },
                         {
                           href: "/dashboard/channels",
@@ -816,7 +808,7 @@ export default function MainDashboardPage() {
                           label: "Channels",
                           sub: "Team spaces",
                           iconBg:
-                            "bg-[#FFFDF8] text-[#1c1b1b] shadow-warm border border-[#E4E0D6] group-hover:shadow-lg",
+                            "bg-surface text-ink shadow-card border border-border group-hover:shadow-pop",
                         },
                         {
                           href: "/dashboard/billing",
@@ -824,13 +816,13 @@ export default function MainDashboardPage() {
                           label: "Billing",
                           sub: "Plans & usage",
                           iconBg:
-                            "bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] text-white shadow-md shadow-[#FF416C]/20 group-hover:shadow-lg",
+                            "bg-chrome text-white shadow-md  group-hover:shadow-pop",
                         },
                       ].map((item) => (
                         <Link
                           key={item.href}
                           href={item.href}
-                          className="group flex items-center gap-4 p-4 border border-[#E4E0D6]/30 rounded-xl hover:border-[#FF416C]/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                          className="group flex items-center gap-4 p-4 border border-border/30 rounded-xl hover:border-accent/30 hover:shadow-card hover:-translate-y-0.5 transition-all duration-300"
                         >
                           <div
                             className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all flex-shrink-0 ${item.iconBg}`}
@@ -840,10 +832,10 @@ export default function MainDashboardPage() {
                             </span>
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-900">
+                            <p className="text-sm font-bold text-ink">
                               {item.label}
                             </p>
-                            <p className="text-[10px] font-bold text-[#8C8880] uppercase tracking-widest mt-0.5">
+                            <p className="text-[10px] font-bold text-muted uppercase tracking-widest mt-0.5">
                               {item.sub}
                             </p>
                           </div>
@@ -857,18 +849,16 @@ export default function MainDashboardPage() {
               <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Live Now Card */}
                 {meetings.some((m) => m.status === "live") && (
-                  <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF416C]/5 to-transparent pointer-events-none" />
-                    <div className="flex items-center gap-4 relative min-w-0">
+                  <div className="bg-surface border border-border rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">                    <div className="flex items-center gap-4 relative min-w-0">
                       <div className="relative flex h-3 w-3 flex-shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF416C] opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF416C]" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-accent" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[#1c1b1b] font-bold text-sm font-helvetica">
+                        <p className="text-ink font-bold text-sm">
                           Meeting in Progress
                         </p>
-                        <p className="text-[#8C8880] text-xs mt-0.5 truncate">
+                        <p className="text-muted text-xs mt-0.5 truncate">
                           {meetings.find((m) => m.status === "live")?.title} —{" "}
                           {
                             meetings.find((m) => m.status === "live")
@@ -878,7 +868,7 @@ export default function MainDashboardPage() {
                         </p>
                       </div>
                     </div>
-                    <button className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-5 py-2.5 rounded-full text-xs font-bold hover:scale-105 transition-all duration-200 shadow-lg shadow-[#FF416C]/20 relative flex items-center justify-center gap-2 self-start sm:self-auto">
+                    <button className="bg-accent text-white px-5 py-2.5 rounded-full text-xs font-bold hover:scale-105 transition-all duration-200 shadow-lg  relative flex items-center justify-center gap-2 self-start sm:self-auto">
                       <span className="material-symbols-outlined text-[16px]">
                         videocam
                       </span>
@@ -888,15 +878,15 @@ export default function MainDashboardPage() {
                 )}
 
                 {/* Recent Meetings */}
-                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-6 shadow-warm">
+                <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 shadow-card">
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#8C8880] text-[20px]">
+                    <h2 className="text-lg sm:text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+                      <span className="material-symbols-outlined text-muted text-[20px]">
                         history
                       </span>
                       Recent Meetings
                     </h2>
-                    <button className="text-[10px] font-bold text-[#FF416C] uppercase tracking-widest hover:text-[#FF4B2B] transition-colors flex-shrink-0">
+                    <button className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors flex-shrink-0">
                       View All
                     </button>
                   </div>
@@ -904,11 +894,11 @@ export default function MainDashboardPage() {
                     {RECENT_MEETINGS.map((meeting) => (
                       <div
                         key={meeting.id}
-                        className="flex items-center justify-between p-3 sm:p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl hover:border-[#FF416C]/30 transition-all cursor-pointer group gap-2"
+                        className="flex items-center justify-between p-3 sm:p-4 bg-canvas border border-border/20 rounded-xl hover:border-accent/30 transition-all cursor-pointer group gap-2"
                       >
                         <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#E4E0D6]/30 flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-[#8C8880] text-[18px] sm:text-[20px]">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface border border-border/30 flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-muted text-[18px] sm:text-[20px]">
                               {meeting.platform === "Native"
                                 ? "videocam"
                                 : "link"}
@@ -916,14 +906,14 @@ export default function MainDashboardPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-bold text-slate-900 text-sm group-hover:text-[#FF416C] transition-colors truncate">
+                              <p className="font-bold text-ink text-sm group-hover:text-accent transition-colors truncate">
                                 {meeting.title}
                               </p>
                               <span
                                 className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 hidden sm:inline-block ${
                                   meeting.platform === "Native"
-                                    ? "bg-[#FF416C]/10 text-[#FF416C] border border-[#FF416C]/20"
-                                    : "bg-slate-100 text-slate-600 border border-slate-200"
+                                    ? "bg-accent/10 text-accent border border-accent/20"
+                                    : "bg-canvas text-muted border border-border"
                                 }`}
                               >
                                 {meeting.platform}
@@ -943,18 +933,18 @@ export default function MainDashboardPage() {
                                     </div>
                                   ))}
                                 {meeting.participants.length > 3 && (
-                                  <div className="w-5 h-5 rounded-full border-2 border-white bg-slate-200 text-slate-600 flex items-center justify-center text-[7px] font-bold">
+                                  <div className="w-5 h-5 rounded-full border-2 border-white bg-border text-muted flex items-center justify-center text-[7px] font-bold">
                                     +{meeting.participants.length - 3}
                                   </div>
                                 )}
                               </div>
-                              <span className="text-[#8C8880] text-xs">
+                              <span className="text-muted text-xs">
                                 {meeting.timeAgo}
                               </span>
                             </div>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-[#c4c7c7] text-[18px] group-hover:text-[#FF416C] transition-colors flex-shrink-0">
+                        <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors flex-shrink-0">
                           chevron_right
                         </span>
                       </div>
@@ -965,19 +955,17 @@ export default function MainDashboardPage() {
                 {/* Action Items + Quick AI Query & Weekly Streak */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   {/* Action Items */}
-                  <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-6 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#FF416C]/5 to-transparent pointer-events-none" />
-                    <div className="relative">
+                  <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 relative overflow-hidden">                    <div className="relative">
                       <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#FF416C] text-[18px]">
+                          <span className="material-symbols-outlined text-accent text-[18px]">
                             check_circle
                           </span>
-                          <span className="text-sm font-bold font-helvetica text-[#1c1b1b]">
+                          <span className="text-sm font-bold text-ink">
                             Action Items
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold text-[#8C8880] uppercase tracking-widest">
+                        <span className="text-[10px] font-bold text-muted uppercase tracking-widest">
                           This Week
                         </span>
                       </div>
@@ -985,22 +973,22 @@ export default function MainDashboardPage() {
                         {ACTION_ITEMS.map((item, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-3 p-3 rounded-xl bg-[#FAF9F5] border border-[#E4E0D6]/20 hover:border-[#FF416C]/20 transition-all cursor-pointer group"
+                            className="flex items-center gap-3 p-3 rounded-xl bg-canvas border border-border/20 hover:border-accent/20 transition-all cursor-pointer group"
                           >
-                            <div className="w-6 h-6 rounded-lg bg-[#FF416C]/10 border border-[#FF416C]/20 flex items-center justify-center flex-shrink-0">
-                              <span className="text-[10px] font-bold text-[#FF416C]">
+                            <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                              <span className="text-[10px] font-bold text-accent">
                                 {i + 1}
                               </span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[#1c1b1b]/90 text-sm font-medium group-hover:text-[#1c1b1b] transition-colors truncate">
+                              <p className="text-ink/90 text-sm font-medium group-hover:text-ink transition-colors truncate">
                                 {item.text}
                               </p>
-                              <p className="text-[#8C8880] text-xs mt-0.5">
+                              <p className="text-muted text-xs mt-0.5">
                                 from {item.source}
                               </p>
                             </div>
-                            <span className="material-symbols-outlined text-[#c4c7c7] text-[16px] group-hover:text-[#FF416C] transition-colors flex-shrink-0">
+                            <span className="material-symbols-outlined text-faint text-[16px] group-hover:text-accent transition-colors flex-shrink-0">
                               check
                             </span>
                           </div>
@@ -1012,18 +1000,18 @@ export default function MainDashboardPage() {
                   {/* Right Column: Quick AI Query + Weekly Streak */}
                   <div className="space-y-6">
                     {/* Quick AI Query */}
-                    <div className="bg-[#FFFDF8] border border-[#FF416C]/20 rounded-2xl p-4 sm:p-5 shadow-warm">
+                    <div className="bg-surface border border-accent/20 rounded-xl p-4 sm:p-5 shadow-card">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] flex items-center justify-center shadow-md shadow-[#FF416C]/20 flex-shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-chrome flex items-center justify-center shadow-md  flex-shrink-0">
                           <span className="material-symbols-outlined text-white text-[18px]">
                             smart_toy
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-slate-900">
+                          <p className="text-sm font-bold text-ink">
                             Ask About Your Meetings
                           </p>
-                          <p className="text-[10px] text-[#8C8880]">
+                          <p className="text-[10px] text-muted">
                             Powered by AI Query Studio
                           </p>
                         </div>
@@ -1032,22 +1020,22 @@ export default function MainDashboardPage() {
                         <input
                           type="text"
                           placeholder="e.g. What were the key decisions last week?"
-                          className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 pr-12 text-sm text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-[#FF416C]/40 focus:ring-1 focus:ring-[#FF416C]/10 transition-all"
+                          className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 pr-12 text-sm text-ink placeholder:text-muted/60 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/10 transition-all"
                           readOnly
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#FF416C] text-[18px]">
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-accent text-[18px]">
                           auto_awesome
                         </span>
                       </div>
                     </div>
 
                     {/* Weekly Streak */}
-                    <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-5 shadow-warm">
+                    <div className="bg-surface border border-border rounded-xl p-4 sm:p-5 shadow-card">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold font-helvetica text-slate-900">
+                        <h3 className="text-sm font-bold text-ink">
                           This Week
                         </h3>
-                        <span className="text-xs font-bold text-[#FF416C]">
+                        <span className="text-xs font-bold text-accent">
                           9 meetings
                         </span>
                       </div>
@@ -1061,9 +1049,9 @@ export default function MainDashboardPage() {
                               className="w-full relative"
                               style={{ height: `${bar.height}%` }}
                             >
-                              <div className="absolute inset-0 bg-gradient-to-t from-[#FF416C] to-[#FF4B2B] rounded-lg" />
+                              <div className="absolute inset-0 bg-accent rounded-lg" />
                             </div>
-                            <span className="text-[9px] font-bold text-[#8C8880] uppercase">
+                            <span className="text-[9px] font-bold text-muted uppercase">
                               {bar.day}
                             </span>
                           </div>
@@ -1074,24 +1062,24 @@ export default function MainDashboardPage() {
                 </div>
 
                 {/* Upcoming Schedule */}
-                <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 sm:p-6 shadow-warm">
+                <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 shadow-card">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                      <h2 className="text-lg sm:text-xl font-bold font-helvetica tracking-tight text-slate-900 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#8C8880] text-[20px]">
+                      <h2 className="text-lg sm:text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+                        <span className="material-symbols-outlined text-muted text-[20px]">
                           calendar_month
                         </span>
                         Upcoming Schedule
                       </h2>
-                      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto no-scrollbar">
+                      <div className="flex gap-1 bg-canvas p-1 rounded-xl overflow-x-auto no-scrollbar">
                         {(["today", "week", "all"] as const).map((tab) => (
                           <button
                             key={tab}
                             onClick={() => setScheduleTab(tab)}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase font-helvetica transition-all whitespace-nowrap flex-shrink-0 ${
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase transition-all whitespace-nowrap flex-shrink-0 ${
                               scheduleTab === tab
-                                ? "bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white shadow-md shadow-[#FF416C]/20"
-                                : "text-slate-500 hover:text-[#FF416C]"
+                                ? "bg-accent text-white shadow-md "
+                                : "text-muted hover:text-accent"
                             }`}
                           >
                             {tab === "week"
@@ -1103,7 +1091,7 @@ export default function MainDashboardPage() {
                     </div>
                     <button
                       onClick={() => setShowScheduleModal(true)}
-                      className="bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-black/5 self-start w-full sm:w-auto"
+                      className="bg-accent text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:brightness-105 hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-black/5 self-start w-full sm:w-auto"
                     >
                       <span className="material-symbols-outlined text-[16px]">
                         add
@@ -1114,22 +1102,22 @@ export default function MainDashboardPage() {
 
                   {filteredMeetings.length === 0 ? (
                     <div className="py-10 sm:py-12 text-center">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#FF416C] to-[#FF4B2B] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#FF416C]/20">
+                      <div className="w-16 h-16 bg-chrome rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg ">
                         <span className="material-symbols-outlined text-white text-[32px]">
                           event_busy
                         </span>
                       </div>
-                      <h3 className="text-lg font-bold font-helvetica text-slate-900 mb-2">
+                      <h3 className="text-lg font-bold text-ink mb-2">
                         No meetings scheduled
                       </h3>
-                      <p className="text-slate-500 text-sm mb-4">
+                      <p className="text-muted text-sm mb-4">
                         {scheduleTab === "today"
                           ? "Your calendar is clear for today."
                           : "No meetings in this time range."}
                       </p>
                       <button
                         onClick={() => setShowScheduleModal(true)}
-                        className="bg-black text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all"
+                        className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:brightness-105 transition-all"
                       >
                         Schedule a Meeting
                       </button>
@@ -1139,28 +1127,28 @@ export default function MainDashboardPage() {
                       {filteredMeetings.map((meeting) => (
                         <div
                           key={meeting.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl hover:border-[#FF416C]/30 transition-all duration-300 group"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-canvas border border-border/20 rounded-xl hover:border-accent/30 transition-all duration-300 group"
                         >
                           <div className="flex items-center gap-4 flex-1 min-w-0">
                             <div className="text-center w-16 sm:w-20 flex-shrink-0">
-                              <p className="font-bold text-slate-900 text-sm">
+                              <p className="font-bold text-ink text-sm">
                                 {formatDate(meeting.date)}
                               </p>
-                              <p className="text-[#8C8880] text-xs">
+                              <p className="text-muted text-xs">
                                 {formatTime(meeting.time)} · {meeting.duration}
                               </p>
                             </div>
-                            <div className="w-px h-10 bg-[#c4c7c7]/30 flex-shrink-0" />
+                            <div className="w-px h-10 bg-border/60 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-bold text-slate-900 text-sm group-hover:text-[#FF416C] transition-colors truncate">
+                                <p className="font-bold text-ink text-sm group-hover:text-accent transition-colors truncate">
                                   {meeting.title}
                                 </p>
                                 <span
                                   className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 ${
                                     meeting.platform === "Native"
-                                      ? "bg-[#FF416C]/10 text-[#FF416C] border border-[#FF416C]/20"
-                                      : "bg-slate-100 text-slate-600 border border-slate-200"
+                                      ? "bg-accent/10 text-accent border border-accent/20"
+                                      : "bg-canvas text-muted border border-border"
                                   }`}
                                 >
                                   {meeting.platform}
@@ -1180,12 +1168,12 @@ export default function MainDashboardPage() {
                                       </div>
                                     ))}
                                   {meeting.participants.length > 3 && (
-                                    <div className="w-5 h-5 rounded-full border-2 border-white bg-slate-200 text-slate-600 flex items-center justify-center text-[7px] font-bold">
+                                    <div className="w-5 h-5 rounded-full border-2 border-white bg-border text-muted flex items-center justify-center text-[7px] font-bold">
                                       +{meeting.participants.length - 3}
                                     </div>
                                   )}
                                 </div>
-                                <span className="text-[#8C8880] text-xs">
+                                <span className="text-muted text-xs">
                                   {meeting.participants.length} participant
                                   {meeting.participants.length !== 1 ? "s" : ""}
                                 </span>
@@ -1195,7 +1183,7 @@ export default function MainDashboardPage() {
                           <div className="flex items-center gap-2 flex-shrink-0 ml-0 sm:ml-4 pl-[4.5rem] sm:pl-0">
                             <button
                               onClick={() => joinMeeting(meeting)}
-                              className="bg-black text-white px-4 py-2 rounded-xl text-[11px] font-bold hover:bg-slate-800 hover:scale-105 transition-all duration-200 flex items-center gap-1.5"
+                              className="bg-accent text-white px-4 py-2 rounded-xl text-[11px] font-bold hover:brightness-105 hover:scale-105 transition-all duration-200 flex items-center gap-1.5"
                             >
                               <span className="material-symbols-outlined text-[14px]">
                                 {meeting.platform === "Native"
@@ -1206,7 +1194,7 @@ export default function MainDashboardPage() {
                             </button>
                             <button
                               onClick={() => deleteMeeting(meeting.id)}
-                              className="w-8 h-8 rounded-xl border border-[#E4E0D6]/30 flex items-center justify-center text-[#8C8880] hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-all flex-shrink-0"
+                              className="w-8 h-8 rounded-xl border border-border/30 flex items-center justify-center text-muted hover:text-danger hover:border-danger/30 hover:bg-danger/10 transition-all flex-shrink-0"
                               title="Remove meeting"
                             >
                               <span className="material-symbols-outlined text-[16px]">
@@ -1228,21 +1216,21 @@ export default function MainDashboardPage() {
       {/* Schedule Meeting Modal */}
       {showScheduleModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-chrome/50 backdrop-blur-sm p-4"
           onClick={() => setShowScheduleModal(false)}
         >
           <div
-            className="bg-[#FFFDF8] rounded-2xl shadow-2xl border border-[#E4E0D6]/30 w-full max-w-md mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+            className="bg-surface rounded-xl shadow-2xl border border-border/30 w-full max-w-md mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-5 sm:p-6 border-b border-[#E4E0D6]/30">
+            <div className="p-5 sm:p-6 border-b border-border/30">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold font-helvetica text-slate-900">
+                <h2 className="text-lg font-bold text-ink">
                   Schedule a Meeting
                 </h2>
                 <button
                   onClick={() => setShowScheduleModal(false)}
-                  className="w-8 h-8 rounded-xl border border-[#E4E0D6]/30 flex items-center justify-center text-[#8C8880] hover:text-[#FF416C] hover:border-[#FF416C]/30 transition-colors flex-shrink-0"
+                  className="w-8 h-8 rounded-xl border border-border/30 flex items-center justify-center text-muted hover:text-accent hover:border-accent/30 transition-colors flex-shrink-0"
                 >
                   <span className="material-symbols-outlined text-[18px]">
                     close
@@ -1252,7 +1240,7 @@ export default function MainDashboardPage() {
             </div>
             <form onSubmit={addMeeting} className="p-5 sm:p-6 space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                <label className="block text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5">
                   Meeting Title
                 </label>
                 <input
@@ -1265,13 +1253,13 @@ export default function MainDashboardPage() {
                     }))
                   }
                   placeholder="e.g. Client Sync, Design Review..."
-                  className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-[#1c1b1b] placeholder:text-[#8C8880]/60 focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                  className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 text-sm text-ink placeholder:text-muted/60 focus:outline-none focus:border-ink focus:ring-1 focus:ring-black/5 transition-all"
                   required
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5">
                     Date
                   </label>
                   <input
@@ -1283,12 +1271,12 @@ export default function MainDashboardPage() {
                         date: e.target.value,
                       }))
                     }
-                    className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-[#1c1b1b] focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                    className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 text-sm text-ink focus:outline-none focus:border-ink focus:ring-1 focus:ring-black/5 transition-all"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5">
                     Time
                   </label>
                   <input
@@ -1300,14 +1288,14 @@ export default function MainDashboardPage() {
                         time: e.target.value,
                       }))
                     }
-                    className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-[#1c1b1b] focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                    className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 text-sm text-ink focus:outline-none focus:border-ink focus:ring-1 focus:ring-black/5 transition-all"
                     required
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5">
                     Duration
                   </label>
                   <select
@@ -1318,7 +1306,7 @@ export default function MainDashboardPage() {
                         duration: e.target.value,
                       }))
                     }
-                    className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-[#1c1b1b] focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                    className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 text-sm text-ink focus:outline-none focus:border-ink focus:ring-1 focus:ring-black/5 transition-all"
                   >
                     <option value="15m">15 minutes</option>
                     <option value="30m">30 minutes</option>
@@ -1329,7 +1317,7 @@ export default function MainDashboardPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-bold text-muted uppercase tracking-widest mb-1.5">
                     Platform
                   </label>
                   <select
@@ -1341,7 +1329,7 @@ export default function MainDashboardPage() {
                           .value as ScheduledMeeting["platform"],
                       }))
                     }
-                    className="w-full bg-[#FAF9F5] border border-[#E4E0D6]/30 rounded-xl py-3 px-4 text-sm text-[#1c1b1b] focus:outline-none focus:border-black focus:ring-1 focus:ring-black/5 transition-all"
+                    className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 text-sm text-ink focus:outline-none focus:border-ink focus:ring-1 focus:ring-black/5 transition-all"
                   >
                     <option value="Native">Relay Native</option>
                     <option value="Zoom">Zoom</option>
@@ -1354,13 +1342,13 @@ export default function MainDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setShowScheduleModal(false)}
-                  className="flex-1 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-colors border border-[#E4E0D6]/30"
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-muted hover:bg-canvas transition-colors border border-border/30"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FF416C] to-[#FF4B2B] text-white text-sm font-bold hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-[#FF416C]/20"
+                  className="flex-1 py-3 rounded-xl bg-accent text-white text-sm font-bold hover:scale-[1.02] transition-all duration-200 shadow-lg "
                 >
                   Schedule Meeting
                 </button>

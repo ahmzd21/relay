@@ -13,7 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <MobileMenuProvider>
       <NotificationProvider>
-        <div className="min-h-screen bg-[#FAF9F5] text-[#1c1b1b] flex font-helvetica selection:bg-black selection:text-white w-full overflow-x-hidden">
+        <div className="min-h-screen bg-canvas text-ink flex selection:bg-chrome selection:text-white w-full overflow-x-hidden">
           <AuthGuard sidebarReady={sidebarReady}>
             <Sidebar onReady={notifySidebarReady} />
             {children}

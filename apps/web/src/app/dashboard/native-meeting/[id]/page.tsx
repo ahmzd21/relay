@@ -24,11 +24,11 @@ const MOCK_MEETINGS: Record<string, {
     languages: ['Arabic', 'English'],
     aiReady: true,
     participants: [
-      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700', role: 'Host' },
-      { name: 'Sarah Chen', initials: 'SC', color: 'bg-rose-100 text-rose-700', role: 'Presenter' },
-      { name: 'Yousef Al-Rashid', initials: 'YA', color: 'bg-amber-100 text-amber-700', role: 'Attendee' },
-      { name: 'Sofia Martinez', initials: 'SM', color: 'bg-emerald-100 text-emerald-700', role: 'Attendee' },
-      { name: 'Wei Zhang', initials: 'WZ', color: 'bg-blue-100 text-blue-700', role: 'Attendee' },
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-border text-ink', role: 'Host' },
+      { name: 'Sarah Chen', initials: 'SC', color: 'bg-border text-ink', role: 'Presenter' },
+      { name: 'Yousef Al-Rashid', initials: 'YA', color: 'bg-border text-ink', role: 'Attendee' },
+      { name: 'Sofia Martinez', initials: 'SM', color: 'bg-border text-ink', role: 'Attendee' },
+      { name: 'Wei Zhang', initials: 'WZ', color: 'bg-border text-ink', role: 'Attendee' },
     ],
     summary: 'The team discussed the MENA expansion timeline and resource allocation. Key decisions were made regarding the Dubai office launch in Q2, with Sarah leading the marketing campaign and Yousef overseeing local partnerships. Budget allocation of $2.4M was approved for the first phase. Technical infrastructure setup was delegated to Wei\'s team with a target completion date of March 15th.',
     actionItems: [
@@ -57,9 +57,9 @@ const MOCK_MEETINGS: Record<string, {
     languages: ['Japanese', 'English'],
     aiReady: true,
     participants: [
-      { name: 'Yuki Tanaka', initials: 'YT', color: 'bg-rose-100 text-rose-700', role: 'Host' },
-      { name: 'Marcus Klein', initials: 'MK', color: 'bg-purple-100 text-purple-700', role: 'Presenter' },
-      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700', role: 'Attendee' },
+      { name: 'Yuki Tanaka', initials: 'YT', color: 'bg-border text-ink', role: 'Host' },
+      { name: 'Marcus Klein', initials: 'MK', color: 'bg-border text-ink', role: 'Presenter' },
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-border text-ink', role: 'Attendee' },
     ],
     summary: 'Creative workshop focused on the Japanese market branding strategy. Marcus presented three brand identity concepts, with Concept B receiving the most positive feedback. The team agreed to proceed with a hybrid approach combining elements from Concepts A and B. Color palette and typography were finalized, with the design team to produce final assets by end of month.',
     actionItems: [
@@ -84,8 +84,8 @@ const MOCK_MEETINGS: Record<string, {
     languages: ['English', 'French'],
     aiReady: false,
     participants: [
-      { name: 'Pierre Laurent', initials: 'PL', color: 'bg-emerald-100 text-emerald-700', role: 'Host' },
-      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700', role: 'Attendee' },
+      { name: 'Pierre Laurent', initials: 'PL', color: 'bg-border text-ink', role: 'Host' },
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-border text-ink', role: 'Attendee' },
     ],
     summary: 'Brief sync on design operations workflow. Pierre introduced the new Figma component library which reduced design handoff time by 40%. The team agreed to adopt the new system across all projects starting next sprint. Minor adjustments needed for the mobile component set.',
     actionItems: [
@@ -108,8 +108,8 @@ const MOCK_MEETINGS: Record<string, {
     languages: ['English'],
     aiReady: false,
     participants: [
-      { name: 'Elias Thompson', initials: 'ET', color: 'bg-indigo-100 text-indigo-700', role: 'Host' },
-      { name: '120+ Attendees', initials: '120+', color: 'bg-slate-200 text-slate-600', role: 'Company' },
+      { name: 'Elias Thompson', initials: 'ET', color: 'bg-border text-ink', role: 'Host' },
+      { name: '120+ Attendees', initials: '120+', color: 'bg-border text-muted', role: 'Company' },
     ],
     summary: 'Company-wide town hall covering Q4 results, product roadmap, and 2025 vision. Revenue grew 78% YoY with 12,000+ enterprise customers. New product features including real-time collaboration and advanced analytics were announced. CEO outlined the three strategic pillars for 2025: Enterprise expansion, AI innovation, and global market penetration.',
     actionItems: [
@@ -148,7 +148,7 @@ export default function MeetingDetailPage() {
             <div className="space-y-4">
               <button
                 onClick={() => router.push('/dashboard/native-meeting')}
-                className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors"
+                className="flex items-center gap-2 text-sm font-bold text-muted hover:text-ink transition-colors"
               >
                 <span className="material-symbols-outlined text-[18px]">arrow_back</span>
                 Back to Native Meetings
@@ -157,14 +157,14 @@ export default function MeetingDetailPage() {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl md:text-4xl font-bold font-helvetica tracking-tight text-slate-900">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-ink">
                       {meeting.title}
                     </h1>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-canvas text-muted border border-border">
                       Ended
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-slate-500">
+                  <div className="flex items-center gap-4 text-sm text-muted">
                     <span className="flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-[16px]">calendar_today</span>
                       {meeting.date}
@@ -180,11 +180,11 @@ export default function MeetingDetailPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="bg-white border border-[#E4E0D6]/30 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
+                  <button className="bg-surface border border-border/30 text-ink/80 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-canvas transition-all flex items-center gap-2">
                     <span className="material-symbols-outlined text-[16px]">download</span>
                     Export
                   </button>
-                  <button className="bg-black text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 hover:scale-105 transition-all duration-200 flex items-center gap-2 shadow-lg shadow-black/5">
+                  <button className="bg-accent text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:brightness-105 hover:scale-105 transition-all duration-200 flex items-center gap-2 shadow-lg shadow-black/5">
                     <span className="material-symbols-outlined text-[16px]">videocam</span>
                     Replay
                   </button>
@@ -195,33 +195,33 @@ export default function MeetingDetailPage() {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Duration', value: meeting.duration, icon: 'schedule', color: 'text-slate-600 bg-slate-50' },
-                { label: 'Languages', value: `${meeting.languages.length}`, icon: 'translate', color: 'text-indigo-600 bg-indigo-50' },
-                { label: 'Participants', value: `${meeting.participants.length}`, icon: 'group', color: 'text-emerald-600 bg-emerald-50' },
-                { label: 'AI Analysis', value: meeting.aiReady ? 'Complete' : 'Pending', icon: 'smart_toy', color: meeting.aiReady ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50' },
+                { label: 'Duration', value: meeting.duration, icon: 'schedule', color: 'text-muted bg-canvas' },
+                { label: 'Languages', value: `${meeting.languages.length}`, icon: 'translate', color: 'text-info bg-info/10' },
+                { label: 'Participants', value: `${meeting.participants.length}`, icon: 'group', color: 'text-success bg-success/10' },
+                { label: 'AI Analysis', value: meeting.aiReady ? 'Complete' : 'Pending', icon: 'smart_toy', color: meeting.aiReady ? 'text-success bg-success/10' : 'text-warning bg-warning/10' },
               ].map((stat) => (
-                <div key={stat.label} className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-4 shadow-warm">
+                <div key={stat.label} className="bg-surface border border-border rounded-xl p-4 shadow-card">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${stat.color}`}>
                     <span className="material-symbols-outlined text-[18px]">{stat.icon}</span>
                   </div>
-                  <p className="text-xl font-bold font-helvetica text-slate-900">{stat.value}</p>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{stat.label}</p>
+                  <p className="text-xl font-bold text-ink">{stat.value}</p>
+                  <p className="text-[10px] font-bold text-muted uppercase tracking-widest mt-0.5">{stat.label}</p>
                 </div>
               ))}
             </div>
 
             {/* Participants */}
-            <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
-              <h2 className="text-lg font-bold font-helvetica tracking-tight text-slate-900 mb-4">Participants</h2>
+            <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
+              <h2 className="text-lg font-bold tracking-tight text-ink mb-4">Participants</h2>
               <div className="flex flex-wrap gap-3">
                 {meeting.participants.map((p, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl px-4 py-2.5">
+                  <div key={i} className="flex items-center gap-3 bg-canvas border border-border/20 rounded-xl px-4 py-2.5">
                     <div className={`w-8 h-8 rounded-lg ${p.color} flex items-center justify-center text-[11px] font-bold`}>
                       {p.initials}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900">{p.name}</p>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">{p.role}</p>
+                      <p className="text-sm font-bold text-ink">{p.name}</p>
+                      <p className="text-[10px] text-muted uppercase tracking-wider">{p.role}</p>
                     </div>
                   </div>
                 ))}
@@ -229,7 +229,7 @@ export default function MeetingDetailPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+            <div className="flex gap-1 bg-canvas p-1 rounded-xl w-fit">
               {([
                 { key: 'summary' as const, label: 'AI Summary' },
                 { key: 'transcript' as const, label: 'Transcript' },
@@ -238,10 +238,10 @@ export default function MeetingDetailPage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`px-4 py-2 rounded-lg text-[11px] font-bold tracking-wider uppercase font-helvetica transition-all ${
+                  className={`px-4 py-2 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all ${
                     activeTab === tab.key
-                      ? 'bg-white shadow-sm text-slate-900'
-                      : 'text-slate-500 hover:text-slate-900'
+                      ? 'bg-surface shadow-sm text-ink'
+                      : 'text-muted hover:text-ink'
                   }`}
                 >
                   {tab.label}
@@ -251,33 +251,33 @@ export default function MeetingDetailPage() {
 
             {/* Tab Content */}
             {activeTab === 'summary' && (
-              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-indigo-600 text-[20px]">smart_toy</span>
+                  <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-info text-[20px]">smart_toy</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">AI-Generated Summary</h3>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest">Powered by Relay Intelligence</p>
+                    <h3 className="text-sm font-bold text-ink">AI-Generated Summary</h3>
+                    <p className="text-[10px] text-muted uppercase tracking-widest">Powered by Relay Intelligence</p>
                   </div>
                 </div>
-                <p className="text-slate-700 leading-relaxed text-[15px]">{meeting.summary}</p>
+                <p className="text-ink/80 leading-relaxed text-[15px]">{meeting.summary}</p>
               </div>
             )}
 
             {activeTab === 'transcript' && (
-              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-slate-600 text-[20px]">description</span>
+                    <div className="w-10 h-10 rounded-xl bg-canvas flex items-center justify-center">
+                      <span className="material-symbols-outlined text-muted text-[20px]">description</span>
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-slate-900">Full Transcript</h3>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-widest">{meeting.transcript.length} messages</p>
+                      <h3 className="text-sm font-bold text-ink">Full Transcript</h3>
+                      <p className="text-[10px] text-muted uppercase tracking-widest">{meeting.transcript.length} messages</p>
                     </div>
                   </div>
-                  <button className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors flex items-center gap-1">
+                  <button className="text-[10px] font-bold text-muted uppercase tracking-widest hover:text-ink transition-colors flex items-center gap-1">
                     <span className="material-symbols-outlined text-[14px]">download</span>
                     Download
                   </button>
@@ -286,12 +286,12 @@ export default function MeetingDetailPage() {
                   {meeting.transcript.map((entry, i) => (
                     <div key={i} className="flex gap-4">
                       <div className="text-right w-12 flex-shrink-0">
-                        <span className="text-[11px] font-bold text-slate-400">{entry.time}</span>
+                        <span className="text-[11px] font-bold text-faint">{entry.time}</span>
                       </div>
-                      <div className="w-px bg-[#c4c7c7]/30 flex-shrink-0" />
+                      <div className="w-px bg-border/60 flex-shrink-0" />
                       <div className="flex-1">
-                        <p className="text-[11px] font-bold text-slate-900 mb-0.5">{entry.speaker}</p>
-                        <p className="text-sm text-slate-700 leading-relaxed">{entry.text}</p>
+                        <p className="text-[11px] font-bold text-ink mb-0.5">{entry.speaker}</p>
+                        <p className="text-sm text-ink/80 leading-relaxed">{entry.text}</p>
                       </div>
                     </div>
                   ))}
@@ -300,23 +300,23 @@ export default function MeetingDetailPage() {
             )}
 
             {activeTab === 'actions' && (
-              <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-amber-600 text-[20px]">checklist</span>
+                  <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-warning text-[20px]">checklist</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">Action Items</h3>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest">{meeting.actionItems.length} items extracted</p>
+                    <h3 className="text-sm font-bold text-ink">Action Items</h3>
+                    <p className="text-[10px] text-muted uppercase tracking-widest">{meeting.actionItems.length} items extracted</p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   {meeting.actionItems.map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 bg-[#FAF9F5] border border-[#E4E0D6]/20 rounded-xl">
-                      <div className="w-5 h-5 rounded border border-[#E4E0D6]/40 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold">{i + 1}</span>
+                    <div key={i} className="flex items-start gap-3 p-3 bg-canvas border border-border/20 rounded-xl">
+                      <div className="w-5 h-5 rounded border border-border/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-[10px] text-faint font-bold">{i + 1}</span>
                       </div>
-                      <p className="text-sm text-slate-700 leading-relaxed">{item}</p>
+                      <p className="text-sm text-ink/80 leading-relaxed">{item}</p>
                     </div>
                   ))}
                 </div>
@@ -324,23 +324,23 @@ export default function MeetingDetailPage() {
             )}
 
             {/* Recording */}
-            <div className="bg-[#FFFDF8] border border-[#E4E0D6] rounded-2xl p-6 shadow-warm">
+            <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#FAF9F5] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[#1c1b1b] text-[24px]">play_circle</span>
+                  <div className="w-12 h-12 rounded-xl bg-canvas flex items-center justify-center">
+                    <span className="material-symbols-outlined text-ink text-[24px]">play_circle</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#1c1b1b]">Meeting Recording</h3>
-                    <p className="text-xs text-[#8C8880]">{meeting.duration} · {meeting.languages.join(' + ')} audio</p>
+                    <h3 className="text-sm font-bold text-ink">Meeting Recording</h3>
+                    <p className="text-xs text-muted">{meeting.duration} · {meeting.languages.join(' + ')} audio</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="bg-[#FAF9F5] text-[#1c1b1b] px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#E4E0D6]/30 transition-all flex items-center gap-2">
+                  <button className="bg-canvas text-ink px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-border/30 transition-all flex items-center gap-2">
                     <span className="material-symbols-outlined text-[16px]">download</span>
                     Download
                   </button>
-                  <button className="bg-white text-black px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-white/90 transition-all flex items-center gap-2">
+                  <button className="bg-surface text-ink px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-surface/90 transition-all flex items-center gap-2">
                     <span className="material-symbols-outlined text-[16px]">play_arrow</span>
                     Play
                   </button>
