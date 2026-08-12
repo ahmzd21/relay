@@ -4,18 +4,8 @@ import React, { useMemo } from 'react';
 import { useTracks, useLocalParticipant, AudioTrack } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 
-export function CustomAudioRenderer() {
+export function CustomAudioRenderer({ audioLang }: { audioLang: string }) {
   const { localParticipant } = useLocalParticipant();
-  
-  // 1. Get preferred audio language from metadata
-  const audioLang = useMemo(() => {
-    try {
-      const meta = JSON.parse(localParticipant?.metadata || '{}');
-      return meta?.preferences?.audio || 'none';
-    } catch {
-      return 'none';
-    }
-  }, [localParticipant]);
 
   // 2. Get all remote audio tracks in the room. Local mic is never rendered —
   //    playing your own microphone back is echo.

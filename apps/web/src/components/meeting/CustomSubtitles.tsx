@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRoomContext, useLocalParticipant } from '@livekit/components-react';
+import { useRoomContext } from '@livekit/components-react';
 import { RemoteParticipant, DataPacket_Kind } from 'livekit-client';
 
 interface SubtitleMessage {
@@ -13,20 +13,9 @@ interface SubtitleMessage {
   timestamp: number;
 }
 
-export function CustomSubtitles() {
+export function CustomSubtitles({ subtitleLang }: { subtitleLang: string }) {
   const room = useRoomContext();
-  const { localParticipant } = useLocalParticipant();
   const [subtitles, setSubtitles] = useState<SubtitleMessage[]>([]);
-
-  // 1. Get preferred subtitle language from metadata
-  const subtitleLang = React.useMemo(() => {
-    try {
-      const meta = JSON.parse(localParticipant?.metadata || '{}');
-      return meta?.preferences?.subtitle || 'none';
-    } catch {
-      return 'none';
-    }
-  }, [localParticipant?.metadata]);
 
   useEffect(() => {
     if (!room) return;
