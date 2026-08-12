@@ -90,7 +90,9 @@ def prewarm(proc: JobProcess):
     # livekit-agents 1.x invokes it directly, so an async def is never awaited.
     pass
 
-tts_engine = elevenlabs.TTS(model="eleven_multilingual_v2", api_key=eleven_key) if eleven_key else elevenlabs.TTS(model="eleven_multilingual_v2")
+def _create_tts():
+    """Create a fresh TTS engine so its internal HTTP session is tied to the current job."""
+    return elevenlabs.TTS(model="eleven_multilingual_v2", api_key=eleven_key) if eleven_key else elevenlabs.TTS(model="eleven_multilingual_v2")
 
 async def entrypoint(ctx: JobContext):
     logger.info(f"Connecting to room {ctx.room.name}")
@@ -100,6 +102,7 @@ async def entrypoint(ctx: JobContext):
     audio_sources = {}
     audio_locks = {}
     http_session = aiohttp.ClientSession()
+    tts_engine = _create_tts()
 
     # Track real participants (non-agents). When they all leave, we leave too.
     async def check_should_exit():
@@ -126,7 +129,7 @@ async def entrypoint(ctx: JobContext):
                 logger.info(f"Ignoring translation track: {publication.name}")
                 return
             logger.info(f"Subscribed to live microphone track from {participant.identity}")
-            asyncio.create_task(process_track(ctx.room, participant, track, audio_sources, audio_locks, http_session))
+            asyncio.create_task(process_track(ctx.room, participant, track, audio_sources, audio_locks, http_session, tts_engine))
 
     @ctx.room.on("data_received")
     def on_data_received(dp: rtc.DataPacket):
@@ -145,11 +148,11 @@ async def entrypoint(ctx: JobContext):
                         
                 import time
                 logger.info(f"Simulated STT ({speaker_id}): {text}")
-                asyncio.create_task(broadcast_subtitles_and_audio(ctx.room, speaker_id, speaker_name, spoken_lang, text, time.time(), audio_sources, audio_locks, http_session))
+                asyncio.create_task(broadcast_subtitles_and_audio(ctx.room, speaker_id, speaker_name, spoken_lang, text, time.time(), audio_sources, audio_locks, http_session, tts_engine))
             except Exception as e:
                 logger.error(f"Error parsing simulate_stt: {e}")
 
-async def process_track(room: rtc.Room, participant: rtc.RemoteParticipant, track: rtc.AudioTrack, audio_sources: dict, audio_locks: dict, session: aiohttp.ClientSession):
+async def process_track(room: rtc.Room, participant: rtc.RemoteParticipant, track: rtc.AudioTrack, audio_sources: dict, audio_locks: dict, session: aiohttp.ClientSession, tts_engine):
     # 1. Parse participant's spoken language from their metadata
     spoken_lang = "en"
     try:
@@ -194,7 +197,7 @@ async def process_track(room: rtc.Room, participant: rtc.RemoteParticipant, trac
                     
                 speaker_name = participant.name or participant.identity
                 logger.info(f"Live STT Transcript ({participant.identity}): {text}")
-                await broadcast_subtitles_and_audio(room, participant.identity, speaker_name, spoken_lang, text, event.alternatives[0].start_time, audio_sources, audio_locks, session)
+                await broadcast_subtitles_and_audio(room, participant.identity, speaker_name, spoken_lang, text, event.alternatives[0].start_time, audio_sources, audio_locks, session, tts_engine)
     except asyncio.CancelledError:
         pass
     except Exception as e:
@@ -203,7 +206,7 @@ async def process_track(room: rtc.Room, participant: rtc.RemoteParticipant, trac
         forward_task.cancel()
         await audio_stream.aclose()
 
-async def stream_tts(text: str, audio_lang: str, speaker_identity: str, room: rtc.Room, audio_sources: dict, audio_locks: dict):
+async def stream_tts(text: str, audio_lang: str, speaker_identity: str, room: rtc.Room, audio_sources: dict, audio_locks: dict, tts_engine):
     if not text or not text.strip():
         return
     source_key = f"{audio_lang}_{speaker_identity}"
@@ -228,7 +231,7 @@ async def stream_tts(text: str, audio_lang: str, speaker_identity: str, room: rt
         except Exception as e:
             logger.error(f"TTS synthesis error for {source_key}: {e}")
 
-async def broadcast_subtitles_and_audio(room: rtc.Room, speaker_id: str, speaker_name: str, spoken_lang: str, text: str, timestamp: float, audio_sources: dict, audio_locks: dict, session: aiohttp.ClientSession):
+async def broadcast_subtitles_and_audio(room: rtc.Room, speaker_id: str, speaker_name: str, spoken_lang: str, text: str, timestamp: float, audio_sources: dict, audio_locks: dict, session: aiohttp.ClientSession, tts_engine):
     # Broadcast to all OTHER participants in their preferred subtitle and audio language
     for p_id, target_participant in room.remote_participants.items():
         if p_id == speaker_id:
@@ -266,7 +269,7 @@ async def broadcast_subtitles_and_audio(room: rtc.Room, speaker_id: str, speaker
             # 2. Audio TTS Dubbing
             if audio_lang != "none" and audio_lang != spoken_lang:
                 translated_audio_text = await translate_text(text, spoken_lang, audio_lang, session)
-                asyncio.create_task(stream_tts(translated_audio_text, audio_lang, speaker_id, room, audio_sources, audio_locks))
+                asyncio.create_task(stream_tts(translated_audio_text, audio_lang, speaker_id, room, audio_sources, audio_locks, tts_engine))
                 logger.info(f"Queued TTS dubbing for {audio_lang} to {target_participant.identity}")
                 
         except Exception as e:

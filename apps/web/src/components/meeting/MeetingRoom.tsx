@@ -34,6 +34,10 @@ interface MeetingRoomProps {
   isHost?: boolean;
   hostKey?: string;
   initialStatus?: string;
+  initialSpokenLang?: string;
+  initialSubtitleLang?: string;
+  initialAudioLang?: string;
+  initialChatLang?: string;
 }
 
 const SUPPORTED_LANGUAGES = [
@@ -77,7 +81,7 @@ const readChatPayload = (messageRaw: string | any) => {
   return { payload, table, original };
 };
 
-export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, hostKey = '', initialStatus = 'active' }: MeetingRoomProps) {
+export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, hostKey = '', initialStatus = 'active', initialSpokenLang = 'en', initialSubtitleLang = 'en', initialAudioLang = 'none', initialChatLang = 'en' }: MeetingRoomProps) {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const isMicMuted = !localParticipant?.isMicrophoneEnabled;
@@ -141,11 +145,11 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
   const [connectionState, setConnectionState] = useState<'connected' | 'reconnecting'>('connected');
   const [connectionLost, setConnectionLost] = useState(false);
 
-  // In-meeting language preferences
-  const [spokenLang, setSpokenLang] = useState('en');
-  const [subtitleLang, setSubtitleLang] = useState('en');
-  const [audioLang, setAudioLang] = useState('none');
-  const [chatLang, setChatLang] = useState('en');
+  // In-meeting language preferences — initialised from the pre-join screen
+  const [spokenLang, setSpokenLang] = useState(initialSpokenLang);
+  const [subtitleLang, setSubtitleLang] = useState(initialSubtitleLang);
+  const [audioLang, setAudioLang] = useState(initialAudioLang);
+  const [chatLang, setChatLang] = useState(initialChatLang);
   const [isTranslatingChat, setIsTranslatingChat] = useState(false);
 
   // Translations fetched after a message arrived, for messages that do not carry
@@ -509,7 +513,6 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
         surfaceSwitching: 'exclude',
         systemAudio: 'exclude',
         preferCurrentTab: false,
-        // @ts-expect-error monitorTypeSurfaces is supported in Chromium 119+
         monitorTypeSurfaces: 'include',
       };
 
@@ -1083,8 +1086,8 @@ export function MeetingRoom({ meetingId, onLeave, onRejoin, isHost = false, host
       )}
 
       {/* Real-time Dubbing Audio Renderer & Subtitles */}
-      <CustomAudioRenderer />
-      <CustomSubtitles />
+      <CustomAudioRenderer audioLang={audioLang} />
+      <CustomSubtitles subtitleLang={subtitleLang} />
       <ReactionsOverlay />
       <AgendaWidget />
       <KeyboardShortcuts

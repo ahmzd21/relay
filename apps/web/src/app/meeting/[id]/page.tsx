@@ -181,6 +181,10 @@ export default function MeetingPage({ params }: MeetingPageProps) {
           isHost={connectionDetails.isHost}
           hostKey={connectionDetails.hostKey}
           initialStatus={connectionDetails.status}
+          initialSpokenLang={spokenLang}
+          initialSubtitleLang={subtitleLang}
+          initialAudioLang={audioLang}
+          initialChatLang={chatLang}
         />
       </LiveKitRoom>
     );
