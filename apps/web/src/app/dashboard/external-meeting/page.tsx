@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import DashboardHeader from '@/components/DashboardHeader';
 
 interface ExternalMeeting {
@@ -11,10 +12,29 @@ interface ExternalMeeting {
   time: string;
   date: string;
   duration: string;
-  status: 'translated' | 'processing' | 'ended';
+  status: 'translated' | 'processing' | 'ended' | 'connecting';
   participants: { name: string; initials: string; color: string }[];
   languages: string[];
 }
+
+const SUPPORTED_LANGUAGES = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'zh', name: 'Chinese' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'it', name: 'Italian' },
+  { code: 'hi', name: 'Hindi' },
+  { code: 'ko', name: 'Korean' },
+  { code: 'tr', name: 'Turkish' },
+  { code: 'ur', name: 'Urdu' },
+];
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 const MOCK_MEETINGS: ExternalMeeting[] = [
   {
@@ -105,25 +125,65 @@ const PLATFORM_ICONS: Record<string, { icon: string; color: string; bg: string; 
 };
 
 export default function ExternalMeetingPage() {
+  const router = useRouter();
   const [meetingLink, setMeetingLink] = useState('');
+  const [hearingLang, setHearingLang] = useState('en');
+  const [speakingLang, setSpeakingLang] = useState('en');
   const [isConnecting, setIsConnecting] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'zoom' | 'meet' | 'teams'>('all');
 
   const [meetings, setMeetings] = useState<ExternalMeeting[]>(MOCK_MEETINGS);
 
-  // Hydrate from localStorage on client mount
+  // Fetch real meetings from API or fall back to stored/mock meetings
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('relay-external-meetings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMeetings(parsed);
+    const fetchMeetings = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/meetings/external`, {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const dbMeetings = await res.json();
+          if (Array.isArray(dbMeetings) && dbMeetings.length > 0) {
+            const formatted: ExternalMeeting[] = dbMeetings.map((m: any) => {
+              const platformName = m.platform === 'zoom' ? 'Zoom' : m.platform === 'teams' ? 'Microsoft Teams' : 'Google Meet';
+              const d = new Date(m.createdAt);
+              return {
+                id: m.id,
+                title: m.title || `${platformName} Meeting`,
+                platform: platformName as any,
+                url: m.meetingUrl,
+                time: d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                date: d.toISOString().split('T')[0],
+                duration: m.duration || 'Live',
+                status: m.status.toLowerCase() as any,
+                participants: Array.isArray(m.participants) && m.participants.length > 0
+                  ? m.participants.map((p: any) => ({ name: p.name || 'User', initials: (p.name || 'U').substring(0, 2).toUpperCase(), color: 'bg-border text-ink' }))
+                  : [{ name: 'Relay Bot', initials: 'RB', color: 'bg-border text-ink' }],
+                languages: m.languages || [m.hearingLang || 'English', m.speakingLang || 'English'],
+              };
+            });
+            setMeetings(formatted);
+            return;
+          }
         }
+      } catch (e) {
+        console.warn('Could not load meetings from API, falling back to cache');
       }
-    } catch {
-      // ignore
-    }
+
+      try {
+        const saved = localStorage.getItem('relay-external-meetings');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMeetings(parsed);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchMeetings();
   }, []);
 
   useEffect(() => {
@@ -138,28 +198,52 @@ export default function ExternalMeetingPage() {
     return meetings.filter(m => m.platform === platformMap[activeTab]);
   }, [meetings, activeTab]);
 
-  const handleJoin = (e: React.FormEvent) => {
+  const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!meetingLink.trim()) return;
     setIsConnecting(true);
-    setTimeout(() => {
-      setIsConnecting(false);
-      const newMeeting: ExternalMeeting = {
-        id: 'ext-' + Date.now(),
-        title: 'External Meeting',
-        platform: meetingLink.includes('zoom') ? 'Zoom' : meetingLink.includes('teams') ? 'Microsoft Teams' : 'Google Meet',
-        url: meetingLink,
-        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        date: new Date().toISOString().split('T')[0],
-        duration: '0m',
-        status: 'translated',
-        participants: [{ name: 'You', initials: 'Y', color: 'bg-border text-ink' }],
-        languages: ['English'],
-      };
-      setMeetings(prev => [newMeeting, ...prev]);
-      setMeetingLink('');
-    }, 2000);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/meetings/external/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          meetingUrl: meetingLink.trim(),
+          hearingLang,
+          speakingLang,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        router.push(`/meeting/external/${data.id}`);
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend join call failed, navigating to meeting room with local ID', err);
+    }
+
+    // Fallback: create client session and navigate
+    const newMeetingId = 'ext-' + Date.now();
+    const platformName = meetingLink.includes('zoom') ? 'Zoom' : meetingLink.includes('teams') ? 'Microsoft Teams' : 'Google Meet';
+    const newMeeting: ExternalMeeting = {
+      id: newMeetingId,
+      title: `${platformName} Meeting`,
+      platform: platformName as any,
+      url: meetingLink,
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      date: new Date().toISOString().split('T')[0],
+      duration: '0m',
+      status: 'connecting',
+      participants: [{ name: 'You', initials: 'Y', color: 'bg-border text-ink' }],
+      languages: [hearingLang, speakingLang],
+    };
+    setMeetings(prev => [newMeeting, ...prev]);
+    setIsConnecting(false);
+    router.push(`/meeting/external/${newMeetingId}`);
   };
+
 
   const formatTime = (time: string) => {
     const [h, m] = time.split(':').map(Number);
@@ -233,36 +317,69 @@ export default function ExternalMeetingPage() {
                     <p className="text-muted text-sm mb-6 leading-relaxed">Paste a Zoom, Google Meet, or Teams link to join with live translation overlay.</p>
                   </div>
 
-                   <form className="flex flex-col sm:flex-row gap-3 mt-auto" onSubmit={handleJoin}>
-                    <input
-                      type="url"
-                      value={meetingLink}
-                      onChange={(e) => setMeetingLink(e.target.value)}
-                      placeholder="Paste meeting link..."
-                      className="flex-1 bg-canvas border border-border/30 rounded-full py-3 px-5 text-[15px] text-ink placeholder:text-muted/60 focus:outline-none focus:border-ink focus:ring-1 focus:ring-black/5 transition-all"
-                      disabled={isConnecting}
-                    />
-                    <button
-                      type="submit"
-                      disabled={!meetingLink.trim() || isConnecting}
-                      className="bg-accent text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 shadow-lg "
-                    >
-                      {isConnecting ? (
-                        <>
-                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        <>
-                          Join
-                          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                        </>
-                      )}
-                    </button>
+                   <form className="flex flex-col gap-3 mt-auto" onSubmit={handleJoin}>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input
+                        type="url"
+                        value={meetingLink}
+                        onChange={(e) => setMeetingLink(e.target.value)}
+                        placeholder="Paste Zoom, Google Meet, or Teams link..."
+                        className="flex-1 bg-canvas border border-border/30 rounded-full py-3 px-5 text-[15px] text-ink placeholder:text-muted/60 focus:outline-none focus:border-ink focus:ring-1 focus:ring-black/5 transition-all"
+                        disabled={isConnecting}
+                      />
+                      <button
+                        type="submit"
+                        disabled={!meetingLink.trim() || isConnecting}
+                        className="bg-accent text-white px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 shadow-lg whitespace-nowrap"
+                      >
+                        {isConnecting ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Connecting...
+                          </>
+                        ) : (
+                          <>
+                            Join with Relay
+                            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted pt-1 px-1">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-muted">headphones</span>
+                        <span className="font-semibold">Hearing:</span>
+                        <select
+                          value={hearingLang}
+                          onChange={(e) => setHearingLang(e.target.value)}
+                          className="bg-canvas border border-border/40 rounded-lg px-2.5 py-1 text-xs text-ink font-medium focus:outline-none focus:border-ink cursor-pointer"
+                        >
+                          {SUPPORTED_LANGUAGES.map((l) => (
+                            <option key={l.code} value={l.code}>{l.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-muted">mic</span>
+                        <span className="font-semibold">Speaking into meeting as:</span>
+                        <select
+                          value={speakingLang}
+                          onChange={(e) => setSpeakingLang(e.target.value)}
+                          className="bg-canvas border border-border/40 rounded-lg px-2.5 py-1 text-xs text-ink font-medium focus:outline-none focus:border-ink cursor-pointer"
+                        >
+                          {SUPPORTED_LANGUAGES.map((l) => (
+                            <option key={l.code} value={l.code}>{l.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   </form>
                 </div>
               </div>
             </div>
+
 
             {/* Supported Platforms */}
             <div>
