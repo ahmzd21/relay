@@ -1694,7 +1694,7 @@ function ParticipantTile({ participant, compact = false }: { participant: Partic
       {isVideoEnabled ? (
         <VideoTrack
           trackRef={{ participant, publication: cameraPub, source: Track.Source.Camera }}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover ${participant.isLocal ? '-scale-x-100' : ''}`}
         />
       ) : (
         // Avatar Fallback
