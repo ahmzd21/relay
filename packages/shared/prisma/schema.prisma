@@ -92,7 +92,11 @@ model PushSubscription {
 }
 
 enum ExternalMeetingStatus {
+  VALIDATING
   CONNECTING
+  WAITING_ROOM
+  PASSCODE_REQUIRED
+  REJECTED
   IN_CALL
   PROCESSING
   TRANSLATED
@@ -101,29 +105,33 @@ enum ExternalMeetingStatus {
 }
 
 model ExternalMeeting {
-  id              String                @id @default(cuid())
-  userId          String
-  platform        String                // "zoom" | "google_meet" | "teams"
-  meetingUrl       String
-  nativeMeetingId String?               // e.g. Zoom numeric meeting ID
-  passcode        String?
-  botSessionId    String?               // Vexa bot session ID
-  botName         String                @default("Relay AI Assistant")
-  title           String                @default("External Meeting")
-  status          ExternalMeetingStatus @default(CONNECTING)
-  hearingLang     String                @default("en")  // user wants to HEAR in this language
-  speakingLang    String                @default("en")  // user's voice translated INTO this for the call
-  summary         String?               @db.Text
-  actionItems     Json                  @default("[]")
-  transcript      Json                  @default("[]")  // [{speaker, text, timestamp, translatedText}]
-  participants    Json                  @default("[]")  // [{name, isActive}]
-  languages       String[]              @default(["en"])
-  duration        String?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  id                 String                @id @default(cuid())
+  userId             String
+  platform           String                // "zoom" | "google_meet" | "teams"
+  meetingUrl          String
+  nativeMeetingId    String?               // e.g. Zoom numeric meeting ID
+  passcode           String?
+  botSessionId       String?               // Vexa bot session ID
+  botName            String                @default("Relay AI Assistant")
+  title              String                @default("External Meeting")
+  status             ExternalMeetingStatus @default(CONNECTING)
+  statusDetail       String?               // e.g. "Waiting for host to admit bot from Zoom lobby"
+  claimedSpeakerName String?               // e.g. "Elias Thompson" - which participant is the Relay user
+  userInMeeting      Boolean               @default(false)
+  hearingLang        String                @default("en")  // user wants to HEAR in this language
+  speakingLang       String                @default("en")  // user's voice translated INTO this for the call
+  summary            String?               @db.Text
+  actionItems        Json                  @default("[]")
+  transcript         Json                  @default("[]")  // [{speaker, text, timestamp, translatedText, isSelf}]
+  participants       Json                  @default("[]")  // [{name, isSelf, isActive}]
+  languages          String[]              @default(["en"])
+  duration           String?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
 }
+
