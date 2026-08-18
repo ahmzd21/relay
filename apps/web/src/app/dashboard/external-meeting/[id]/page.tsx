@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardHeader from '@/components/DashboardHeader';
 
@@ -105,15 +105,68 @@ const PLATFORM_ICONS: Record<string, { icon: string; color: string; bg: string }
   'Microsoft Teams': { icon: 'meeting_room', color: 'text-info', bg: 'bg-info/10' },
 };
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 export default function ExternalMeetingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const meetingId = params.id as string;
 
   const [activeTab, setActiveTab] = useState<'summary' | 'transcript' | 'actions'>('summary');
+  const [meeting, setMeeting] = useState<ExternalMeetingDetail>(MOCK_MEETINGS[meetingId] || MOCK_MEETINGS['ext-1']);
 
-  const meeting = MOCK_MEETINGS[meetingId] || MOCK_MEETINGS['ext-1'];
-  const platform = PLATFORM_ICONS[meeting.platform];
+  useEffect(() => {
+    const fetchMeeting = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/meetings/external/${meetingId}`, {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            const platformName = data.platform === 'zoom' ? 'Zoom' : data.platform === 'teams' ? 'Microsoft Teams' : 'Google Meet';
+            const d = new Date(data.createdAt);
+            const formatted: ExternalMeetingDetail = {
+              title: data.title || `${platformName} Meeting`,
+              platform: platformName as any,
+              url: data.meetingUrl,
+              date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              time: d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              duration: data.duration || 'Completed',
+              languages: data.languages || [data.hearingLang || 'English', data.speakingLang || 'English'],
+              status: data.status.toLowerCase() as any,
+              participants: Array.isArray(data.participants) && data.participants.length > 0
+                ? data.participants.map((p: any) => ({ name: p.name || 'User', initials: (p.name || 'U').substring(0, 2).toUpperCase(), color: 'bg-border text-ink' }))
+                : [{ name: 'Relay AI Assistant', initials: 'RA', color: 'bg-border text-ink' }],
+              summary: data.summary || 'Meeting completed. AI summary and key takeaways have been archived.',
+              actionItems: Array.isArray(data.actionItems) ? data.actionItems : [],
+              transcript: Array.isArray(data.transcript)
+                ? data.transcript.map((t: any) => ({
+                    speaker: t.speaker || 'Speaker',
+                    time: t.timestamp ? new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '12:00',
+                    text: t.translatedText || t.text || '',
+                  }))
+                : [],
+              recordingUrl: data.recordingUrl || '#',
+            };
+            setMeeting(formatted);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not fetch meeting detail from API, using fallback data');
+      }
+
+      if (MOCK_MEETINGS[meetingId]) {
+        setMeeting(MOCK_MEETINGS[meetingId]);
+      }
+    };
+
+    fetchMeeting();
+  }, [meetingId]);
+
+  const platform = PLATFORM_ICONS[meeting.platform] || PLATFORM_ICONS['Zoom'];
+
 
   return (
     <>
