@@ -240,12 +240,28 @@ router.get('/:id/stream', authMiddleware, async (req: Request, res: Response) =>
       'Connection': 'keep-alive',
     });
 
-    res.write(`data: ${JSON.stringify({ type: 'status', status: meeting.status })}\n\n`);
+    res.write(`data: ${JSON.stringify({
+      type: 'status',
+      status: meeting.status,
+      statusDetail: meeting.statusDetail || 'Connecting to meeting...',
+      claimedSpeakerName: meeting.claimedSpeakerName,
+      userInMeeting: meeting.userInMeeting,
+    })}\n\n`);
 
     let lastIndex = 0;
+    const knownParticipants = new Set<string>();
     
     const interval = setInterval(async () => {
       try {
+        // Refresh meeting state for claimedSpeakerName updates
+        const currentMeeting = await prisma.externalMeeting.findUnique({
+          where: { id: meetingId },
+          select: { claimedSpeakerName: true, hearingLang: true, status: true, statusDetail: true },
+        });
+
+        const claimedName = currentMeeting?.claimedSpeakerName || meeting.claimedSpeakerName;
+        const hearingLang = currentMeeting?.hearingLang || meeting.hearingLang;
+
         const url = `${VEXA_API_URL}/transcripts/${meeting.platform}/${encodeURIComponent(meeting.nativeMeetingId || '')}`;
         const vexaRes = await fetch(url, {
           headers: { 'X-API-Key': VEXA_API_KEY },
@@ -253,20 +269,30 @@ router.get('/:id/stream', authMiddleware, async (req: Request, res: Response) =>
 
         if (vexaRes.ok) {
           const transcriptData: any = await vexaRes.json();
-          // Assuming transcriptData is an array of segments
           const newSegments = (Array.isArray(transcriptData) ? transcriptData : transcriptData.transcript || []).slice(lastIndex);
           
+          let rosterChanged = false;
+
           for (const segment of newSegments) {
+            const rawSpeaker = (segment.speaker || 'Unknown').trim();
+            if (rawSpeaker && !knownParticipants.has(rawSpeaker)) {
+              knownParticipants.add(rawSpeaker);
+              rosterChanged = true;
+            }
+
+            const isSelf = !!(claimedName && rawSpeaker.toLowerCase() === claimedName.toLowerCase());
             let translatedText = segment.text;
-            if (meeting.hearingLang && meeting.hearingLang !== 'en') {
+
+            // Only translate if speech is from SOMEONE ELSE (prevent user audio echo)
+            if (!isSelf && hearingLang && hearingLang !== 'en') {
               try {
-                const deeplRes = await translateWithDeepL(segment.text, meeting.hearingLang);
+                const deeplRes = await translateWithDeepL(segment.text, hearingLang);
                 if (deeplRes) {
                   translatedText = deeplRes.text;
                 } else {
-                  const geminiRes = await translateWithGemini(segment.text, [meeting.hearingLang]);
-                  if (geminiRes[meeting.hearingLang]) {
-                    translatedText = geminiRes[meeting.hearingLang];
+                  const geminiRes = await translateWithGemini(segment.text, [hearingLang]);
+                  if (geminiRes[hearingLang]) {
+                    translatedText = geminiRes[hearingLang];
                   }
                 }
               } catch (e) {
@@ -276,10 +302,24 @@ router.get('/:id/stream', authMiddleware, async (req: Request, res: Response) =>
 
             res.write(`data: ${JSON.stringify({
               type: 'transcript',
-              speaker: segment.speaker || 'Unknown',
+              speaker: rawSpeaker,
+              isSelf,
               text: segment.text,
-              translatedText,
+              translatedText: isSelf ? segment.text : translatedText,
               timestamp: segment.timestamp || Date.now()
+            })}\n\n`);
+          }
+
+          if (rosterChanged || newSegments.length > 0) {
+            const participantList = Array.from(knownParticipants).map(name => ({
+              name,
+              isSelf: !!(claimedName && name.toLowerCase() === claimedName.toLowerCase()),
+              isActive: newSegments.length > 0 && newSegments[newSegments.length - 1].speaker === name,
+            }));
+
+            res.write(`data: ${JSON.stringify({
+              type: 'participants',
+              participants: participantList,
             })}\n\n`);
           }
 
@@ -301,7 +341,84 @@ router.get('/:id/stream', authMiddleware, async (req: Request, res: Response) =>
   }
 });
 
-// 5. POST /:id/leave
+// 5. PATCH /:id/claim-speaker
+router.patch('/:id/claim-speaker', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const meetingId = req.params.id as string;
+    const userId = (req as any).user.userId;
+    const { speakerName } = req.body;
+
+    const meeting = await prisma.externalMeeting.findUnique({
+      where: { id: meetingId },
+    });
+
+    if (!meeting) return res.status(404).json({ error: 'Meeting not found' });
+    if (meeting.userId !== userId) return res.status(403).json({ error: 'Forbidden' });
+
+    const updated = await prisma.externalMeeting.update({
+      where: { id: meetingId },
+      data: {
+        claimedSpeakerName: speakerName || null,
+        userInMeeting: !!speakerName,
+      },
+    });
+
+    return res.json(updated);
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 6. POST /:id/passcode
+router.post('/:id/passcode', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const meetingId = req.params.id as string;
+    const userId = (req as any).user.userId;
+    const { passcode } = req.body;
+
+    const meeting = await prisma.externalMeeting.findUnique({
+      where: { id: meetingId },
+    });
+
+    if (!meeting) return res.status(404).json({ error: 'Meeting not found' });
+    if (meeting.userId !== userId) return res.status(403).json({ error: 'Forbidden' });
+
+    const updated = await prisma.externalMeeting.update({
+      where: { id: meetingId },
+      data: {
+        passcode,
+        status: 'CONNECTING',
+        statusDetail: 'Re-authenticating with passcode...',
+      },
+    });
+
+    // Attempt bot re-spawn with passcode
+    try {
+      await fetch(`${VEXA_API_URL}/bots`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': VEXA_API_KEY,
+        },
+        body: JSON.stringify({
+          platform: meeting.platform,
+          native_meeting_id: meeting.nativeMeetingId,
+          passcode: passcode || '',
+          bot_name: meeting.botName,
+          language: meeting.speakingLang,
+        }),
+      });
+    } catch (e) {
+      console.warn('Vexa respawn failed on passcode update', e);
+    }
+
+    return res.json(updated);
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 7. POST /:id/leave
 router.post('/:id/leave', authMiddleware, async (req: Request, res: Response) => {
   try {
     const meetingId = req.params.id as string;
@@ -324,7 +441,7 @@ router.post('/:id/leave', authMiddleware, async (req: Request, res: Response) =>
   }
 });
 
-// 6. PATCH /:id/language
+// 8. PATCH /:id/language
 router.patch('/:id/language', authMiddleware, async (req: Request, res: Response) => {
   try {
     const meetingId = req.params.id as string;
@@ -352,8 +469,9 @@ router.patch('/:id/language', authMiddleware, async (req: Request, res: Response
   }
 });
 
-// 7. POST /:id/end
+// 9. POST /:id/end
 router.post('/:id/end', authMiddleware, async (req: Request, res: Response) => {
+
   try {
     const meetingId = req.params.id as string;
     const userId = (req as any).user.userId;
