@@ -268,6 +268,58 @@ router.post('/change-password', authMiddleware, async (req: Request, res: Respon
   }
 });
 
+// --- DELETE /api/auth/account ---
+const deleteAccountSchema = z.object({
+  password: z.string().optional(),
+  confirmed: z.boolean().optional(),
+});
+
+router.delete('/account', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const body = deleteAccountSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (user.deletedAt) {
+      return res.status(400).json({ error: 'Account is already deleted' });
+    }
+
+    if (user.passwordHash) {
+      if (!body.password) {
+        return res.status(400).json({ error: 'Password is required to delete your account' });
+      }
+      const passwordValid = await bcrypt.compare(body.password, user.passwordHash);
+      if (!passwordValid) {
+        return res.status(400).json({ error: 'Incorrect password' });
+      }
+    } else {
+      if (!body.confirmed) {
+        return res.status(400).json({ error: 'Confirmation is required to delete your account' });
+      }
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { deletedAt: new Date() },
+    });
+
+    res.cookie('relay_session', '', {
+      httpOnly: true,
+      path: '/',
+      maxAge: 0,
+    });
+
+    return res.json({ success: true });
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
+    console.error('Delete account error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // --- Zod Schemas ---
 const signupSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -351,6 +403,10 @@ router.post('/login', async (req: Request, res: Response) => {
     });
 
     if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    if (user.deletedAt) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -493,6 +549,10 @@ router.post('/google', async (req: Request, res: Response) => {
       avatar: payload.picture || null,
       providerAccountId: payload.sub || payload.email,
     });
+
+    if (result.user.deletedAt) {
+      return res.status(401).json({ error: 'Account not found' });
+    }
 
     const token = await signSessionToken({
       userId: result.user.id,

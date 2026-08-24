@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import AuthGuard from '@/components/AuthGuard';
 import { MobileMenuProvider } from '@/contexts/MobileMenuContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { ChannelProvider } from '@/contexts/ChannelContext';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarReady, setSidebarReady] = useState(false);
@@ -13,12 +14,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <MobileMenuProvider>
       <NotificationProvider>
-        <div className="min-h-screen bg-canvas text-ink flex selection:bg-chrome selection:text-white w-full overflow-x-hidden">
-          <AuthGuard sidebarReady={sidebarReady}>
-            <Sidebar onReady={notifySidebarReady} />
-            {children}
-          </AuthGuard>
-        </div>
+        <ChannelProvider>
+          <div className="min-h-screen bg-canvas text-ink flex selection:bg-chrome selection:text-white w-full overflow-x-hidden">
+            <AuthGuard sidebarReady={sidebarReady}>
+              <Sidebar onReady={notifySidebarReady} />
+              {children}
+            </AuthGuard>
+          </div>
+        </ChannelProvider>
       </NotificationProvider>
     </MobileMenuProvider>
   );

@@ -1,17 +1,24 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import DashboardHeader from '@/components/DashboardHeader';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useWorkspace, type Member } from '@/contexts/WorkspaceContext';
 import { useAuth, getUserJobRole } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { Button, Input, Toggle } from '@/components/ui';
 
 type SettingsTab = 'profile' | 'language' | 'workspace' | 'members' | 'policies';
 
 export default function SettingsPage() {
-  const { isOrganization, currentWorkspace, hasPermission, joinWorkspaceWithCode, addWorkspace } = useWorkspace();
+  const {
+    isOrganization, currentWorkspace, hasPermission, joinWorkspaceWithCode, createWorkspace,
+    members, invites, membersLoading, fetchMembers, fetchInvites,
+    inviteMember, resendInvite, revokeInvite, changeMemberRole, removeMember,
+    regenerateInviteCode, updateWorkspaceSettings, updateWorkspaceName, deleteWorkspace,
+    refetchWorkspaces,
+  } = useWorkspace();
   const { user, refetchUser } = useAuth();
   const { preferences, updatePreferences, deviceCount, pushEnabled, requestPushPermission } = useNotifications();
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -59,16 +66,46 @@ export default function SettingsPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
+  // Delete account state
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
   // Org join/create state
   const [joinCode, setJoinCode] = useState('');
   const [orgName, setOrgName] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
   const [showCreateInput, setShowCreateInput] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
 
-  // Org settings state
-  const [meetingHostPolicy, setMeetingHostPolicy] = useState('all');
-  const [autoRecording, setAutoRecording] = useState(false);
+  // Members tab state
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member');
+  const [isInviting, setIsInviting] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [roleChangeTarget, setRoleChangeTarget] = useState<Member | null>(null);
+  const [newRole, setNewRole] = useState<string>('member');
+  const [isChangingRole, setIsChangingRole] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<Member | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // Policies state
+  const wsSettings0 = (currentWorkspace.settings || {}) as Record<string, unknown>;
+  const [meetingHostPolicy, setMeetingHostPolicy] = useState((wsSettings0.meetingHostPolicy as string) || 'all');
+  const [autoRecording, setAutoRecording] = useState(typeof wsSettings0.autoRecording === 'boolean' ? wsSettings0.autoRecording : false);
+  const [isSavingPolicies, setIsSavingPolicies] = useState(false);
+
+  // Workspace settings state
+  const [editOrgName, setEditOrgName] = useState(currentWorkspace.name);
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const tabs = isOrg
     ? ([
@@ -83,6 +120,14 @@ export default function SettingsPage() {
         { key: 'workspace' as const, label: 'Workspace' },
       ]);
 
+  // Fetch members + invites when switching to members tab
+  useEffect(() => {
+    if (tab === 'members' && isOrg && isOwner) {
+      fetchMembers();
+      fetchInvites();
+    }
+  }, [tab, isOrg, isOwner, fetchMembers, fetchInvites]);
+
   const handleJoinOrg = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCode.trim()) return;
@@ -95,30 +140,145 @@ export default function SettingsPage() {
     }
   };
 
-  const handleCreateOrg = (e: React.FormEvent) => {
+  const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orgName.trim()) return;
-    addWorkspace({
-      id: 'org-' + Date.now(),
-      type: 'organization',
-      name: orgName,
-      role: 'owner',
-      inviteCode: 'RELAY-' + Math.floor(1000 + Math.random() * 9000),
-    });
-    setStatusMessage(`Created "${orgName}" workspace!`);
-    setOrgName('');
-    setShowCreateInput(false);
-    setTimeout(() => setStatusMessage(null), 3000);
+    setIsCreatingOrg(true);
+    try {
+      const result = await createWorkspace(orgName);
+      if (result) {
+        setStatusMessage(`Created "${orgName}" workspace!`);
+        setOrgName('');
+        setShowCreateInput(false);
+        await refetchWorkspaces();
+      } else {
+        setStatusMessage('Failed to create workspace.');
+      }
+    } finally {
+      setIsCreatingOrg(false);
+      setTimeout(() => setStatusMessage(null), 3000);
+    }
+  };
+
+  const handleInvite = async () => {
+    if (!inviteEmail.trim()) return;
+    setIsInviting(true);
+    setInviteError(null);
+    try {
+      const ok = await inviteMember(inviteEmail.trim(), inviteRole);
+      if (ok) {
+        setShowInviteModal(false);
+        setInviteEmail('');
+        setInviteRole('member');
+        setStatusMessage('Invitation sent!');
+        setTimeout(() => setStatusMessage(null), 3000);
+      } else {
+        setInviteError('Failed to send invite. Check if the email is valid.');
+      }
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const handleRoleChange = async () => {
+    if (!roleChangeTarget || !newRole) return;
+    setIsChangingRole(true);
+    try {
+      const ok = await changeMemberRole(roleChangeTarget.id, newRole as 'owner' | 'admin' | 'member');
+      if (ok) {
+        setRoleChangeTarget(null);
+        setStatusMessage('Role updated');
+        setTimeout(() => setStatusMessage(null), 3000);
+      }
+    } finally {
+      setIsChangingRole(false);
+    }
+  };
+
+  const handleRemoveMember = async () => {
+    if (!removeTarget) return;
+    setIsRemoving(true);
+    try {
+      const ok = await removeMember(removeTarget.id);
+      if (ok) {
+        setRemoveTarget(null);
+        setStatusMessage('Member removed');
+        setTimeout(() => setStatusMessage(null), 3000);
+      }
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
+  const handleCopyCode = useCallback(() => {
+    const code = currentWorkspace.inviteCode || 'RELAY-8841';
+    navigator.clipboard.writeText(code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  }, [currentWorkspace.inviteCode]);
+
+  const handleRegenerateCode = async () => {
+    setIsRegenerating(true);
+    try {
+      await regenerateInviteCode();
+      setStatusMessage('Invite code regenerated');
+      setTimeout(() => setStatusMessage(null), 3000);
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  const handleSavePolicies = async () => {
+    setIsSavingPolicies(true);
+    try {
+      const ok = await updateWorkspaceSettings({
+        meetingHostPolicy,
+        autoRecording,
+      });
+      if (ok) {
+        setStatusMessage('Policies saved');
+        setTimeout(() => setStatusMessage(null), 3000);
+      }
+    } finally {
+      setIsSavingPolicies(false);
+    }
+  };
+
+  const handleSaveOrgName = async () => {
+    if (!editOrgName.trim() || editOrgName === currentWorkspace.name) return;
+    setIsSavingName(true);
+    try {
+      const ok = await updateWorkspaceName(editOrgName.trim());
+      if (ok) {
+        setStatusMessage('Workspace name updated');
+        setTimeout(() => setStatusMessage(null), 3000);
+      }
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  const handleDeleteWorkspace = async () => {
+    setIsDeleting(true);
+    try {
+      const ok = await deleteWorkspace(currentWorkspace.id);
+      if (ok) {
+        setShowDeleteConfirm(false);
+        setStatusMessage('Workspace deleted');
+        setTimeout(() => setStatusMessage(null), 3000);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
     <>
-
       <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
         <DashboardHeader
           rightContent={
             statusMessage ? (
-              <span className="text-xs font-bold text-white bg-accent px-3 py-1.5 rounded-full shadow-sm ">
+              <span className="text-xs font-bold text-white bg-accent px-3 py-1.5 rounded-full shadow-sm">
                 {statusMessage}
               </span>
             ) : null
@@ -165,7 +325,7 @@ export default function SettingsPage() {
                       {user?.avatar ? (
                         <Image src={user.avatar} alt={user.fullName} width={64} height={64} className="w-16 h-16 rounded-xl object-cover shadow-lg" />
                       ) : (
-                        <div className="w-16 h-16 rounded-xl bg-chrome flex items-center justify-center text-white font-bold text-xl shadow-lg ">
+                        <div className="w-16 h-16 rounded-xl bg-chrome flex items-center justify-center text-white font-bold text-xl shadow-lg">
                           {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
                         </div>
                       )}
@@ -175,7 +335,7 @@ export default function SettingsPage() {
                         {getUserJobRole(user) && (
                           <p className="text-xs font-bold text-muted mt-0.5">{getUserJobRole(user)}</p>
                         )}
-                        <span className="inline-block mt-1 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-accent text-white shadow-sm ">
+                        <span className="inline-block mt-1 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-accent text-white shadow-sm">
                           {isOrg ? `${currentWorkspace.role} · ${currentWorkspace.name}` : 'Solo Account'}
                         </span>
                       </div>
@@ -201,15 +361,13 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-canvas border border-border/20 rounded-xl">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md ">
+                        <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
                           <span className="material-symbols-outlined text-white text-[20px]">lock</span>
                         </div>
                         <div>
                           <p className="text-sm font-bold text-ink">Password</p>
                           <p className="text-xs text-muted">
-                            {user?.hasPassword
-                              ? 'Set a new password'
-                              : 'No password set'}
+                            {user?.hasPassword ? 'Set a new password' : 'No password set'}
                           </p>
                         </div>
                       </div>
@@ -246,7 +404,7 @@ export default function SettingsPage() {
                       }}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md ">
+                        <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
                           <span className="material-symbols-outlined text-white text-[20px]">shield</span>
                         </div>
                         <div>
@@ -256,7 +414,7 @@ export default function SettingsPage() {
                       </div>
                       <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
                         user?.twoFactorEnabled
-                          ? 'bg-accent text-white shadow-sm '
+                          ? 'bg-accent text-white shadow-sm'
                           : 'bg-border text-muted'
                       }`}>
                         {user?.twoFactorEnabled ? 'Active' : 'Setup'}
@@ -265,7 +423,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex items-center justify-between p-4 bg-canvas border border-border/20 rounded-xl">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md ">
+                        <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
                           <span className="material-symbols-outlined text-white text-[20px]">notifications</span>
                         </div>
                         <div>
@@ -282,6 +440,36 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Danger Zone */}
+                <div className="bg-surface border border-danger/30 rounded-xl p-6 shadow-card">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-danger/20 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-danger text-[20px]">warning</span>
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold tracking-tight text-ink">Danger Zone</h2>
+                      <p className="text-[10px] text-muted uppercase tracking-widest">Irreversible actions</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-danger/5 border border-danger/20 rounded-xl">
+                    <div>
+                      <p className="text-sm font-bold text-ink">Delete Account</p>
+                      <p className="text-xs text-muted">Permanently deactivate your account. You will lose access to all workspaces and data.</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setDeletePassword('');
+                        setDeleteConfirmed(false);
+                        setDeleteError(null);
+                        setShowDeleteAccountModal(true);
+                      }}
+                      className="text-[10px] font-bold text-danger uppercase tracking-widest hover:text-danger/80 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -291,7 +479,7 @@ export default function SettingsPage() {
                 {/* Language Preferences */}
                 <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md ">
+                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
                       <span className="material-symbols-outlined text-white text-[20px]">translate</span>
                     </div>
                     <div>
@@ -345,7 +533,7 @@ export default function SettingsPage() {
                 {/* Voice Configuration */}
                 <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md ">
+                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
                       <span className="material-symbols-outlined text-white text-[20px]">record_voice_over</span>
                     </div>
                     <div>
@@ -369,7 +557,7 @@ export default function SettingsPage() {
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                            selectedVoice === voice.id ? 'bg-chrome text-white shadow-md ' : 'bg-canvas text-muted'
+                            selectedVoice === voice.id ? 'bg-chrome text-white shadow-md' : 'bg-canvas text-muted'
                           }`}>
                             <span className="material-symbols-outlined text-[20px]">{voice.icon}</span>
                           </div>
@@ -390,7 +578,7 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md ">
+                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
                       <span className="material-symbols-outlined text-white text-[20px]">domain</span>
                     </div>
                     <div>
@@ -405,7 +593,7 @@ export default function SettingsPage() {
                   <div className="flex flex-wrap gap-3">
                     <button
                       onClick={() => { setShowCreateInput(!showCreateInput); setShowJoinInput(false); }}
-                      className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-lg  flex items-center gap-2"
+                      className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-lg flex items-center gap-2"
                     >
                       <span className="material-symbols-outlined text-[16px]">add</span>
                       {showCreateInput ? 'Cancel' : 'Create Organization'}
@@ -428,7 +616,7 @@ export default function SettingsPage() {
                         onChange={(e) => setJoinCode(e.target.value)}
                         className="flex-1 bg-surface border border-border/30 rounded-xl px-4 py-2.5 text-xs uppercase font-mono tracking-wider focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20"
                       />
-                      <button type="submit" className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md ">
+                      <button type="submit" className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md">
                         Join
                       </button>
                     </form>
@@ -445,8 +633,8 @@ export default function SettingsPage() {
                           onChange={(e) => setOrgName(e.target.value)}
                           className="flex-1 bg-surface border border-border/30 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20"
                         />
-                        <button type="submit" className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md ">
-                          Create
+                        <button type="submit" disabled={isCreatingOrg} className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md disabled:opacity-50">
+                          {isCreatingOrg ? 'Creating...' : 'Create'}
                         </button>
                       </div>
                     </form>
@@ -458,7 +646,7 @@ export default function SettingsPage() {
                   <h2 className="text-lg font-bold tracking-tight text-ink mb-4">Current Workspace</h2>
                   <div className="p-4 bg-canvas border border-border/20 rounded-xl">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-chrome text-white flex items-center justify-center text-xs font-bold shadow-md ">
+                      <div className="w-10 h-10 rounded-xl bg-chrome text-white flex items-center justify-center text-xs font-bold shadow-md">
                         P
                       </div>
                       <div>
@@ -472,74 +660,160 @@ export default function SettingsPage() {
             )}
 
             {/* ==================== MEMBERS TAB (Org only) ==================== */}
-            {tab === 'members' && isOrg && (
+            {tab === 'members' && isOrg && isOwner && (
               <div className="space-y-6">
-                {/* Invite Code (Owner only) */}
-                {isOwner && (
-                  <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md ">
-                        <span className="material-symbols-outlined text-white text-[20px]">vpn_key</span>
-                      </div>
-                      <div>
-                        <h2 className="text-lg font-bold tracking-tight text-ink">Invite Code</h2>
-                        <p className="text-[10px] text-muted uppercase tracking-widest">Share this code to add members</p>
-                      </div>
+                {/* Invite Code */}
+                <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
+                      <span className="material-symbols-outlined text-white text-[20px]">vpn_key</span>
                     </div>
-                    <div className="flex items-center gap-3 p-4 bg-canvas border border-dashed border-border/50 rounded-xl">
-                      <span className="font-mono text-lg font-black tracking-widest text-ink select-all">
-                        {currentWorkspace.inviteCode || 'RELAY-8841'}
-                      </span>
-                      <button className="ml-auto text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">content_copy</span>
-                        Copy
-                      </button>
+                    <div>
+                      <h2 className="text-lg font-bold tracking-tight text-ink">Invite Code</h2>
+                      <p className="text-[10px] text-muted uppercase tracking-widest">Share this code to add members</p>
                     </div>
                   </div>
+                  <div className="flex items-center gap-3 p-4 bg-canvas border border-dashed border-border/50 rounded-xl">
+                    <span className="font-mono text-lg font-black tracking-widest text-ink select-all">
+                      {currentWorkspace.inviteCode || 'RELAY-8841'}
+                    </span>
+                    <button
+                      onClick={handleCopyCode}
+                      className="ml-auto text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors flex items-center gap-1"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">{copiedCode ? 'check' : 'content_copy'}</span>
+                      {copiedCode ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      onClick={handleRegenerateCode}
+                      disabled={isRegenerating}
+                      className="text-[10px] font-bold text-muted uppercase tracking-widest hover:text-danger transition-colors"
+                    >
+                      {isRegenerating ? 'Regenerating...' : 'Regenerate Code'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pending Invites */}
+                {invites.length > 0 && (
+                  <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
+                    <h2 className="text-lg font-bold tracking-tight text-ink mb-4">
+                      Pending Invites ({invites.length})
+                    </h2>
+                    <div className="space-y-2">
+                      {invites.map((inv) => (
+                        <div key={inv.id} className="flex items-center justify-between p-3 bg-canvas border border-border/20 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-border flex items-center justify-center text-[10px] font-bold text-muted">
+                              {inv.email[0].toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-ink">{inv.email}</p>
+                              <p className="text-[10px] text-faint">
+                                Invited as {inv.role} · Expires {new Date(inv.expiresAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-warning/10 text-warning border border-yellow-200">
+                              Pending
+                            </span>
+                            <button
+                              onClick={async () => { await resendInvite(inv.id); setStatusMessage('Invite resent'); setTimeout(() => setStatusMessage(null), 3000); }}
+                              className="text-[10px] font-bold text-muted hover:text-accent transition-colors"
+                            >
+                              Resend
+                            </button>
+                            <button
+                              onClick={() => revokeInvite(inv.id)}
+                              className="text-[10px] font-bold text-muted hover:text-danger transition-colors"
+                            >
+                              Revoke
+                            </button>
+                          </div>
+                        </div>
+                       ))}
+                </div>
+                </div>
                 )}
 
                 {/* Member List */}
                 <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-bold tracking-tight text-ink">
-                      Members ({orgMembers.length})
+                      Members ({members.length})
                     </h2>
-                    {isOwner && (
-                      <button className="bg-accent text-white px-4 py-2 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md  flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[14px]">person_add</span>
-                        Invite
-                      </button>
-                    )}
+                    <button
+                      onClick={() => { setShowInviteModal(true); setInviteEmail(''); setInviteRole('member'); setInviteError(null); }}
+                      className="bg-accent text-white px-4 py-2 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">person_add</span>
+                      Invite
+                    </button>
                   </div>
-                  <div className="space-y-3">
-                    {orgMembers.map((member, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 border border-border/20 rounded-xl hover:border-accent/30 hover:shadow-card transition-all duration-300 group">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl ${member.color} flex items-center justify-center text-[11px] font-bold group-hover:scale-110 transition-transform`}>
-                            {member.initials}
+                  {membersLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <svg className="animate-spin h-6 w-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {members.map((member) => {
+                        const initials = member.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                        const isCurrentUser = member.id === user?.id;
+                        return (
+                          <div key={member.id} className="flex items-center justify-between p-4 border border-border/20 rounded-xl hover:border-accent/30 hover:shadow-card transition-all duration-300 group">
+                            <div className="flex items-center gap-3">
+                              {member.avatar ? (
+                                <Image src={member.avatar} alt={member.fullName} width={40} height={40} className="w-10 h-10 rounded-xl object-cover shadow-md group-hover:scale-110 transition-transform" />
+                              ) : (
+                                <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center text-white text-[11px] font-bold shadow-md group-hover:scale-110 transition-transform">
+                                  {initials}
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-sm font-bold text-ink group-hover:text-accent transition-colors">
+                                  {member.fullName}{isCurrentUser && ' (you)'}
+                                </p>
+                                <p className="text-xs text-muted">{member.email}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                member.role === 'owner' ? 'bg-accent text-white shadow-sm' :
+                                member.role === 'admin' ? 'bg-info/10 text-info border border-indigo-200' :
+                                'bg-canvas text-muted border border-border'
+                              }`}>
+                                {member.role}
+                              </span>
+                              {!isCurrentUser && member.role !== 'owner' && (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => { setRoleChangeTarget(member); setNewRole(member.role === 'admin' ? 'member' : 'admin'); }}
+                                    className="w-8 h-8 rounded-xl border border-border/30 flex items-center justify-center text-muted hover:text-ink hover:border-border hover:bg-canvas transition-all"
+                                    title="Change role"
+                                  >
+                                    <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                                  </button>
+                                  <button
+                                    onClick={() => setRemoveTarget(member)}
+                                    className="w-8 h-8 rounded-xl border border-border/30 flex items-center justify-center text-muted hover:text-danger hover:border-danger/30 hover:bg-danger/10 transition-all"
+                                    title="Remove member"
+                                  >
+                                    <span className="material-symbols-outlined text-[16px]">person_remove</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-ink group-hover:text-accent transition-colors">{member.name}</p>
-                            <p className="text-xs text-muted">{member.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
-                            member.role === 'Owner' ? 'bg-accent text-white shadow-sm ' :
-                            member.role === 'Admin' ? 'bg-info/10 text-info border border-indigo-200' :
-                            'bg-canvas text-muted border border-border'
-                          }`}>
-                            {member.role}
-                          </span>
-                          {isOwner && member.role !== 'Owner' && (
-                            <button className="w-8 h-8 rounded-xl border border-border/30 flex items-center justify-center text-muted hover:text-danger hover:border-danger/30 hover:bg-danger/10 transition-all">
-                              <span className="material-symbols-outlined text-[16px]">person_remove</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -547,9 +821,37 @@ export default function SettingsPage() {
             {/* ==================== POLICIES TAB (Org Owner only) ==================== */}
             {tab === 'policies' && isOrg && isOwner && (
               <div className="space-y-6">
+                {/* Workspace Name */}
+                <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
+                      <span className="material-symbols-outlined text-white text-[20px]">badge</span>
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold tracking-tight text-ink">Workspace Name</h2>
+                      <p className="text-[10px] text-muted uppercase tracking-widest">Rename your organization</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={editOrgName}
+                      onChange={(e) => setEditOrgName(e.target.value)}
+                      className="flex-1 bg-canvas border border-border/30 rounded-xl px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                    />
+                    <button
+                      onClick={handleSaveOrgName}
+                      disabled={isSavingName || !editOrgName.trim() || editOrgName === currentWorkspace.name}
+                      className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md disabled:opacity-40 disabled:hover:scale-100"
+                    >
+                      {isSavingName ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </div>
+
                 <div className="bg-surface border border-border rounded-xl p-6 shadow-card">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md ">
+                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
                       <span className="material-symbols-outlined text-white text-[20px]">policy</span>
                     </div>
                     <div>
@@ -573,12 +875,21 @@ export default function SettingsPage() {
                       options={['on', 'off']}
                     />
                   </div>
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      onClick={handleSavePolicies}
+                      disabled={isSavingPolicies}
+                      className="bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-105 transition-all shadow-md disabled:opacity-50"
+                    >
+                      {isSavingPolicies ? 'Saving...' : 'Save Policies'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Danger Zone */}
                 <div className="bg-surface border border-danger/30 rounded-xl p-6 shadow-card">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md ">
+                    <div className="w-10 h-10 rounded-xl bg-chrome flex items-center justify-center shadow-md">
                       <span className="material-symbols-outlined text-white text-[20px]">warning</span>
                     </div>
                     <div>
@@ -591,17 +902,116 @@ export default function SettingsPage() {
                       <p className="text-sm font-bold text-ink">Delete Workspace</p>
                       <p className="text-xs text-muted">Permanently delete this workspace and all its data.</p>
                     </div>
-                    <button className="bg-danger text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-700 transition-all">
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="bg-danger text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-700 transition-all"
+                    >
                       Delete
                     </button>
                   </div>
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </main>
+
+      {/* ===== INVITE MEMBER MODAL ===== */}
+      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="Invite Member">
+        <div className="p-6 space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-muted uppercase tracking-widest">Email Address</label>
+            <input
+              type="email"
+              placeholder="colleague@company.com"
+              value={inviteEmail}
+              onChange={(e) => { setInviteEmail(e.target.value); setInviteError(null); }}
+              className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 text-sm text-ink placeholder:text-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+              autoFocus
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-muted uppercase tracking-widest">Role</label>
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+              className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 text-sm text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+            >
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          {inviteError && (
+            <p className="text-xs text-danger text-center font-medium">{inviteError}</p>
+          )}
+          <div className="flex gap-3">
+            <Button variant="white" fullWidth onClick={() => setShowInviteModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="gradient"
+              fullWidth
+              isLoading={isInviting}
+              disabled={!inviteEmail.trim()}
+              onClick={handleInvite}
+            >
+              Send Invite
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ===== CHANGE ROLE MODAL ===== */}
+      <Modal open={!!roleChangeTarget} onClose={() => setRoleChangeTarget(null)} title="Change Role">
+        <div className="p-6 space-y-6">
+          <p className="text-sm text-muted">
+            Change <span className="font-bold text-ink">{roleChangeTarget?.fullName}</span>&apos;s role:
+          </p>
+          <select
+            value={newRole}
+            onChange={(e) => setNewRole(e.target.value)}
+            className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 text-sm text-ink focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+          >
+            <option value="member">Member</option>
+            <option value="admin">Admin</option>
+          </select>
+          <div className="flex gap-3">
+            <Button variant="white" fullWidth onClick={() => setRoleChangeTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="gradient"
+              fullWidth
+              isLoading={isChangingRole}
+              onClick={handleRoleChange}
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ===== REMOVE MEMBER CONFIRM ===== */}
+      <ConfirmDialog
+        open={!!removeTarget}
+        onClose={() => setRemoveTarget(null)}
+        onConfirm={handleRemoveMember}
+        title="Remove Member"
+        description={`Remove ${removeTarget?.fullName || ''} (${removeTarget?.email || ''}) from this workspace? They will lose access immediately.`}
+        confirmLabel="Remove"
+        isLoading={isRemoving}
+      />
+
+      {/* ===== DELETE WORKSPACE CONFIRM ===== */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteWorkspace}
+        title="Delete Workspace"
+        description={`Permanently delete "${currentWorkspace.name}" and all its data? This action cannot be undone.`}
+        confirmLabel="Delete Workspace"
+        isLoading={isDeleting}
+      />
 
       {/* ===== EDIT PROFILE MODAL ===== */}
       <Modal open={showEditProfileModal} onClose={() => setShowEditProfileModal(false)} title="Edit Profile">
@@ -716,11 +1126,7 @@ export default function SettingsPage() {
           )}
 
           <div className="flex gap-3">
-            <Button
-              variant="white"
-              fullWidth
-              onClick={() => setShowEditProfileModal(false)}
-            >
+            <Button variant="white" fullWidth onClick={() => setShowEditProfileModal(false)}>
               Cancel
             </Button>
             <Button
@@ -845,11 +1251,7 @@ export default function SettingsPage() {
           )}
 
           <div className="flex gap-3">
-            <Button
-              variant="white"
-              fullWidth
-              onClick={() => setShowPasswordModal(false)}
-            >
+            <Button variant="white" fullWidth onClick={() => setShowPasswordModal(false)}>
               Cancel
             </Button>
             <Button
@@ -866,11 +1268,7 @@ export default function SettingsPage() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({
-                      currentPassword,
-                      newPassword,
-                      confirmPassword,
-                    }),
+                    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
                   });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error);
@@ -896,11 +1294,10 @@ export default function SettingsPage() {
       {/* ===== 2FA SETUP MODAL ===== */}
       <Modal open={show2FASetup} onClose={() => setShow2FASetup(false)} title="Set Up Two-Factor Authentication">
         <div className="p-6">
-          {/* Step 1: Intro */}
           {twoFactorStep === 'intro' && (
             <div className="space-y-6">
               <div className="flex items-center justify-center">
-                <div className="w-16 h-16 rounded-xl bg-chrome flex items-center justify-center shadow-lg ">
+                <div className="w-16 h-16 rounded-xl bg-chrome flex items-center justify-center shadow-lg">
                   <span className="material-symbols-outlined text-white text-[32px]">shield</span>
                 </div>
               </div>
@@ -944,7 +1341,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Step 2: QR Code */}
           {twoFactorStep === 'qr' && (
             <div className="space-y-6">
               <p className="text-sm text-muted text-center leading-relaxed">
@@ -965,11 +1361,7 @@ export default function SettingsPage() {
               <Button
                 variant="gradient"
                 fullWidth
-                onClick={() => {
-                  setTwoFactorStep('verify');
-                  setSetupCode('');
-                  setSetupError(null);
-                }}
+                onClick={() => { setTwoFactorStep('verify'); setSetupCode(''); setSetupError(null); }}
                 icon="arrow_forward"
               >
                 I&apos;ve Scanned It
@@ -977,7 +1369,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Step 3: Verify */}
           {twoFactorStep === 'verify' && (
             <div className="space-y-6">
               <p className="text-sm text-muted text-center leading-relaxed">
@@ -990,10 +1381,7 @@ export default function SettingsPage() {
                 maxLength={6}
                 placeholder="000000"
                 value={setupCode}
-                onChange={(e) => {
-                  setSetupCode(e.target.value.replace(/[^0-9]/g, ''));
-                  setSetupError(null);
-                }}
+                onChange={(e) => { setSetupCode(e.target.value.replace(/[^0-9]/g, '')); setSetupError(null); }}
                 className="w-full text-center text-3xl tracking-[0.5em] font-mono bg-canvas border border-border/30 rounded-xl py-4 px-4 text-ink placeholder:text-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 autoFocus
               />
@@ -1030,10 +1418,7 @@ export default function SettingsPage() {
                 Verify &amp; Enable
               </Button>
               <button
-                onClick={() => {
-                  setTwoFactorStep('qr');
-                  setSetupError(null);
-                }}
+                onClick={() => { setTwoFactorStep('qr'); setSetupError(null); }}
                 className="w-full text-center text-[11px] font-bold text-muted hover:text-ink transition-colors"
               >
                 Back to QR Code
@@ -1041,7 +1426,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Step 4: Backup Codes */}
           {twoFactorStep === 'backup' && (
             <div className="space-y-6">
               <div className="flex items-center justify-center">
@@ -1069,10 +1453,7 @@ export default function SettingsPage() {
                 <Button
                   variant="white"
                   fullWidth
-                  onClick={() => {
-                    const text = backupCodes.join('\n');
-                    navigator.clipboard.writeText(text);
-                  }}
+                  onClick={() => { navigator.clipboard.writeText(backupCodes.join('\n')); }}
                   icon="content_copy"
                 >
                   Copy Codes
@@ -1083,9 +1464,6 @@ export default function SettingsPage() {
                   onClick={async () => {
                     setShow2FASetup(false);
                     setTwoFactorStep('intro');
-                    await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).then(() => {
-                      // refetch will happen in AuthContext automatically
-                    });
                     window.location.reload();
                   }}
                   icon="done"
@@ -1169,6 +1547,81 @@ export default function SettingsPage() {
           </Button>
         </div>
       </Modal>
+
+      {/* ===== DELETE ACCOUNT MODAL ===== */}
+      <Modal open={showDeleteAccountModal} onClose={() => setShowDeleteAccountModal(false)} title="Delete Account">
+        <div className="p-6 space-y-6">
+          <div className="bg-danger/10 border border-danger/30 rounded-xl p-4">
+            <p className="text-xs text-danger font-medium">
+              This action is irreversible. Your account will be permanently deactivated and you will lose access to all workspaces and data.
+            </p>
+          </div>
+
+          {deleteError && (
+            <p className="text-xs text-danger text-center font-medium">{deleteError}</p>
+          )}
+
+          {user?.hasPassword ? (
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-muted uppercase tracking-widest">Confirm Password</label>
+              <input
+                type="password"
+                placeholder="Enter your password to confirm"
+                value={deletePassword}
+                onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(null); }}
+                className="w-full bg-canvas border border-border/30 rounded-xl py-3 px-4 text-sm text-ink placeholder:text-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+              />
+            </div>
+          ) : (
+            <label className="flex items-start gap-3 p-4 bg-canvas border border-border/20 rounded-xl cursor-pointer">
+              <input
+                type="checkbox"
+                checked={deleteConfirmed}
+                onChange={(e) => { setDeleteConfirmed(e.target.checked); setDeleteError(null); }}
+                className="mt-0.5 h-4 w-4 rounded border-border text-danger focus:ring-danger/20"
+              />
+              <span className="text-sm text-ink">I understand this action is permanent and cannot be undone.</span>
+            </label>
+          )}
+
+          <div className="flex gap-3">
+            <Button variant="white" fullWidth onClick={() => setShowDeleteAccountModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              fullWidth
+              isLoading={isDeletingAccount}
+              disabled={user?.hasPassword ? !deletePassword : !deleteConfirmed}
+              onClick={async () => {
+                if (user?.hasPassword ? !deletePassword : !deleteConfirmed) return;
+                setIsDeletingAccount(true);
+                setDeleteError(null);
+                try {
+                  const body = user?.hasPassword
+                    ? { password: deletePassword }
+                    : { confirmed: true };
+                  const res = await fetch('/api/auth/account', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(body),
+                  });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error);
+                  window.location.href = '/';
+                } catch (err: unknown) {
+                  setDeleteError(err instanceof Error ? err.message : 'Failed to delete account');
+                } finally {
+                  setIsDeletingAccount(false);
+                }
+              }}
+            >
+              Delete Account
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }
@@ -1222,14 +1675,3 @@ function PolicyRow({ label, desc, value, onChange, options }: {
     </div>
   );
 }
-
-/* ==================== DATA ==================== */
-
-const orgMembers = [
-  { name: 'Elias Thompson', email: 'elias@relay.ai', role: 'Owner', initials: 'ET', color: 'bg-border text-ink' },
-  { name: 'Sarah Chen', email: 'sarah@relay.ai', role: 'Admin', initials: 'SC', color: 'bg-border text-ink' },
-  { name: 'Yousef Al-Rashid', email: 'yousef@relay.ai', role: 'Member', initials: 'YA', color: 'bg-border text-ink' },
-  { name: 'Marcus Klein', email: 'marcus@relay.ai', role: 'Member', initials: 'MK', color: 'bg-border text-ink' },
-  { name: 'Sofia Martinez', email: 'sofia@relay.ai', role: 'Member', initials: 'SM', color: 'bg-border text-ink' },
-  { name: 'Wei Zhang', email: 'wei@relay.ai', role: 'Member', initials: 'WZ', color: 'bg-border text-ink' },
-];

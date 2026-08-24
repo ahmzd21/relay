@@ -120,6 +120,7 @@ export default function MeetingPage({ params }: MeetingPageProps) {
         // host. Arriving first at an invite link must not be enough.
         if (isStartingMeeting) {
           url.searchParams.append('create', 'true');
+          url.searchParams.append('title', 'Native Meeting');
           if (enableWaitingRoom) url.searchParams.append('waitingRoom', 'true');
         }
       }

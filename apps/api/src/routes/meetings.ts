@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { verifySessionToken } from '../lib/jwt.js';
 import { prisma } from '../lib/prisma.js';
+import { authMiddleware } from '../middleware/auth.js';
+import { cleanupStaleMeetings } from '../lib/cleanup.js';
 
 const router = Router();
 
@@ -62,6 +64,8 @@ router.get('/token', async (req: Request, res: Response) => {
     const chatLang = (req.query.chatLang as string) || 'en';
     const audioLang = (req.query.audioLang as string) || 'none';
     const subtitleLang = (req.query.subtitleLang as string) || 'none';
+    const meetingTitle = (req.query.title as string) || 'Native Meeting';
+    const workspaceId = (req.query.workspaceId as string) || undefined;
 
     // 1. Check for logged-in user session
     let userId = '';
@@ -146,6 +150,27 @@ router.get('/token', async (req: Request, res: Response) => {
             createdAt: Date.now(),
           }),
         });
+
+        // Persist the meeting in the database alongside the LiveKit room
+        try {
+          const existingRecord = await prisma.nativeMeeting.findUnique({
+            where: { roomName },
+            select: { id: true },
+          });
+          if (!existingRecord) {
+            await prisma.nativeMeeting.create({
+              data: {
+                title: meetingTitle,
+                roomName,
+                createdById: userId.startsWith('guest_') ? '' : userId,
+                workspaceId: workspaceId || null,
+                status: 'active',
+              },
+            });
+          }
+        } catch (e) {
+          console.warn('[Meetings API] Could not persist native meeting record:', e);
+        }
       } catch (e) {
         console.warn('[Meetings API] Failed to create room', e);
         return res.status(500).json({ error: 'Failed to create meeting room' });
@@ -363,6 +388,30 @@ router.post('/control', async (req: Request, res: Response) => {
         }
 
         await roomService.deleteRoom(roomName);
+
+        // Persist the meeting end in the database
+        try {
+          const nativeMeeting = await prisma.nativeMeeting.findUnique({
+            where: { roomName },
+            select: { id: true, startedAt: true },
+          });
+          if (nativeMeeting) {
+            const durationMinutes = Math.round(
+              (Date.now() - nativeMeeting.startedAt.getTime()) / 60000
+            );
+            await prisma.nativeMeeting.update({
+              where: { id: nativeMeeting.id },
+              data: {
+                status: 'ended',
+                endedAt: new Date(),
+                durationMinutes,
+              },
+            });
+          }
+        } catch (e) {
+          console.warn('[Meetings API] Could not persist meeting end:', e);
+        }
+
         return res.json({ success: true });
       }
 
@@ -623,6 +672,404 @@ router.post('/translate', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[Meetings API] Error translating chat message:', error);
     return res.status(500).json({ error: 'Translation failed' });
+  }
+});
+
+// ==================== Native Meeting CRUD ====================
+
+/**
+ * POST /api/meetings
+ * Create a NativeMeeting record (called when user starts a meeting from dashboard).
+ */
+router.post('/', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { title, roomName, workspaceId } = req.body as {
+      title?: string;
+      roomName: string;
+      workspaceId?: string;
+    };
+
+    if (!roomName) {
+      return res.status(400).json({ error: 'roomName is required' });
+    }
+
+    const meeting = await prisma.nativeMeeting.create({
+      data: {
+        title: title || 'Native Meeting',
+        roomName,
+        createdById: userId,
+        workspaceId: workspaceId || null,
+        status: 'active',
+      },
+    });
+
+    return res.status(201).json(meeting);
+  } catch (error: any) {
+    console.error('[Meetings API] Error creating native meeting:', error);
+    return res.status(500).json({ error: 'Failed to create meeting' });
+  }
+});
+
+/**
+ * GET /api/meetings
+ * List the authenticated user's recent native meetings.
+ * If workspaceId is provided, scope to that workspace.
+ */
+router.get('/', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    await cleanupStaleMeetings();
+    const userId = req.user!.userId;
+    const workspaceId = req.query.workspaceId as string | undefined;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
+
+    const where: any = {};
+
+    if (workspaceId) {
+      // Org scope: meetings created by any member of this workspace
+      const memberUserIds = (
+        await prisma.workspaceMember.findMany({
+          where: { workspaceId },
+          select: { userId: true },
+        })
+      ).map((m) => m.userId);
+      where.createdById = { in: memberUserIds };
+      where.workspaceId = workspaceId;
+    } else {
+      // Personal scope: meetings created by this user
+      where.createdById = userId;
+    }
+
+    const meetings = await prisma.nativeMeeting.findMany({
+      where,
+      orderBy: { startedAt: 'desc' },
+      take: limit,
+    });
+
+    return res.json(meetings);
+  } catch (error: any) {
+    console.error('[Meetings API] Error listing native meetings:', error);
+    return res.status(500).json({ error: 'Failed to list meetings' });
+  }
+});
+
+/**
+ * GET /api/meetings/recent
+ * Combined recent meetings across native, external, and channel types.
+ */
+router.get('/recent', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    await cleanupStaleMeetings();
+    const userId = req.user!.userId;
+    const workspaceId = req.query.workspaceId as string | undefined;
+    const limit = Math.min(parseInt(req.query.limit as string) || 6, 20);
+
+    const isOrg = !!workspaceId;
+    let memberUserIds: string[] = [userId];
+
+    if (isOrg) {
+      memberUserIds = (
+        await prisma.workspaceMember.findMany({
+          where: { workspaceId },
+          select: { userId: true },
+        })
+      ).map((m) => m.userId);
+    }
+
+    // Fetch all three types in parallel
+    const [nativeMeetings, extMeetings, channelMeetings] = await Promise.all([
+      prisma.nativeMeeting.findMany({
+        where: isOrg
+          ? { createdById: { in: memberUserIds }, workspaceId }
+          : { createdById: userId },
+        orderBy: { startedAt: 'desc' },
+        take: limit,
+      }),
+      prisma.externalMeeting.findMany({
+        where: { userId: { in: memberUserIds } },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+      prisma.channelMeeting.findMany({
+        where: isOrg ? { channel: { workspaceId } } : { createdById: userId },
+        orderBy: { startedAt: 'desc' },
+        take: limit,
+      }),
+    ]);
+
+    // Normalize into a unified shape
+    interface RecentMeeting {
+      id: string;
+      title: string;
+      type: 'native' | 'external' | 'channel';
+      platform: string;
+      date: string;
+      duration: string | null;
+      languages: string[];
+      status: string;
+      participantCount: number;
+      href: string;
+    }
+
+    const normalized: RecentMeeting[] = [
+      ...nativeMeetings.map((m) => ({
+        id: m.id,
+        title: m.title,
+        type: 'native' as const,
+        platform: 'Native',
+        date: m.startedAt.toISOString(),
+        duration: m.durationMinutes ? `${m.durationMinutes}m` : null,
+        languages: m.languages,
+        status: m.status,
+        participantCount: m.participantCount,
+        href: `/dashboard/native-meeting/${m.id}`,
+      })),
+      ...extMeetings.map((m) => ({
+        id: m.id,
+        title: m.title,
+        type: 'external' as const,
+        platform: m.platform === 'zoom' ? 'Zoom' : m.platform === 'teams' ? 'Teams' : 'Google Meet',
+        date: m.createdAt.toISOString(),
+        duration: m.duration || null,
+        languages: m.languages,
+        status: m.status.toLowerCase(),
+        participantCount: Array.isArray(m.participants) ? m.participants.length : 0,
+        href: `/dashboard/external-meeting/${m.id}`,
+      })),
+      ...channelMeetings.map((m) => ({
+        id: m.id,
+        title: m.title,
+        type: 'channel' as const,
+        platform: 'Channel',
+        date: m.startedAt.toISOString(),
+        duration: m.endedAt
+          ? `${Math.round((m.endedAt.getTime() - m.startedAt.getTime()) / 60000)}m`
+          : null,
+        languages: m.language ? [m.language.toUpperCase()] : [],
+        status: m.status,
+        participantCount: m.participantCount,
+        href: `/dashboard/channels`,
+      })),
+    ];
+
+    // Sort by date descending and take top N
+    normalized.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return res.json(normalized.slice(0, limit));
+  } catch (error: any) {
+    console.error('[Meetings API] Error fetching recent meetings:', error);
+    return res.status(500).json({ error: 'Failed to fetch recent meetings' });
+  }
+});
+
+/**
+ * GET /api/meetings/live-count
+ * Count of currently active meetings across all types for the user's workspace.
+ */
+router.get('/live-count', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const workspaceId = req.query.workspaceId as string | undefined;
+
+    const isOrg = !!workspaceId;
+    let memberUserIds: string[] = [userId];
+
+    if (isOrg) {
+      memberUserIds = (
+        await prisma.workspaceMember.findMany({
+          where: { workspaceId },
+          select: { userId: true },
+        })
+      ).map((m) => m.userId);
+    }
+
+    const [nativeActive, extActive, channelActive] = await Promise.all([
+      prisma.nativeMeeting.count({
+        where: isOrg
+          ? { createdById: { in: memberUserIds }, workspaceId, status: 'active' }
+          : { createdById: userId, status: 'active' },
+      }),
+      prisma.externalMeeting.count({
+        where: {
+          userId: { in: memberUserIds },
+          status: { in: ['IN_CALL', 'PROCESSING'] },
+        },
+      }),
+      prisma.channelMeeting.count({
+        where: isOrg
+          ? { channel: { workspaceId }, status: { in: ['starting', 'live'] } }
+          : { createdById: userId, status: { in: ['starting', 'live'] } },
+      }),
+    ]);
+
+    return res.json({ liveCount: nativeActive + extActive + channelActive });
+  } catch (error: any) {
+    console.error('[Meetings API] Error counting live meetings:', error);
+    return res.status(500).json({ liveCount: 0 });
+  }
+});
+
+/**
+ * GET /api/meetings/:id
+ * Get a single native meeting's detail.
+ */
+router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const meeting = await prisma.nativeMeeting.findUnique({
+      where: { id: req.params.id as string },
+      include: { creator: { select: { id: true, fullName: true, avatar: true } } },
+    });
+
+    if (!meeting) {
+      return res.status(404).json({ error: 'Meeting not found' });
+    }
+
+    return res.json(meeting);
+  } catch (error: any) {
+    console.error('[Meetings API] Error fetching meeting:', error);
+    return res.status(500).json({ error: 'Failed to fetch meeting' });
+  }
+});
+
+/**
+ * PATCH /api/meetings/:id
+ * End or update a native meeting.
+ */
+router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { status, endedAt, durationMinutes, summary, actionItems, transcript, participantCount, languages } = req.body as {
+      status?: string;
+      endedAt?: string;
+      durationMinutes?: number;
+      summary?: string;
+      actionItems?: unknown;
+      transcript?: unknown;
+      participantCount?: number;
+      languages?: string[];
+    };
+
+    const data: Record<string, unknown> = {};
+    if (status) data.status = status;
+    if (endedAt) data.endedAt = new Date(endedAt);
+    if (durationMinutes !== undefined) data.durationMinutes = durationMinutes;
+    if (summary !== undefined) data.summary = summary;
+    if (actionItems !== undefined) data.actionItems = actionItems;
+    if (transcript !== undefined) data.transcript = transcript;
+    if (participantCount !== undefined) data.participantCount = participantCount;
+    if (languages) data.languages = languages;
+
+    const meeting = await prisma.nativeMeeting.update({
+      where: { id: req.params.id as string },
+      data,
+    });
+
+    return res.json(meeting);
+  } catch (error: any) {
+    console.error('[Meetings API] Error updating meeting:', error);
+    return res.status(500).json({ error: 'Failed to update meeting' });
+  }
+});
+
+// --- Scheduled Meetings CRUD ---
+
+// GET /api/meetings/schedule — list scheduled meetings for the user/workspace
+router.get('/schedule', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const workspaceId = (req.query.workspaceId as string) || undefined;
+    const range = (req.query.range as string) || 'all'; // today | week | all
+
+    const now = new Date();
+    let where: any = { status: 'upcoming' };
+
+    if (workspaceId) {
+      where.workspaceId = workspaceId;
+    } else {
+      where.createdById = userId;
+    }
+
+    if (range === 'today') {
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const dayEnd = new Date(dayStart.getTime() + 86400000);
+      where.scheduledAt = { gte: dayStart, lt: dayEnd };
+    } else if (range === 'week') {
+      const weekEnd = new Date(now.getTime() + 7 * 86400000);
+      where.scheduledAt = { gte: now, lte: weekEnd };
+    } else {
+      where.scheduledAt = { gte: now };
+    }
+
+    const meetings = await prisma.scheduledMeeting.findMany({
+      where,
+      orderBy: { scheduledAt: 'asc' },
+    });
+
+    return res.json(meetings);
+  } catch (error: any) {
+    console.error('[Meetings API] Error fetching scheduled meetings:', error);
+    return res.status(500).json({ error: 'Failed to fetch scheduled meetings' });
+  }
+});
+
+// POST /api/meetings/schedule — create a scheduled meeting
+router.post('/schedule', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { title, scheduledAt, duration, platform, workspaceId } = req.body as {
+      title: string;
+      scheduledAt: string;
+      duration?: string;
+      platform?: string;
+      workspaceId?: string;
+    };
+
+    if (!title?.trim() || !scheduledAt) {
+      return res.status(400).json({ error: 'Title and scheduled time are required' });
+    }
+
+    const meeting = await prisma.scheduledMeeting.create({
+      data: {
+        title: title.trim(),
+        scheduledAt: new Date(scheduledAt),
+        duration: duration || '30m',
+        platform: platform || 'Native',
+        createdById: userId,
+        workspaceId: workspaceId || null,
+      },
+    });
+
+    return res.json(meeting);
+  } catch (error: any) {
+    console.error('[Meetings API] Error creating scheduled meeting:', error);
+    return res.status(500).json({ error: 'Failed to create scheduled meeting' });
+  }
+});
+
+// DELETE /api/meetings/schedule/:id — delete a scheduled meeting
+router.delete('/schedule/:id', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const meetingId = req.params.id as string;
+
+    const meeting = await prisma.scheduledMeeting.findUnique({
+      where: { id: meetingId },
+    });
+
+    if (!meeting) {
+      return res.status(404).json({ error: 'Scheduled meeting not found' });
+    }
+
+    if (meeting.createdById !== userId) {
+      return res.status(403).json({ error: 'You can only delete your own scheduled meetings' });
+    }
+
+    await prisma.scheduledMeeting.delete({
+      where: { id: meetingId },
+    });
+
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error('[Meetings API] Error deleting scheduled meeting:', error);
+    return res.status(500).json({ error: 'Failed to delete scheduled meeting' });
   }
 });
 

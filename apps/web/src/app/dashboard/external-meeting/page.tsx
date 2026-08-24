@@ -134,7 +134,7 @@ export default function ExternalMeetingPage() {
 
   const [meetings, setMeetings] = useState<ExternalMeeting[]>(MOCK_MEETINGS);
 
-  // Fetch real meetings from API or fall back to stored/mock meetings
+  // Fetch real meetings from API
   useEffect(() => {
     const fetchMeetings = async () => {
       try {
@@ -163,34 +163,15 @@ export default function ExternalMeetingPage() {
               };
             });
             setMeetings(formatted);
-            return;
           }
         }
       } catch (e) {
-        console.warn('Could not load meetings from API, falling back to cache');
-      }
-
-      try {
-        const saved = localStorage.getItem('relay-external-meetings');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setMeetings(parsed);
-          }
-        }
-      } catch {
-        // ignore
+        console.warn('Could not load meetings from API:', e);
       }
     };
 
     fetchMeetings();
   }, []);
-
-  useEffect(() => {
-    if (meetings.length > 0) {
-      localStorage.setItem('relay-external-meetings', JSON.stringify(meetings));
-    }
-  }, [meetings]);
 
   const filteredMeetings = useMemo(() => {
     if (activeTab === 'all') return meetings;
