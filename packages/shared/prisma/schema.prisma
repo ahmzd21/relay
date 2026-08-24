@@ -17,6 +17,13 @@ enum MemberRole {
   MEMBER
 }
 
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
 model User {
   id                 String              @id @default(cuid())
   email              String              @unique
@@ -32,10 +39,19 @@ model User {
   twoFactorBackupCodes String?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
   memberships        WorkspaceMember[]
+  sentInvites        Invite[] @relation("InviteCreator")
   verificationTokens VerificationToken[]
   pushSubscriptions  PushSubscription[]
   externalMeetings   ExternalMeeting[]
+  channelMemberships ChannelMember[]
+  channelMessages    ChannelMessage[]
+  createdChannels    Channel[]            @relation("ChannelCreator")
+  channelMeetings    ChannelMeeting[]     @relation("MeetingCreator")
+  nativeMeetings     NativeMeeting[]      @relation("NativeMeetingCreator")
+  sentMentions       ChannelMention[]
+  scheduledMeetings  ScheduledMeeting[]   @relation("ScheduledMeetingCreator")
 
   @@unique([provider, providerAccountId])
 }
@@ -62,6 +78,10 @@ model Workspace {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   members          WorkspaceMember[]
+  invites          Invite[]
+  channels         Channel[]
+  nativeMeetings   NativeMeeting[]
+  scheduledMeetings ScheduledMeeting[]
 }
 
 model WorkspaceMember {
@@ -77,6 +97,25 @@ model WorkspaceMember {
   @@unique([workspaceId, userId])
 }
 
+model Invite {
+  id          String       @id @default(cuid())
+  workspaceId String
+  email       String
+  role        MemberRole   @default(MEMBER)
+  invitedById String
+  token       String       @unique
+  status      InviteStatus @default(PENDING)
+  expiresAt   DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InviteCreator", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([workspaceId, email])
+}
+
 model PushSubscription {
   id         String   @id @default(cuid())
   userId     String
@@ -89,6 +128,12 @@ model PushSubscription {
 
   @@unique([userId, token])
   @@index([userId])
+}
+
+enum ChannelRole {
+  OWNER
+  ADMIN
+  MEMBER
 }
 
 enum ExternalMeetingStatus {
@@ -126,6 +171,7 @@ model ExternalMeeting {
   participants       Json                  @default("[]")  // [{name, isSelf, isActive}]
   languages          String[]              @default(["en"])
   duration           String?
+  durationMinutes    Int?
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt
 
@@ -133,5 +179,151 @@ model ExternalMeeting {
 
   @@index([userId])
   @@index([status])
+}
+
+model Channel {
+  id          String           @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  settings    Json             @default("{}")
+  createdBy   String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  creator   User              @relation("ChannelCreator", fields: [createdBy], references: [id])
+  members   ChannelMember[]
+  messages  ChannelMessage[]
+  meetings  ChannelMeeting[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+}
+
+model ChannelMember {
+  id         String      @id @default(cuid())
+  channelId  String
+  userId     String
+  role       ChannelRole @default(MEMBER)
+  lastReadAt DateTime?
+  joinedAt   DateTime    @default(now())
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@index([channelId])
+  @@index([userId])
+}
+
+model ChannelMessage {
+  id         String               @id @default(cuid())
+  channelId  String
+  userId     String
+  content    String               @db.Text
+  replyToId  String?
+  editedAt   DateTime?
+  deletedAt  DateTime?
+  createdAt  DateTime             @default(now())
+
+  channel     Channel              @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replyTo     ChannelMessage?      @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     ChannelMessage[]     @relation("MessageReplies")
+  mentions    ChannelMention[]
+  attachments MessageAttachment[]
+
+  @@index([channelId, createdAt])
+  @@index([userId])
+}
+
+model ChannelMention {
+  id        String @id @default(cuid())
+  messageId String
+  userId    String
+
+  message ChannelMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId])
+}
+
+model MessageAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  fileName  String
+  fileSize  Int
+  mimeType  String
+  url       String
+  createdAt DateTime @default(now())
+
+  message ChannelMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model ChannelMeeting {
+  id              String    @id @default(cuid())
+  channelId       String
+  createdById     String
+  title           String
+  meetingType     String
+  meetingUrl      String?
+  roomName        String?
+  status          String    @default("starting")
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+  participantCount Int      @default(0)
+  language        String?
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  creator User    @relation("MeetingCreator", fields: [createdById], references: [id])
+
+  @@index([channelId, startedAt])
+}
+
+model NativeMeeting {
+  id              String    @id @default(cuid())
+  title           String    @default("Native Meeting")
+  roomName        String    @unique
+  createdById     String
+  workspaceId     String?
+  status          String    @default("active")  // active | ended | failed
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+  participantCount Int      @default(0)
+  languages       String[]  @default(["en"])
+  language        String?
+  summary         String?   @db.Text
+  actionItems     Json      @default("[]")
+  transcript      Json      @default("[]")
+  durationMinutes Int?
+
+  creator   User           @relation("NativeMeetingCreator", fields: [createdById], references: [id])
+  workspace Workspace?     @relation(fields: [workspaceId], references: [id])
+
+  @@index([createdById, startedAt])
+  @@index([workspaceId, startedAt])
+}
+
+model ScheduledMeeting {
+  id          String    @id @default(cuid())
+  title       String
+  scheduledAt DateTime
+  duration    String    @default("30m")
+  platform    String    @default("Native") // Native | Zoom | Google Meet | Teams
+  status      String    @default("upcoming") // upcoming | ended | cancelled
+  createdById String
+  workspaceId String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  creator   User       @relation("ScheduledMeetingCreator", fields: [createdById], references: [id])
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
+
+  @@index([createdById, scheduledAt])
+  @@index([workspaceId, scheduledAt])
 }
 

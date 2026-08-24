@@ -97,3 +97,24 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     `,
   });
 }
+
+export async function sendInviteEmail(email: string, inviteUrl: string, orgName: string, invitedByName: string) {
+  await sendEmail({
+    to: email,
+    subject: `${invitedByName} invited you to join ${orgName} on Relay`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+        <h1 style="font-size: 24px; font-weight: 700; color: #1c1b1b; margin-bottom: 8px;">You've been invited to Relay</h1>
+        <p style="font-size: 16px; color: #8C8880; margin-bottom: 32px;">
+          <strong>${invitedByName}</strong> has invited you to join <strong>${orgName}</strong> on Relay for real-time multilingual meetings.
+        </p>
+        <a href="${inviteUrl}" style="display: inline-block; background: linear-gradient(to right, #FF416C, #FF4B2B); color: white; padding: 14px 32px; border-radius: 9999px; text-decoration: none; font-weight: 700; font-size: 14px;">
+          Accept Invitation
+        </a>
+        <p style="font-size: 13px; color: #8C8880; margin-top: 32px;">
+          This invitation expires in 7 days. If you don't have a Relay account yet, you'll be prompted to create one. If you didn't expect this invite, you can safely ignore this email.
+        </p>
+      </div>
+    `,
+  });
+}

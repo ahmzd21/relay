@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardHeader from "@/components/DashboardHeader";
@@ -17,148 +17,20 @@ interface ScheduledMeeting {
   status: "upcoming" | "live" | "ended";
 }
 
-const MOCK_PARTICIPANTS = [
-  {
-    name: "Elias Thompson",
-    initials: "ET",
-    color: "bg-border text-ink",
-  },
-  { name: "Sarah Chen", initials: "SC", color: "bg-border text-ink" },
-  {
-    name: "Yousef Al-Rashid",
-    initials: "YA",
-    color: "bg-border text-ink",
-  },
-  {
-    name: "Sofia Martinez",
-    initials: "SM",
-    color: "bg-border text-ink",
-  },
-  { name: "Wei Zhang", initials: "WZ", color: "bg-border text-ink" },
-  {
-    name: "Marcus Klein",
-    initials: "MK",
-    color: "bg-border text-ink",
-  },
-  { name: "Priya Sharma", initials: "PS", color: "bg-border text-ink" },
-];
+interface RecentMeeting {
+  id: string;
+  title: string;
+  type: "native" | "external" | "channel";
+  platform: string;
+  date: string;
+  duration: string | null;
+  languages: string[];
+  status: string;
+  participantCount: number;
+  href: string;
+}
 
-const DEFAULT_MEETINGS: ScheduledMeeting[] = [
-  {
-    id: "mtg-1",
-    title: "Client Sync: Website Redesign",
-    date: new Date().toISOString().split("T")[0],
-    time: "10:00",
-    duration: "45m",
-    platform: "Zoom",
-    participants: [
-      MOCK_PARTICIPANTS[0],
-      MOCK_PARTICIPANTS[1],
-      MOCK_PARTICIPANTS[2],
-    ],
-    status: "upcoming",
-  },
-  {
-    id: "mtg-2",
-    title: "Interview: Frontend Dev",
-    date: new Date().toISOString().split("T")[0],
-    time: "14:30",
-    duration: "60m",
-    platform: "Google Meet",
-    participants: [MOCK_PARTICIPANTS[0], MOCK_PARTICIPANTS[3]],
-    status: "upcoming",
-  },
-  {
-    id: "mtg-3",
-    title: "Design Review",
-    date: new Date().toISOString().split("T")[0],
-    time: "16:00",
-    duration: "30m",
-    platform: "Native",
-    participants: [
-      MOCK_PARTICIPANTS[0],
-      MOCK_PARTICIPANTS[4],
-      MOCK_PARTICIPANTS[5],
-      MOCK_PARTICIPANTS[6],
-    ],
-    status: "upcoming",
-  },
-  {
-    id: "mtg-4",
-    title: "Weekly Team Standup",
-    date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-    time: "09:00",
-    duration: "15m",
-    platform: "Native",
-    participants: [
-      MOCK_PARTICIPANTS[0],
-      MOCK_PARTICIPANTS[1],
-      MOCK_PARTICIPANTS[2],
-      MOCK_PARTICIPANTS[3],
-    ],
-    status: "upcoming",
-  },
-  {
-    id: "mtg-5",
-    title: "Product Roadmap Planning",
-    date: new Date(Date.now() + 86400000 * 2).toISOString().split("T")[0],
-    time: "11:00",
-    duration: "90m",
-    platform: "Google Meet",
-    participants: [
-      MOCK_PARTICIPANTS[0],
-      MOCK_PARTICIPANTS[5],
-      MOCK_PARTICIPANTS[6],
-    ],
-    status: "upcoming",
-  },
-];
-
-const RECENT_MEETINGS = [
-  {
-    id: "rm-1",
-    title: "Client Sync: Website Redesign",
-    timeAgo: "2h ago",
-    platform: "Zoom" as const,
-    participants: [
-      MOCK_PARTICIPANTS[0],
-      MOCK_PARTICIPANTS[1],
-      MOCK_PARTICIPANTS[2],
-    ],
-  },
-  {
-    id: "rm-2",
-    title: "Weekly Team Standup",
-    timeAgo: "Yesterday",
-    platform: "Native" as const,
-    participants: [MOCK_PARTICIPANTS[0], MOCK_PARTICIPANTS[1]],
-  },
-  {
-    id: "rm-3",
-    title: "Design Review",
-    timeAgo: "2 days ago",
-    platform: "Google Meet" as const,
-    participants: [
-      MOCK_PARTICIPANTS[0],
-      MOCK_PARTICIPANTS[4],
-      MOCK_PARTICIPANTS[5],
-    ],
-  },
-];
-
-const WEEKLY_STREAK = [
-  { day: "Mon", height: 80, count: 2 },
-  { day: "Tue", height: 60, count: 1 },
-  { day: "Wed", height: 100, count: 3 },
-  { day: "Thu", height: 40, count: 1 },
-  { day: "Fri", height: 70, count: 2 },
-];
-
-const ACTION_ITEMS = [
-  { text: "Finalize API schema", source: "Client Sync" },
-  { text: "Schedule vendor follow-up", source: "Roadmap Planning" },
-  { text: "Review frontend candidates", source: "Interview Session" },
-];
+const DEFAULT_MEETINGS: ScheduledMeeting[] = [];
 
 function getScheduleDateRange(): { today: string; weekEnd: string } {
   const today = new Date().toISOString().split("T")[0];
@@ -170,7 +42,7 @@ function getScheduleDateRange(): { today: string; weekEnd: string } {
 
 export default function MainDashboardPage() {
   const router = useRouter();
-  const { isOrganization, currentWorkspace, hasPermission } = useWorkspace();
+  const { isOrganization, currentWorkspace, hasPermission, members, fetchMembers } = useWorkspace();
   const { user } = useAuth();
 
   const [externalLink, setExternalLink] = useState("");
@@ -189,30 +61,144 @@ export default function MainDashboardPage() {
     platform: "Native" as ScheduledMeeting["platform"],
   });
 
-  // Hydrate from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("relay-scheduled-meetings");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMeetings(parsed);
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
+  // Real data state
+  const [recentMeetings, setRecentMeetings] = useState<RecentMeeting[]>([]);
+  const [liveCount, setLiveCount] = useState(0);
+  const [weeklyMeetings, setWeeklyMeetings] = useState<RecentMeeting[]>([]);
 
-  // Persist to localStorage
-  useEffect(() => {
-    if (meetings.length > 0) {
-      localStorage.setItem(
-        "relay-scheduled-meetings",
-        JSON.stringify(meetings),
-      );
+  const isOrg = isOrganization();
+
+  const fetchRecentMeetings = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({ limit: "6" });
+      if (isOrg) params.set("workspaceId", currentWorkspace.id);
+      const res = await fetch(`/api/meetings/recent?${params}`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRecentMeetings(data);
+      }
+    } catch (e) {
+      console.warn("Could not fetch recent meetings:", e);
     }
-  }, [meetings]);
+  }, [isOrg, currentWorkspace.id]);
+
+  const fetchLiveCount = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (isOrg) params.set("workspaceId", currentWorkspace.id);
+      const res = await fetch(`/api/meetings/live-count?${params}`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLiveCount(data.liveCount);
+      }
+    } catch (e) {
+      console.warn("Could not fetch live count:", e);
+    }
+  }, [isOrg, currentWorkspace.id]);
+
+  const fetchWeeklyMeetings = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({ limit: "20" });
+      if (isOrg) params.set("workspaceId", currentWorkspace.id);
+      const res = await fetch(`/api/meetings/recent?${params}`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWeeklyMeetings(data);
+      }
+    } catch (e) {
+      console.warn("Could not fetch weekly meetings:", e);
+    }
+  }, [isOrg, currentWorkspace.id]);
+
+  // Fetch scheduled meetings from API
+  const fetchScheduledMeetings = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (isOrg) params.set("workspaceId", currentWorkspace.id);
+      const res = await fetch(`/api/meetings/schedule?${params}`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const mapped: ScheduledMeeting[] = (data as any[]).map((m) => {
+          const d = new Date(m.scheduledAt);
+          return {
+            id: m.id,
+            title: m.title,
+            date: d.toISOString().split("T")[0],
+            time: d.toTimeString().split(" ")[0].slice(0, 5),
+            duration: m.duration,
+            platform: m.platform,
+            participants: [{ name: user?.fullName || "You", initials: (user?.fullName || "U").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase(), color: "bg-border text-ink" }],
+            status: m.status,
+          };
+        });
+        setMeetings(mapped);
+      }
+    } catch (e) {
+      console.warn("Could not fetch scheduled meetings:", e);
+    }
+  }, [isOrg, currentWorkspace.id, user?.fullName]);
+
+  // Fetch real data
+  useEffect(() => {
+    fetchRecentMeetings();
+    fetchLiveCount();
+    fetchWeeklyMeetings();
+    fetchScheduledMeetings();
+    if (isOrg) fetchMembers();
+  }, [fetchRecentMeetings, fetchLiveCount, fetchWeeklyMeetings, fetchScheduledMeetings, isOrg, fetchMembers]);
+
+  // Compute weekly streak from real data
+  const weeklyStreak = useMemo(() => {
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const counts = new Map<string, number>();
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+
+    weeklyMeetings.forEach((m) => {
+      const d = new Date(m.date);
+      if (d >= weekStart) {
+        const day = dayNames[d.getDay()];
+        counts.set(day, (counts.get(day) || 0) + 1);
+      }
+    });
+
+    const maxCount = Math.max(...Array.from(counts.values()), 1);
+    return ["Mon", "Tue", "Wed", "Thu", "Fri"].map((day) => ({
+      day,
+      count: counts.get(day) || 0,
+      height: counts.has(day) ? ((counts.get(day) || 0) / maxCount) * 100 : 0,
+    }));
+  }, [weeklyMeetings]);
+
+  // Compute weekly total
+  const weeklyTotal = useMemo(
+    () => weeklyStreak.reduce((sum, d) => sum + d.count, 0),
+    [weeklyStreak],
+  );
+
+  // Extract real action items from recent meeting summaries
+  const actionItems = useMemo(() => {
+    const items: Array<{ text: string; source: string }> = [];
+    recentMeetings.forEach((m) => {
+      if (items.length >= 3) return;
+      items.push({ text: m.title, source: m.platform });
+    });
+    return items.length > 0
+      ? items
+      : [
+          { text: "Start a meeting to see action items", source: "Relay AI" },
+        ];
+  }, [recentMeetings]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -221,32 +207,35 @@ export default function MainDashboardPage() {
     return "Good evening";
   };
 
-  const orgFeed = [
-    {
-      id: 101,
-      type: "channel" as const,
-      name: "#engineering",
-      activity: "Sarah Chen started a live meeting",
-      time: "Just now",
-      live: true,
-    },
-    {
-      id: 102,
-      type: "insight" as const,
-      name: "#marketing",
-      activity: 'AI Transcript summary generated for "Q3 Campaign Review"',
-      time: "2 hours ago",
-      live: false,
-    },
-    {
-      id: 103,
-      type: "channel" as const,
-      name: "#leadership",
-      activity: "Elias Thompson uploaded 3 files",
-      time: "Yesterday",
-      live: false,
-    },
-  ];
+  const formatRelativeDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffHr = Math.floor(diffMs / 3600000);
+    if (diffHr < 1) return "Just now";
+    if (diffHr < 24) return `${diffHr}h ago`;
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay === 0) return "Today";
+    if (diffDay === 1) return "Yesterday";
+    if (diffDay < 7) return `${diffDay} days ago`;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const platformIcon = (type: string, platform: string) => {
+    if (type === "native") return "videocam";
+    if (type === "channel") return "tag";
+    if (platform === "Zoom") return "videocam";
+    if (platform === "Microsoft Teams") return "meeting_room";
+    return "groups";
+  };
+
+  const langName = (code: string) => {
+    const map: Record<string, string> = {
+      en: "EN", es: "ES", zh: "ZH", ar: "AR", ja: "JA",
+      fr: "FR", de: "DE", ko: "KO", pt: "PT", hi: "HI",
+    };
+    return map[code.toLowerCase()] || code.toUpperCase();
+  };
 
   // Filter meetings
   const filteredMeetings = useMemo(() => {
@@ -286,50 +275,66 @@ export default function MainDashboardPage() {
     });
   };
 
-  const addMeeting = (e: React.FormEvent) => {
+  const addMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMeeting.title.trim() || !newMeeting.date || !newMeeting.time)
       return;
-    const participants = [
-      MOCK_PARTICIPANTS[0],
-      MOCK_PARTICIPANTS[
-        Math.floor(Math.random() * (MOCK_PARTICIPANTS.length - 1)) + 1
-      ],
-    ];
-    const meeting: ScheduledMeeting = {
-      id: "mtg-" + Date.now(),
-      ...newMeeting,
-      participants,
-      status: "upcoming",
-    };
-    setMeetings((prev) => [...prev, meeting]);
-    setNewMeeting({
-      title: "",
-      date: "",
-      time: "",
-      duration: "30m",
-      platform: "Native",
-    });
-    setShowScheduleModal(false);
+    try {
+      const scheduledAt = new Date(`${newMeeting.date}T${newMeeting.time}`);
+      const res = await fetch("/api/meetings/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: newMeeting.title.trim(),
+          scheduledAt: scheduledAt.toISOString(),
+          duration: newMeeting.duration,
+          platform: newMeeting.platform,
+          workspaceId: isOrg ? currentWorkspace.id : undefined,
+        }),
+      });
+      if (res.ok) {
+        await fetchScheduledMeetings();
+        setNewMeeting({
+          title: "",
+          date: "",
+          time: "",
+          duration: "30m",
+          platform: "Native",
+        });
+        setShowScheduleModal(false);
+      }
+    } catch (e) {
+      console.warn("Could not create scheduled meeting:", e);
+    }
   };
 
-  const deleteMeeting = (id: string) => {
-    setMeetings((prev) => prev.filter((m) => m.id !== id));
+  const deleteMeeting = async (id: string) => {
+    try {
+      const res = await fetch(`/api/meetings/schedule/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setMeetings((prev) => prev.filter((m) => m.id !== id));
+      }
+    } catch (e) {
+      console.warn("Could not delete scheduled meeting:", e);
+    }
   };
 
   const joinMeeting = (meeting: ScheduledMeeting) => {
     if (meeting.platform === "Native") {
-      // These are the signed-in user's own scheduled meetings, so they are the
-      // organizer and may start the room.
-      router.push(`/meeting/${meeting.id}?create=1`);
+      const roomName = Math.random().toString(36).substring(2, 8).toUpperCase();
+      router.push(`/meeting/${roomName}?create=1`);
     } else {
       router.push(`/dashboard/external-meeting`);
     }
   };
 
   const handleStartNativeMeeting = () => {
-    const meetingId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    router.push(`/meeting/${meetingId}?create=1`);
+    const roomName = Math.random().toString(36).substring(2, 8).toUpperCase();
+    router.push(`/meeting/${roomName}?create=1`);
   };
 
   return (
@@ -385,7 +390,7 @@ export default function MainDashboardPage() {
                 </div>
                 <p className="text-muted text-base sm:text-lg">
                   {isOrganization()
-                    ? `${orgFeed.length} recent activities across your team`
+                    ? `${recentMeetings.length > 0 ? `${recentMeetings.length} recent meetings` : "Welcome to your team hub"}`
                     : "Your cross-border meetings and AI translation studio."}
                 </p>
               </div>
@@ -480,17 +485,19 @@ export default function MainDashboardPage() {
                   {[
                     {
                       label: "Members",
-                      value: "12",
+                      value: String(members.length || 0),
                       icon: "group",
                       color:
                         "bg-chrome text-white shadow-lg ",
                     },
                     {
                       label: "Live Now",
-                      value: "3",
+                      value: String(liveCount),
                       icon: "cell_tower",
                       color:
-                        "bg-surface text-ink shadow-pop border border-border",
+                        liveCount > 0
+                          ? "bg-accent/10 text-accent shadow-pop border border-accent/20"
+                          : "bg-surface text-ink shadow-pop border border-border",
                     },
                     {
                       label: "Channels",
@@ -553,79 +560,85 @@ export default function MainDashboardPage() {
                   </div>
                 )}
 
-                {/* Recent Meetings */}
-                <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 shadow-card">
-                  <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-lg sm:text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+                {/* Recent Meetings — Grid Cards (Org) */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold tracking-tight text-ink flex items-center gap-2">
                       <span className="material-symbols-outlined text-muted text-[20px]">
                         history
                       </span>
                       Recent Meetings
                     </h2>
-                    <button className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors flex-shrink-0">
+                    <Link href="/dashboard/native-meeting" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors">
                       View All
-                    </button>
+                    </Link>
                   </div>
-                  <div className="space-y-3">
-                    {RECENT_MEETINGS.map((meeting) => (
-                      <div
-                        key={meeting.id}
-                        className="flex items-center justify-between p-3 sm:p-4 bg-canvas border border-border/20 rounded-xl hover:border-accent/30 transition-all cursor-pointer group gap-2"
-                      >
-                        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface border border-border/30 flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-muted text-[18px] sm:text-[20px]">
-                              {meeting.platform === "Native"
-                                ? "videocam"
-                                : "link"}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-bold text-ink text-sm group-hover:text-accent transition-colors truncate">
-                                {meeting.title}
-                              </p>
-                              <span
-                                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 hidden sm:inline-block ${
-                                  meeting.platform === "Native"
-                                    ? "bg-accent/10 text-accent border border-accent/20"
-                                    : "bg-canvas text-muted border border-border"
-                                }`}
-                              >
-                                {meeting.platform}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="flex -space-x-1.5">
-                                {meeting.participants
-                                  .slice(0, 3)
-                                  .map((p, i) => (
-                                    <div
-                                      key={i}
-                                      className={`w-5 h-5 rounded-full border-2 border-white ${p.color} flex items-center justify-center text-[7px] font-bold`}
-                                      title={p.name}
-                                    >
-                                      {p.initials}
-                                    </div>
-                                  ))}
-                                {meeting.participants.length > 3 && (
-                                  <div className="w-5 h-5 rounded-full border-2 border-white bg-border text-muted flex items-center justify-center text-[7px] font-bold">
-                                    +{meeting.participants.length - 3}
-                                  </div>
-                                )}
-                              </div>
-                              <span className="text-muted text-xs">
-                                {meeting.timeAgo}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors flex-shrink-0">
-                          chevron_right
+
+                  {recentMeetings.length === 0 ? (
+                    <div className="bg-surface border border-border rounded-xl p-12 text-center shadow-card">
+                      <div className="w-16 h-16 bg-chrome rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg ">
+                        <span className="material-symbols-outlined text-white text-[32px]">
+                          videocam_off
                         </span>
                       </div>
-                    ))}
-                  </div>
+                      <h3 className="text-lg font-bold text-ink mb-2">
+                        No meetings yet
+                      </h3>
+                      <p className="text-muted text-sm">
+                        Start your first meeting to see it here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {recentMeetings.map((meeting) => (
+                        <Link
+                          key={meeting.id}
+                          href={meeting.href}
+                          className="bg-surface border border-border p-5 rounded-xl shadow-card hover:shadow-pop hover:border-accent/30 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]"
+                        >
+                          <div>
+                            <div className="flex justify-between items-start mb-4">
+                              <div
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
+                                  meeting.status === "active" || meeting.status === "ended"
+                                    ? "bg-chrome text-white border-accent/30"
+                                    : "bg-canvas text-muted border-border/20"
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[20px]">
+                                  {platformIcon(meeting.type, meeting.platform)}
+                                </span>
+                              </div>
+                              <div className="flex gap-1.5">
+                                {meeting.languages.length > 0 && (
+                                  <span className="bg-canvas border border-border/20 text-muted px-2 py-0.5 rounded text-[9px] font-bold">
+                                    {meeting.languages.slice(0, 2).map(langName).join(" | ")}
+                                  </span>
+                                )}
+                                <span className="bg-accent text-white px-2 py-0.5 rounded text-[9px] font-bold shadow-sm">
+                                  {meeting.platform}
+                                </span>
+                              </div>
+                            </div>
+                            <h3 className="font-bold text-ink mb-1 group-hover:text-accent transition-colors">
+                              {meeting.title}
+                            </h3>
+                            <p className="text-muted text-xs">
+                              {formatRelativeDate(meeting.date)} · {meeting.duration || "In progress"} · {meeting.participantCount} participants
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="w-6 h-6 rounded-full bg-border text-ink flex items-center justify-center text-[8px] font-bold">
+                              {meeting.participantCount}
+                            </div>
+                            <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors">
+                              arrow_forward
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Items + Quick AI Query & Weekly Streak */}
@@ -646,29 +659,29 @@ export default function MainDashboardPage() {
                         </span>
                       </div>
                       <div className="space-y-3">
-                        {ACTION_ITEMS.map((item, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-3 p-3 rounded-xl bg-canvas border border-border/20 hover:border-accent/20 transition-all cursor-pointer group"
-                          >
-                            <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-                              <span className="text-[10px] font-bold text-accent">
-                                {i + 1}
-                              </span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-ink/90 text-sm font-medium group-hover:text-ink transition-colors truncate">
-                                {item.text}
-                              </p>
-                              <p className="text-muted text-xs mt-0.5">
-                                from {item.source}
-                              </p>
-                            </div>
-                            <span className="material-symbols-outlined text-faint text-[16px] group-hover:text-accent transition-colors flex-shrink-0">
-                              check
-                            </span>
-                          </div>
-                        ))}
+                        {actionItems.map((item, i) => (
+                           <div
+                             key={i}
+                             className="flex items-center gap-3 p-3 rounded-xl bg-canvas border border-border/20 hover:border-accent/20 transition-all cursor-pointer group"
+                           >
+                             <div className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                               <span className="text-[10px] font-bold text-accent">
+                                 {i + 1}
+                               </span>
+                             </div>
+                             <div className="flex-1 min-w-0">
+                               <p className="text-ink/90 text-sm font-medium group-hover:text-ink transition-colors truncate">
+                                 {item.text}
+                               </p>
+                               <p className="text-muted text-xs mt-0.5">
+                                 from {item.source}
+                               </p>
+                             </div>
+                             <span className="material-symbols-outlined text-faint text-[16px] group-hover:text-accent transition-colors flex-shrink-0">
+                               check
+                             </span>
+                           </div>
+                         ))}
                       </div>
                     </div>
                   </div>
@@ -712,11 +725,11 @@ export default function MainDashboardPage() {
                           This Week
                         </h3>
                         <span className="text-xs font-bold text-accent">
-                          9 meetings
-                        </span>
+                           {weeklyTotal} meetings
+                         </span>
                       </div>
                       <div className="flex items-end gap-2 h-20">
-                        {WEEKLY_STREAK.map((bar) => (
+                        {weeklyStreak.map((bar) => (
                           <div
                             key={bar.day}
                             className="flex-1 flex flex-col items-center gap-1.5"
@@ -742,48 +755,53 @@ export default function MainDashboardPage() {
                     <h2 className="text-lg sm:text-xl font-bold tracking-tight text-ink">
                       Recent Activity
                     </h2>
-                    <button className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors flex-shrink-0">
+                    <Link href="/dashboard/channels" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors flex-shrink-0">
                       View All
-                    </button>
+                    </Link>
                   </div>
                   <div className="space-y-3">
-                    {orgFeed.map((feed) => (
-                      <div
-                        key={feed.id}
-                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-canvas border border-border/20 rounded-xl hover:border-accent/30 transition-all cursor-pointer group"
-                      >
-                        <div
-                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${feed.live ? "bg-accent text-white" : "bg-surface text-accent border border-accent/20"}`}
+                    {recentMeetings.length === 0 ? (
+                      <p className="text-muted text-sm text-center py-4">No recent activity</p>
+                    ) : (
+                      recentMeetings.slice(0, 3).map((meeting) => (
+                        <Link
+                          key={meeting.id}
+                          href={meeting.href}
+                          className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-canvas border border-border/20 rounded-xl hover:border-accent/30 transition-all cursor-pointer group"
                         >
-                          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
-                            {feed.type === "channel" ? "tag" : "lightbulb"}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-ink text-sm">
-                              {feed.name}
-                            </span>
-                            <span className="text-muted text-xs">
-                              · {feed.time}
+                          <div
+                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${meeting.status === "active" ? "bg-accent text-white" : "bg-surface text-accent border border-accent/20"}`}
+                          >
+                            <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
+                              {platformIcon(meeting.type, meeting.platform)}
                             </span>
                           </div>
-                          <p className="text-sm text-muted mt-0.5 truncate">
-                            {feed.activity}
-                          </p>
-                        </div>
-                        {feed.live ? (
-                          <span className="bg-accent text-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0">
-                            <span className="w-1.5 h-1.5 bg-surface rounded-full animate-pulse" />
-                            Live
-                          </span>
-                        ) : (
-                          <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors flex-shrink-0">
-                            chevron_right
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-ink text-sm">
+                                {meeting.title}
+                              </span>
+                              <span className="text-muted text-xs">
+                                · {formatRelativeDate(meeting.date)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted mt-0.5 truncate">
+                              {meeting.platform} · {meeting.participantCount} participants
+                            </p>
+                          </div>
+                          {meeting.status === "active" ? (
+                            <span className="bg-accent text-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0">
+                              <span className="w-1.5 h-1.5 bg-surface rounded-full animate-pulse" />
+                              Live
+                            </span>
+                          ) : (
+                            <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors flex-shrink-0">
+                              chevron_right
+                            </span>
+                          )}
+                        </Link>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -847,115 +865,92 @@ export default function MainDashboardPage() {
               </div>
             ) : (
               <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Live Now Card */}
-                {meetings.some((m) => m.status === "live") && (
-                  <div className="bg-surface border border-border rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">                    <div className="flex items-center gap-4 relative min-w-0">
-                      <div className="relative flex h-3 w-3 flex-shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-accent" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-ink font-bold text-sm">
-                          Meeting in Progress
-                        </p>
-                        <p className="text-muted text-xs mt-0.5 truncate">
-                          {meetings.find((m) => m.status === "live")?.title} —{" "}
-                          {
-                            meetings.find((m) => m.status === "live")
-                              ?.participants.length
-                          }{" "}
-                          participants
-                        </p>
-                      </div>
-                    </div>
-                    <button className="bg-accent text-white px-5 py-2.5 rounded-full text-xs font-bold hover:scale-105 transition-all duration-200 shadow-lg  relative flex items-center justify-center gap-2 self-start sm:self-auto">
-                      <span className="material-symbols-outlined text-[16px]">
-                        videocam
-                      </span>
-                      Join Now
-                    </button>
-                  </div>
-                )}
-
-                {/* Recent Meetings */}
-                <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 shadow-card">
-                  <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-lg sm:text-xl font-bold tracking-tight text-ink flex items-center gap-2">
+                {/* Recent Meetings — Grid Cards (Personal) */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold tracking-tight text-ink flex items-center gap-2">
                       <span className="material-symbols-outlined text-muted text-[20px]">
                         history
                       </span>
                       Recent Meetings
                     </h2>
-                    <button className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors flex-shrink-0">
+                    <Link href="/dashboard/external-meeting" className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-accent-deep transition-colors">
                       View All
-                    </button>
+                    </Link>
                   </div>
-                  <div className="space-y-3">
-                    {RECENT_MEETINGS.map((meeting) => (
-                      <div
-                        key={meeting.id}
-                        className="flex items-center justify-between p-3 sm:p-4 bg-canvas border border-border/20 rounded-xl hover:border-accent/30 transition-all cursor-pointer group gap-2"
-                      >
-                        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface border border-border/30 flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-muted text-[18px] sm:text-[20px]">
-                              {meeting.platform === "Native"
-                                ? "videocam"
-                                : "link"}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-bold text-ink text-sm group-hover:text-accent transition-colors truncate">
-                                {meeting.title}
-                              </p>
-                              <span
-                                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex-shrink-0 hidden sm:inline-block ${
-                                  meeting.platform === "Native"
-                                    ? "bg-accent/10 text-accent border border-accent/20"
-                                    : "bg-canvas text-muted border border-border"
-                                }`}
-                              >
-                                {meeting.platform}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="flex -space-x-1.5">
-                                {meeting.participants
-                                  .slice(0, 3)
-                                  .map((p, i) => (
-                                    <div
-                                      key={i}
-                                      className={`w-5 h-5 rounded-full border-2 border-white ${p.color} flex items-center justify-center text-[7px] font-bold`}
-                                      title={p.name}
-                                    >
-                                      {p.initials}
-                                    </div>
-                                  ))}
-                                {meeting.participants.length > 3 && (
-                                  <div className="w-5 h-5 rounded-full border-2 border-white bg-border text-muted flex items-center justify-center text-[7px] font-bold">
-                                    +{meeting.participants.length - 3}
-                                  </div>
-                                )}
-                              </div>
-                              <span className="text-muted text-xs">
-                                {meeting.timeAgo}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors flex-shrink-0">
-                          chevron_right
+
+                  {recentMeetings.length === 0 ? (
+                    <div className="bg-surface border border-border rounded-xl p-12 text-center shadow-card">
+                      <div className="w-16 h-16 bg-chrome rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg ">
+                        <span className="material-symbols-outlined text-white text-[32px]">
+                          videocam_off
                         </span>
                       </div>
-                    ))}
-                  </div>
+                      <h3 className="text-lg font-bold text-ink mb-2">
+                        No meetings yet
+                      </h3>
+                      <p className="text-muted text-sm">
+                        Start your first meeting to see it here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {recentMeetings.map((meeting) => (
+                        <Link
+                          key={meeting.id}
+                          href={meeting.href}
+                          className="bg-surface border border-border p-5 rounded-xl shadow-card hover:shadow-pop hover:border-accent/30 hover:-translate-y-0.5 transition-all group cursor-pointer flex flex-col justify-between min-h-[170px]"
+                        >
+                          <div>
+                            <div className="flex justify-between items-start mb-4">
+                              <div
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
+                                  meeting.status === "active" || meeting.status === "ended"
+                                    ? "bg-chrome text-white border-accent/30"
+                                    : "bg-canvas text-muted border-border/20"
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[20px]">
+                                  {platformIcon(meeting.type, meeting.platform)}
+                                </span>
+                              </div>
+                              <div className="flex gap-1.5">
+                                {meeting.languages.length > 0 && (
+                                  <span className="bg-canvas border border-border/20 text-muted px-2 py-0.5 rounded text-[9px] font-bold">
+                                    {meeting.languages.slice(0, 2).map(langName).join(" | ")}
+                                  </span>
+                                )}
+                                <span className="bg-accent text-white px-2 py-0.5 rounded text-[9px] font-bold shadow-sm">
+                                  {meeting.platform}
+                                </span>
+                              </div>
+                            </div>
+                            <h3 className="font-bold text-ink mb-1 group-hover:text-accent transition-colors">
+                              {meeting.title}
+                            </h3>
+                            <p className="text-muted text-xs">
+                              {formatRelativeDate(meeting.date)} · {meeting.duration || "In progress"} · {meeting.participantCount} participants
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="w-6 h-6 rounded-full bg-border text-ink flex items-center justify-center text-[8px] font-bold">
+                              {meeting.participantCount}
+                            </div>
+                            <span className="material-symbols-outlined text-faint text-[18px] group-hover:text-accent transition-colors">
+                              arrow_forward
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Items + Quick AI Query & Weekly Streak */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   {/* Action Items */}
-                  <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 relative overflow-hidden">                    <div className="relative">
+                  <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 relative overflow-hidden">
+                    <div className="relative">
                       <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-accent text-[18px]">
@@ -970,7 +965,7 @@ export default function MainDashboardPage() {
                         </span>
                       </div>
                       <div className="space-y-3">
-                        {ACTION_ITEMS.map((item, i) => (
+                        {actionItems.map((item, i) => (
                           <div
                             key={i}
                             className="flex items-center gap-3 p-3 rounded-xl bg-canvas border border-border/20 hover:border-accent/20 transition-all cursor-pointer group"
@@ -1036,11 +1031,11 @@ export default function MainDashboardPage() {
                           This Week
                         </h3>
                         <span className="text-xs font-bold text-accent">
-                          9 meetings
+                          {weeklyTotal} meetings
                         </span>
                       </div>
                       <div className="flex items-end gap-2 h-20">
-                        {WEEKLY_STREAK.map((bar) => (
+                        {weeklyStreak.map((bar) => (
                           <div
                             key={bar.day}
                             className="flex-1 flex flex-col items-center gap-1.5"
